@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GTHA Metro Map Creator</title>
+<meta name="description" content="Draw schematic rapid transit maps of the Greater Toronto and Hamilton Area in your browser.">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="wrap top">
+  <strong>GTHA Metro Map Creator</strong>
+  <nav aria-label="Site"><a href="#tasks">Guides</a><a href="#features">Features</a><a href="docs/">Documentation</a><a href="https://github.com/Ding-Ding-Projects/gtha-metro-map-creator">Source</a></nav>
+</header>
+<main>
+  <section class="wrap hero">
+    <div>
+      <h1>Draw the GTHA's rapid transit, your way.</h1>
+      <p class="lead">A browser editor for schematic metro maps of Toronto, Hamilton and the surrounding region. Start from a built-in template of subway, LRT and regional rail lines, then reshape it with octilinear snapping.</p>
+      <p class="cta"><a class="btn primary" href="app/">Open the editor</a><a class="btn" href="#tasks">Read the guides</a></p>
+      <p class="note">Unofficial. The template is a simplified schematic, not a TTC or Metrolinx product.</p>
+    </div>
+    <svg viewBox="0 0 480 320" role="img" aria-label="Illustrative schematic of four crossing transit lines">
+      <path d="M40 260 L440 260" stroke="#98002E" stroke-width="10" stroke-linecap="round"/>
+      <path d="M40 260 L440 260" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+      <path d="M240 40 L240 200 L270 230 L270 260 L210 260 L210 230 L230 210" stroke="#F8C300" stroke-width="12" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M60 160 L420 160" stroke="#00923F" stroke-width="12" stroke-linecap="round"/>
+      <path d="M90 100 L400 100" stroke="#F37021" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="240" cy="260" r="12" fill="#FFFFFF" stroke="#16181D" stroke-width="4"/>
+      <circle cx="236" cy="160" r="12" fill="#FFFFFF" stroke="#16181D" stroke-width="4"/>
+      <circle cx="236" cy="100" r="12" fill="#FFFFFF" stroke="#16181D" stroke-width="4"/>
+    </svg>
+  </section>
+  <section id="tasks" class="wrap">
+    <h2>Start with a task</h2>
+    <div class="cards" id="taskCards">
+      <article><h3>Load the GTHA template</h3><p>Open the editor. The first-run setup offers the GTHA template, a blank map, or your saved map.</p><a href="docs/#template">How the template is built</a></article>
+      <article><h3>Add a station</h3><p>Choose Station (S) and click the grid. Name it in the Inspector, and add a Cantonese name for bilingual maps.</p><a href="docs/#stations">Station guide</a></article>
+      <article><h3>Draw a new line</h3><p>Choose Draw line (L), then click stations in order. Bends snap to 45 degrees and shared track spreads out side by side.</p><a href="docs/#lines">Line guide</a></article>
+      <article><h3>Share your map</h3><p>Export SVG for print, PNG for posts, or JSON to keep editing later. Drop a JSON file on the editor to open it.</p><a href="docs/#export">Export guide</a></article>
+    </div>
+  </section>
+  <section id="features" class="wrap">
+    <h2>What the editor does</h2>
+    <div class="explain">
+      <div class="pickers" role="tablist" aria-label="Feature explanations">
+        <button type="button" role="tab" aria-selected="true" data-k="route">Octilinear routing</button>
+        <button type="button" role="tab" aria-selected="false" data-k="bundle">Shared track</button>
+        <button type="button" role="tab" aria-selected="false" data-k="labels">Label placement</button>
+        <button type="button" role="tab" aria-selected="false" data-k="check">Map check</button>
+      </div>
+      <div class="explain-body" role="tabpanel" id="explainBody" aria-live="polite"></div>
+    </div>
+    <ul class="list">
+      <li>Undo and redo history, and autosave in this browser</li>
+      <li>Station, interchange and terminus styles</li>
+      <li>Solid, dashed (planned) and regional rail line styles</li>
+      <li>Find stations by plain text or regular expression</li>
+      <li>English, Cantonese and bilingual interface and labels</li>
+      <li>Light, dark and system themes</li>
+    </ul>
+  </section>
+</main>
+<footer class="wrap foot"><p>MIT licensed. Line colours are approximate and the template is simplified. <a href="docs/">Documentation</a></p></footer>
+<script>
+(function(){
+  var text = {
+    route: 'Every segment between two stops is drawn with at most one bend, at 0, 45 or 90 degrees. Each segment can bend diagonal-first or straight-first; pick a segment with Select and switch it in the Inspector.',
+    bundle: 'When two or more lines run between the same pair of stops, the editor offsets them side by side instead of drawing them on top of each other. Union to Bloor shows Kitchener and UP Express sharing track.',
+    labels: 'Station names try eight positions and take the one that crosses the fewest lines and neighbours. Override any label in the Inspector, or reset all labels to automatic in Settings.',
+    check: 'Map check lists stations that no line serves, lines with fewer than two stops, duplicate names and stations stacked on the same spot. Click an item to jump to it.'
+  };
+  var body = document.getElementById('explainBody');
+  var tabs = document.querySelectorAll('[role=tab]');
+  function show(k){ body.textContent = text[k]; tabs.forEach(function(b){ b.setAttribute('aria-selected', String(b.dataset.k === k)); }); }
+  tabs.forEach(function(b){ b.addEventListener('click', function(){ show(b.dataset.k); }); });
+  show('route');
+})();
+</script>
+</body>
+</html>

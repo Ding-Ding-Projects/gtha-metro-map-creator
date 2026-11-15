@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GTHA Metro Map Creator editor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F80}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #16181D; background: #F6F5F1; min-height: 56rem; display: flex; flex-direction: column">
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 16px; background: #FFFFFF; border-bottom: 1px solid #DCDAD3">
+<div style="display: flex; align-items: center; gap: 10px; margin-right: 12px">
+<svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#16181D" stroke-width="3"></circle><path d="M6 14h16M14 6v16" stroke="#1F5FBF" stroke-width="3" stroke-linecap="round"></path></svg>
+<strong style="font-size: 16px">GTHA Metro Map Creator</strong>
+</div>
+<nav aria-label="Tools" style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{tools}}" as="t" hint-placeholder-count="5">
+<button type="button" onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="{{t.style}}">{{t.label}}</button>
+</sc-for>
+</nav>
+<div style="flex: 1 1 auto"></div>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px">Search
+<input type="search" placeholder="Station or /regex/" style="height: 36px; border: 1px solid #B9B6AC; border-radius: 8px; padding: 0 10px; font: inherit; width: 200px">
+</label>
+<button type="button" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #B9B6AC; background: #FFFFFF; font: inherit">Undo</button>
+<button type="button" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 0; background: {{accent}}; color: #FFFFFF; font: inherit; font-weight: 600">Export</button>
+</header>
+<div style="display: flex; flex-wrap: wrap; flex: 1 1 auto; min-height: 0">
+<aside aria-label="Lines" style="flex: 1 1 260px; max-width: 300px; background: #FFFFFF; border-right: 1px solid #DCDAD3; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: #545249">Lines</h2>
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="8">
+<button type="button" onClick="{{l.pick}}" style="{{l.rowStyle}}">
+<span style="width: 28px; height: 8px; border-radius: 4px; background: {{l.color}}; flex: none"></span>
+<span style="flex: 1 1 auto; text-align: left">{{l.name}}</span>
+<span style="font-size: 12px; color: #545249">{{l.count}}</span>
+</button>
+</sc-for>
+<button type="button" style="min-height: 44px; border: 1px dashed #8E8B80; border-radius: 8px; background: transparent; font: inherit; color: #16181D">New line</button>
+</aside>
+<main style="flex: 999 1 560px; min-width: 0; position: relative; background-color: #F6F5F1; background-image: radial-gradient(#D3D0C6 1px, transparent 1px); background-size: 24px 24px">
+<svg viewBox="0 0 960 640" role="img" aria-label="Schematic GTHA map preview with subway, LRT and regional lines" style="width: 100%; height: 100%; display: block">
+<path d="M120 520 L840 520" stroke="#3E8EDE" stroke-width="10" fill="none" stroke-linecap="round"></path>
+<path d="M480 120 L480 400 L540 460 L540 520 L420 520 L420 460 L460 420 L460 160" stroke="#F8C300" stroke-width="12" fill="none" stroke-linejoin="round" stroke-linecap="round"></path>
+<path d="M200 320 L800 320" stroke="#00923F" stroke-width="12" fill="none" stroke-linecap="round"></path>
+<path d="M260 240 L760 240" stroke="#F37021" stroke-width="12" fill="none" stroke-linecap="round"></path>
+<path d="M480 160 L700 160" stroke="#A21A68" stroke-width="12" fill="none" stroke-linecap="round"></path>
+<path d="M120 520 L120 300 L180 240" stroke="#7A3E00" stroke-width="10" fill="none" stroke-dasharray="2 0" stroke-linecap="round"></path>
+<circle cx="480" cy="520" r="14" fill="#FFFFFF" stroke="#16181D" stroke-width="4"></circle>
+<circle cx="470" cy="320" r="14" fill="#FFFFFF" stroke="#16181D" stroke-width="4"></circle>
+<circle cx="470" cy="240" r="14" fill="#FFFFFF" stroke="#16181D" stroke-width="4"></circle>
+<circle cx="480" cy="160" r="14" fill="#FFFFFF" stroke="#16181D" stroke-width="4"></circle>
+<circle cx="700" cy="160" r="9" fill="#FFFFFF" stroke="#A21A68" stroke-width="4"></circle>
+<circle cx="200" cy="320" r="9" fill="#FFFFFF" stroke="#00923F" stroke-width="4"></circle>
+<circle cx="800" cy="320" r="9" fill="#FFFFFF" stroke="#00923F" stroke-width="4"></circle>
+<text x="498" y="552" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#16181D">Union</text>
+<text x="490" y="306" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#16181D">Bloor-Yonge</text>
+<text x="490" y="226" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#16181D">Eglinton</text>
+<text x="498" y="146" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#16181D">Sheppard-Yonge</text>
+<text x="200" y="350" font-family="Inter, sans-serif" font-size="13" fill="#16181D">Kipling</text>
+<text x="760" y="350" font-family="Inter, sans-serif" font-size="13" fill="#16181D">Kennedy</text>
+</svg>
+<p style="position: absolute; left: 16px; bottom: 12px; margin: 0; font-size: 12px; color: #545249; background: #FFFFFF; padding: 6px 10px; border-radius: 6px">Snap: octilinear 45° · Grid 24 px · Zoom 100%</p>
+</main>
+<aside aria-label="Inspector" style="flex: 1 1 260px; max-width: 320px; background: #FFFFFF; border-left: 1px solid #DCDAD3; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: #545249">Station</h2>
+<label style="display: flex; flex-direction: column; gap: 4px; font-size: 13px">Name
+<input type="text" value="Union" style="height: 40px; border: 1px solid #B9B6AC; border-radius: 8px; padding: 0 10px; font: inherit">
+</label>
+<label style="display: flex; flex-direction: column; gap: 4px; font-size: 13px">Label position
+<select style="height: 40px; border: 1px solid #B9B6AC; border-radius: 8px; padding: 0 8px; font: inherit"><option>South-east</option><option>East</option><option>North</option></select>
+</label>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px"><input type="checkbox" checked> Interchange</label>
+<h2 style="margin: 8px 0 0; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: #545249">Served by</h2>
+<p style="margin: 0; font-size: 14px; line-height: 1.5">Line 1 Yonge-University, Lakeshore West, Lakeshore East, UP Express</p>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0B6E4F","#16181D"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { tool: 'select', line: 'l1' }; }
+  renderVals() {
+    const accent = this.props.accent ?? '#1F5FBF';
+    const toolDefs = [['select','Select'],['station','Station'],['line','Draw line'],['label','Label'],['erase','Erase']];
+    const tools = toolDefs.map(([id,label]) => {
+      const on = this.state.tool === id;
+      return { label, pressed: on ? 'true' : 'false', pick: () => this.setState({ tool: id }),
+        style: 'min-height:44px;padding:0 14px;border-radius:8px;font:inherit;border:1px solid ' + (on ? accent : '#B9B6AC') + ';background:' + (on ? accent : '#FFFFFF') + ';color:' + (on ? '#FFFFFF' : '#16181D') };
+    });
+    const lineDefs = [['l1','Line 1 Yonge-University','#F8C300',38],['l2','Line 2 Bloor-Danforth','#00923F',31],['l4','Line 4 Sheppard','#A21A68',5],['l5','Line 5 Eglinton','#F37021',25],['l6','Line 6 Finch West','#8B8C8E',18],['lw','Lakeshore West','#3E8EDE',12],['le','Lakeshore East','#E5322D',9],['up','UP Express','#7A3E00',5]];
+    const lines = lineDefs.map(([id,name,color,count]) => {
+      const on = this.state.line === id;
+      return { name, color, count, pick: () => this.setState({ line: id }),
+        rowStyle: 'display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;border-radius:8px;font:inherit;font-size:14px;color:#16181D;border:1px solid ' + (on ? accent : 'transparent') + ';background:' + (on ? '#EEF3FB' : 'transparent') };
+    });
+    return { accent, tools, lines };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GTHA Metro Map Creator project site</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F80}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #16181D; background: #F6F5F1">
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; max-width: 1120px; margin: 0 auto; padding: 20px 24px">
+<strong style="font-size: 17px">GTHA Metro Map Creator</strong>
+<div style="flex: 1 1 auto"></div>
+<nav aria-label="Site" style="display: flex; flex-wrap: wrap; gap: 20px; font-size: 15px">
+<a href="#tasks">Guides</a><a href="#features">Features</a><a href="#docs">Documentation</a>
+</nav>
+</header>
+<section style="max-width: 1120px; margin: 0 auto; padding: 56px 24px 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; align-items: center">
+<div style="display: flex; flex-direction: column; gap: 20px">
+<h1 style="margin: 0; font-size: 52px; line-height: 1.05; font-weight: 800">Draw the GTHA's rapid transit, your way.</h1>
+<p style="margin: 0; font-size: 19px; line-height: 1.55; color: #3B3A35">A browser editor for schematic metro maps of Toronto, Hamilton and the surrounding region. Start from a built-in template of subway, LRT and regional rail lines, then reshape it with octilinear snapping.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<a href="app/" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 10px; background: {{accent}}; color: #FFFFFF; text-decoration: none; font-weight: 600">Open the editor</a>
+<a href="#tasks" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 10px; border: 1px solid #8E8B80; color: #16181D; text-decoration: none; font-weight: 600">Read the guides</a>
+</div>
+</div>
+<svg viewBox="0 0 480 320" role="img" aria-label="Illustrative schematic of four crossing transit lines" style="width: 100%; background: #FFFFFF; border-radius: 16px">
+<path d="M40 260 L440 260" stroke="#3E8EDE" stroke-width="10" stroke-linecap="round"></path>
+<path d="M240 40 L240 200 L270 230 L270 260 L210 260 L210 230 L230 210" stroke="#F8C300" stroke-width="12" fill="none" stroke-linejoin="round" stroke-linecap="round"></path>
+<path d="M60 160 L420 160" stroke="#00923F" stroke-width="12" stroke-linecap="round"></path>
+<path d="M90 100 L400 100" stroke="#F37021" stroke-width="12" stroke-linecap="round"></path>
+<circle cx="240" cy="260" r="12" fill="#FFFFFF" stroke="#16181D" stroke-width="4"></circle>
+<circle cx="236" cy="160" r="12" fill="#FFFFFF" stroke="#16181D" stroke-width="4"></circle>
+<circle cx="236" cy="100" r="12" fill="#FFFFFF" stroke="#16181D" stroke-width="4"></circle>
+</svg>
+</section>
+<section id="tasks" style="max-width: 1120px; margin: 0 auto; padding: 40px 24px">
+<h2 style="margin: 0 0 20px; font-size: 30px">Start with a task</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+<sc-for list="{{tasks}}" as="t" hint-placeholder-count="4">
+<article style="background: #FFFFFF; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+<h3 style="margin: 0; font-size: 18px">{{t.title}}</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.5; color: #3B3A35">{{t.body}}</p>
+</article>
+</sc-for>
+</div>
+</section>
+<section id="features" style="max-width: 1120px; margin: 0 auto; padding: 40px 24px 72px">
+<h2 style="margin: 0 0 20px; font-size: 30px">What the editor does</h2>
+<ul style="margin: 0; padding-left: 20px; font-size: 16px; line-height: 1.8; columns: 2 280px">
+<li>Octilinear routing with 45° bends</li>
+<li>Station, interchange and terminus styles</li>
+<li>Eight-way label placement</li>
+<li>Undo and redo history</li>
+<li>Autosave in this browser</li>
+<li>SVG, PNG and JSON export</li>
+<li>English, Cantonese and bilingual labels</li>
+<li>Light and dark themes</li>
+</ul>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0B6E4F","#16181D"]},"$preview":{"width":1280,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      accent: this.props.accent ?? '#1F5FBF',
+      tasks: [
+        { title: 'Load the GTHA template', body: 'Open the editor and pick the GTHA template to start from TTC, GO, UP Express and LRT lines.' },
+        { title: 'Add a station', body: 'Choose the Station tool, click the grid, then name it in the inspector.' },
+        { title: 'Draw a new line', body: 'Choose Draw line and click stations in order. Bends snap to 45 degrees.' },
+        { title: 'Share your map', body: 'Export SVG for print, PNG for posts, or JSON to keep editing later.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

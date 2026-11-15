@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation · GTHA Metro Map Creator</title>
+<link rel="stylesheet" href="../site.css">
+</head>
+<body>
+<header class="wrap top">
+  <a href="../"><strong>GTHA Metro Map Creator</strong></a>
+  <nav aria-label="Site"><a href="../app/">Open the editor</a><a href="https://github.com/Ding-Ding-Projects/gtha-metro-map-creator">Source</a></nav>
+</header>
+<main class="wrap doc">
+  <nav class="toc" aria-label="Contents">
+    <label class="docsearch">Filter articles <input id="docFilter" type="search" placeholder="Type a word"></label>
+    <ul id="tocList">
+      <li><a href="#start">Getting started</a></li>
+      <li><a href="#template">The GTHA template</a></li>
+      <li><a href="#stations">Stations</a></li>
+      <li><a href="#lines">Lines and segments</a></li>
+      <li><a href="#labels">Labels and languages</a></li>
+      <li><a href="#search">Finding stations</a></li>
+      <li><a href="#check">Map check</a></li>
+      <li><a href="#export">Saving, import and export</a></li>
+      <li><a href="#settings">Settings</a></li>
+      <li><a href="#keys">Keyboard shortcuts</a></li>
+      <li><a href="#format">Map file format</a></li>
+    </ul>
+  </nav>
+  <div class="article" id="articles">
+    <section id="start"><h2>Getting started</h2>
+      <p>Open the editor. On first run a three-step setup asks how to start (GTHA template, blank map, or your saved map), then your language and theme, then shows the tools. You can skip it, and rerun it from Settings.</p>
+      <p>The workspace has three parts: the Lines and search panel on the left, the map in the middle, and the Inspector on the right. On a narrow screen the panels stack under the map.</p>
+      <p>Pan by dragging empty space with the Select tool, by holding <kbd>Space</kbd> while dragging, or with the middle mouse button. Scroll to zoom around the pointer. <kbd>F</kbd> fits the whole map.</p></section>
+    <section id="template"><h2>The GTHA template</h2>
+      <p>The template contains TTC Lines 1, 2, 4, 5 and 6, the planned Ontario Line, GO Lakeshore West, Lakeshore East, Kitchener, Milton, Barrie, Richmond Hill and Stouffville, UP Express, and simplified Hurontario and Hamilton LRT lines.</p>
+      <p>It is a schematic: positions are grid units chosen for legibility, not geography. Station lists for regional and LRT lines are shortened, line colours are approximate, and planned lines use the dashed style. Service status is not tracked. Check TTC and Metrolinx for real service.</p>
+      <p>Some corridors use bend points instead of stations, so several GO lines can leave Union together and split later.</p></section>
+    <section id="stations"><h2>Stations</h2>
+      <p>With the Station tool, click empty grid to add a stop, or click a line segment to insert a stop into it. Every line using that segment gets the new stop.</p>
+      <p>Select a station to edit its name, Chinese name, label position and interchange style. Interchange is automatic when two or more lines serve the stop; you can force it on or off. Shift-click selects several stations, which you can align horizontally or vertically, move together, or delete.</p>
+      <p>Drag to move. With snapping on, stations land on whole grid units. Arrow keys nudge by one unit, or five with <kbd>Shift</kbd>.</p></section>
+    <section id="lines"><h2>Lines and segments</h2>
+      <p>Pick a line in the Lines panel to make it active, or press New line. With Draw line, click stations in order to extend the active line. Clicking empty space adds a new stop there; holding <kbd>Alt</kbd> adds a bend point instead.</p>
+      <p>Each segment has at most one bend. Select a segment to switch between diagonal first and straight first, insert a station, or erase it. Erasing a middle segment splits the line in two.</p>
+      <p>Line settings: name, Chinese name, colour, width, style (solid, dashed for planned, or regional rail with a white centre stripe), order, direction and visibility. Lines that share a pair of stops are drawn side by side. The first line drawn on a shared segment sets its bend.</p></section>
+    <section id="labels"><h2>Labels and languages</h2>
+      <p>Automatic labels test eight positions around a stop and take the one crossing the fewest lines and neighbouring stops. You can pin any of the eight positions per station.</p>
+      <p>The interface and map labels follow the language setting: English, Cantonese, or bilingual. In Cantonese mode a stop shows its Chinese name when it has one; bilingual mode shows both. The template ships English names only, so add Chinese names yourself.</p>
+      <p>Free text labels come from the Label tool. Edit their text and size in the Inspector.</p></section>
+    <section id="search"><h2>Finding stations</h2>
+      <p>Type in Find station. Plain text mode matches any part of a name. Regular expression mode uses JavaScript Unicode patterns, for example <code>^St </code> or <code>(Park|Square)$</code>. Ignore case is on by default. Invalid patterns show the error. Click a result to select and centre it.</p>
+      <p>The pattern search is a plain field with mode and case options, not a full visual pattern builder.</p></section>
+    <section id="check"><h2>Map check</h2>
+      <p>The Map check panel updates on every change and lists stations that no line serves, lines with fewer than two stops, names used more than once, and stations sharing one position. Click an item to jump to it.</p></section>
+    <section id="export"><h2>Saving, import and export</h2>
+      <p>Every change autosaves in this browser's local storage. Nothing is uploaded. Undo and redo keep the last 200 steps for this session.</p>
+      <p>Export offers SVG (vector, with title and optional legend), PNG (rendered at up to twice the size), and JSON (the editable map). Open JSON from the Export menu or drop a file on the editor. Files over 5 MB or with an unexpected shape are refused and your current map is kept.</p></section>
+    <section id="settings"><h2>Settings</h2>
+      <p>Language, theme, label size, grid visibility, snapping, export legend and sound effects are saved in this browser. Sound effects are short tones for actions; turn them off here. Reset settings returns everything to defaults. Reset all labels to automatic clears pinned label positions.</p></section>
+    <section id="keys"><h2>Keyboard shortcuts</h2>
+      <p><kbd>V</kbd> Select, <kbd>S</kbd> Station, <kbd>L</kbd> Draw line, <kbd>T</kbd> Label, <kbd>E</kbd> Erase, <kbd>F</kbd> Fit, <kbd>Delete</kbd> delete selection, <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo, <kbd>Ctrl</kbd>+<kbd>Y</kbd> or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> redo, arrows nudge, <kbd>Esc</kbd> clears selection.</p></section>
+    <section id="format"><h2>Map file format</h2>
+      <p>A map is JSON with <code>version: 1</code>, <code>title</code>, <code>stations</code> (an object keyed by id, each with <code>name</code>, <code>nameZh</code>, <code>x</code>, <code>y</code>, <code>label</code>, <code>interchange</code>), <code>lines</code> (each with <code>name</code>, <code>color</code>, <code>width</code>, <code>style</code>, <code>visible</code>, <code>path</code>, <code>bends</code>), and <code>labels</code>. A path entry is a station id or a bend point written <code>@x,y</code>. <code>bends</code> maps a segment index to <code>late</code> for straight first.</p></section>
+  </div>
+</main>
+<script>
+(function(){
+  var input = document.getElementById('docFilter');
+  input.addEventListener('input', function(){
+    var q = input.value.trim().toLowerCase();
+    document.querySelectorAll('#articles section').forEach(function(s){
+      var hit = !q || s.textContent.toLowerCase().indexOf(q) !== -1;
+      s.hidden = !hit;
+      var link = document.querySelector('#tocList a[href="#' + s.id + '"]');
+      if (link) link.parentElement.hidden = !hit;
+    });
+  });
+})();
+</script>
+</body>
+</html>
