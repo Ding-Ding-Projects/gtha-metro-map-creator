@@ -28,6 +28,24 @@ server setup wizard, plus the project site and documentation.
   used by another program refused, port used by this server allowed), pull with digest, start,
   health, network address on the real adapter only, bilingual relabelling, resume note.
 
+### Release (verified)
+
+- `v1.1.0` at `b7f037b` is a normal release (not draft, not prerelease) with
+  `GTHA-Metro-Map-Creator-1.1.0-portable.exe`, `GTHA-Metro-Map-Creator-Server-Setup-1.1.0-portable.exe`,
+  `gtha-metro-map-creator-site.zip` and `SHA256SUMS.txt`. Deploy site, Container image and Release
+  workflows succeeded for that commit.
+- The released desktop executable was downloaded, matched its SHA-256 in `SHA256SUMS.txt`, and
+  passed `scripts/verify/desktop-app.steps.json`.
+- Image tag `1.1.0` pulls without credentials. The live site serves the new documentation
+  articles and the regex builder, and the repository homepage points at it.
+- Announcement: Discussion #1. Pinning is not available through the API, so it is not pinned.
+
+### Records not created
+
+- Wiki: the wiki has no first page, so its repository does not exist yet. Pages are staged in
+  `docs/wiki/pending/` with publishing steps.
+- GitHub Projects: the CLI token has no `project` scope, so no Project was created.
+
 ### Not yet verified
 
 - Native open, save and unsaved-changes dialogs in the desktop app (they need a visible window).
