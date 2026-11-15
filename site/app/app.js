@@ -769,6 +769,7 @@
   applyTheme();
   $('mapTitle').value = map.title;
   applyI18n();
-  requestAnimationFrame(() => { fit(); if (!setup.done) openSetup(); });
+  // A timer, not requestAnimationFrame: frames pause in background tabs and setup must still open.
+  setTimeout(() => { fit(); if (!setup.done) openSetup(); }, 0);
   window.GMMC = { getMap: () => map, computeGeometry, route, validateMap, standaloneSvg };
 })();
