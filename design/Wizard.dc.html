@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GTHA Metro Map Creator server setup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="font-family: Inter, 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: #16181D; background: #FFFFFF; width: 760px; height: 560px; display: flex; flex-direction: column">
+<div style="height: 36px; display: flex; align-items: center; border-bottom: 1px solid #DDDAD2">
+<div style="padding: 0 12px; font-weight: 600">GTHA Metro Map Creator server setup</div>
+<div style="flex: 1 1 auto"></div>
+<span style="width: 46px; text-align: center; color: #3B3A35">&#10005;</span>
+</div>
+<div style="flex: 1 1 auto; display: flex; min-height: 0">
+<nav aria-label="Steps" style="width: 220px; background: #F6F5F1; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; background: {{s.bg}}">
+<span style="width: 22px; height: 22px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: {{s.dot}}; color: {{s.dotInk}}">{{s.mark}}</span>
+<span style="font-weight: {{s.weight}}">{{s.title}}</span>
+</div>
+</sc-for>
+</nav>
+<main style="flex: 1 1 auto; padding: 24px 28px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 20px; font-weight: 700">Your map server is running</div>
+<div style="color: #3B3A35">Anyone on your home network can open the editor at this address.</div>
+</div>
+<div style="border: 1px solid #DDDAD2; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="color: #6B6960; font-size: 12px">Network address</div>
+<div style="font-size: 22px; font-weight: 700; color: {{accent}}">http://192.168.1.20:8080/</div>
+<div style="display: flex; gap: 8px">
+<span style="min-height: 36px; display: flex; align-items: center; padding: 0 16px; border-radius: 8px; background: {{accent}}; color: #FFFFFF; font-weight: 600">Open in browser</span>
+<span style="min-height: 36px; display: flex; align-items: center; padding: 0 16px; border-radius: 8px; border: 1px solid #8E8B80; font-weight: 600">Copy address</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{checks}}" as="c" hint-placeholder-count="4">
+<div style="display: flex; align-items: center; gap: 10px"><span style="color: #0B6E4F; font-weight: 700">&#10003;</span><span>{{c}}</span></div>
+</sc-for>
+</div>
+<div style="flex: 1 1 auto"></div>
+<div style="display: flex; gap: 8px; align-items: center; border-top: 1px solid #DDDAD2; padding-top: 16px">
+<span style="color: #6B6960">Step 5 of 5</span>
+<div style="flex: 1 1 auto"></div>
+<span style="min-height: 36px; display: flex; align-items: center; padding: 0 16px; border-radius: 8px; border: 1px solid #8E8B80; font-weight: 600">Back</span>
+<span style="min-height: 36px; display: flex; align-items: center; padding: 0 16px; border-radius: 8px; background: {{accent}}; color: #FFFFFF; font-weight: 600">Finish</span>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0B6E4F","#16181D"]},"$preview":{"width":760,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const done = { bg: 'transparent', dot: '#0B6E4F', dotInk: '#FFFFFF', mark: '✓', weight: 500 };
+    return {
+      accent: this.props.accent ?? '#1F5FBF',
+      steps: [
+        Object.assign({ title: 'Check Docker' }, done),
+        Object.assign({ title: 'Choose a port' }, done),
+        Object.assign({ title: 'Download the image' }, done),
+        Object.assign({ title: 'Start the server' }, done),
+        { title: 'Open on your network', bg: '#EEF3FB', dot: '#1F5FBF', dotInk: '#FFFFFF', mark: '5', weight: 700 }
+      ],
+      checks: ['Docker Engine and Compose found', 'Image downloaded and verified', 'Health check passed in 3 seconds']
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -46,7 +46,7 @@ for (const f of files.filter((f) => extname(f) === '.html')) {
 }
 
 if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
-await rm('dist', { recursive: true, force: true });
+await rm(join('dist', 'site'), { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
 await cp(root, join('dist', 'site'), { recursive: true });
 console.log(`OK: ${files.length} files, ${ids.size} template stations, ${m.lines.length} template lines. Output: dist/site`);

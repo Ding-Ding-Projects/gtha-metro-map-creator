@@ -1,3 +1,5 @@
 dist/
 node_modules/
 .agent/
+desktop/node_modules/
+desktop/content/

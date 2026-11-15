@@ -774,5 +774,8 @@
   // A timer, not requestAnimationFrame: frames pause in background tabs and setup must still open.
   if (window.RxBuilder) { window.RxBuilder.init(); window.RxBuilder.render(); }
   setTimeout(() => { fit(); if (!setup.done) openSetup(); }, 0);
-  window.GMMC = { getMap: () => map, computeGeometry, route, validateMap, standaloneSvg };
+  // Hooks for the desktop app: load a map from text, start a new map, read the export menu.
+  function loadJson(text) { let m = null; try { m = validateMap(JSON.parse(text)); } catch { m = null; } if (!m) { toast(t('importFailed')); beep(180); return false; } replaceMap(m); toast(t('imported')); return true; }
+  function newMap(kind) { replaceMap(window.GTHATemplates[kind === 'blank' ? 'blank' : 'gtha']()); }
+  window.GMMC = { getMap: () => map, computeGeometry, route, validateMap, standaloneSvg, loadJson, newMap, exportAct, undo, redo };
 })();
