@@ -52,6 +52,34 @@
         </label>
         <label class="check"><input type="checkbox" id="searchCase" checked> <span data-t="ignoreCase">Ignore case</span></label>
       </div>
+      <details class="rx" id="rxBuilder">
+        <summary data-t="rxTitle">Regex builder</summary>
+        <p class="hint" id="rxModeNote"></p>
+        <p class="hint"><span data-t="rxEngine">Engine: JavaScript RegExp in this browser, Unicode mode</span> <code id="rxFlagsOut"></code></p>
+        <div class="rx-tokens" id="rxTokens" role="group" aria-label="Pattern tokens"></div>
+        <div class="row"><button type="button" id="rxEscape" data-t="rxEscapeBtn">Escape as literal text</button></div>
+        <div class="regex-row">
+          <label class="check"><input type="checkbox" id="rxFlagM"> <span data-t="rxFlagMulti">Multiline (m)</span></label>
+          <label class="check"><input type="checkbox" id="rxFlagS"> <span data-t="rxFlagDot">Dot matches newline (s)</span></label>
+        </div>
+        <h3 data-t="rxExplainTitle">What the pattern means</h3>
+        <ul class="rx-explain" id="rxExplain"></ul>
+        <h3 data-t="rxTestTitle">Test text</h3>
+        <label class="vh" for="rxText" data-t="rxTestTitle">Test text</label>
+        <textarea id="rxText" rows="3" maxlength="5000" placeholder="Station names on the current map"></textarea>
+        <div class="row"><button type="button" id="rxUseStations" data-t="rxUseStations">Use station names</button></div>
+        <p class="hint" id="rxStatus" role="status" aria-live="polite"></p>
+        <pre class="rx-preview" id="rxPreview" aria-label="Matches"></pre>
+        <h3 data-t="rxGroupsTitle">Groups in the first match</h3>
+        <ul class="rx-explain" id="rxGroups"></ul>
+        <label><span data-t="rxReplaceLabel">Replace with ($1, $&lt;name&gt;)</span><input type="text" id="rxReplace" maxlength="200"></label>
+        <pre class="rx-preview" id="rxReplaceOut" aria-label="Replacement preview"></pre>
+        <h3 data-t="rxLibraryTitle">Pattern library</h3>
+        <label class="vh" for="rxSaved" data-t="rxLibraryTitle">Pattern library</label>
+        <select id="rxSaved"></select>
+        <div class="row"><label class="grow"><span data-t="rxNameLabel">Name</span><input type="text" id="rxName" maxlength="40"></label>
+          <button type="button" id="rxSave" data-t="rxSaveBtn">Save pattern</button><button type="button" id="rxDelete" class="danger" data-t="rxDeleteBtn">Delete by name</button></div>
+      </details>
       <p class="hint" id="searchStatus" role="status" aria-live="polite"></p>
       <ul class="results" id="searchResults"></ul>
     </section>
@@ -119,6 +147,7 @@
 
 <script src="i18n.js"></script>
 <script src="gtha-template.js"></script>
+<script src="regex-builder.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

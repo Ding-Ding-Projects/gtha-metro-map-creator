@@ -330,14 +330,15 @@
     const q = $('searchInput').value, mode = $('searchMode').value, ic = $('searchCase').checked;
     const status = $('searchStatus'), list = $('searchResults');
     status.classList.remove('err');
-    if (!q) { status.textContent = ''; list.innerHTML = ''; return; }
+    if (!q) { status.textContent = ''; list.innerHTML = ''; if (window.RxBuilder) window.RxBuilder.render(); return; }
     let test;
     if (mode === 'regex') {
       if (q.length > 200) { status.textContent = t('invalidPattern'); status.classList.add('err'); list.innerHTML = ''; return; }
-      try { const re = new RegExp(q, ic ? 'iu' : 'u'); test = (s) => re.test(s); } catch (e) { status.textContent = t('invalidPattern') + ': ' + e.message; status.classList.add('err'); list.innerHTML = ''; return; }
+      try { const re = new RegExp(q, window.RxBuilder ? window.RxBuilder.flags() : (ic ? 'iu' : 'u')); test = (s) => re.test(s); } catch (e) { status.textContent = t('invalidPattern') + ': ' + e.message; status.classList.add('err'); list.innerHTML = ''; if (window.RxBuilder) window.RxBuilder.render(); return; }
     } else { const needle = ic ? q.toLowerCase() : q; test = (s) => (ic ? s.toLowerCase() : s).includes(needle); }
     const hits = Object.values(map.stations).filter((s) => test(s.name) || (s.nameZh && test(s.nameZh))).sort((a, b) => a.name.localeCompare(b.name));
     status.textContent = hits.length ? hits.length + ' ' + t('matches') : t('noMatches');
+    if (window.RxBuilder) window.RxBuilder.render();
     list.innerHTML = hits.slice(0, 50).map((s) => `<li><button type="button" data-goto="${esc(s.id)}">${esc(s.name)}${s.nameZh ? ' · ' + esc(s.nameZh) : ''}</button></li>`).join('');
   }
 
@@ -393,6 +394,7 @@
   function applyI18n() {
     window.I18N.setLang(settings.lang);
     document.querySelectorAll('[data-t]').forEach((n) => { n.textContent = t(n.dataset.t); });
+    if (window.RxBuilder) window.RxBuilder.relabel();
     $('searchInput').placeholder = t('searchPlaceholder');
     $('map').setAttribute('aria-label', t('appName'));
     renderPanels(); render();
@@ -770,6 +772,7 @@
   $('mapTitle').value = map.title;
   applyI18n();
   // A timer, not requestAnimationFrame: frames pause in background tabs and setup must still open.
+  if (window.RxBuilder) { window.RxBuilder.init(); window.RxBuilder.render(); }
   setTimeout(() => { fit(); if (!setup.done) openSetup(); }, 0);
   window.GMMC = { getMap: () => map, computeGeometry, route, validateMap, standaloneSvg };
 })();
