@@ -19,14 +19,26 @@
 - [x] Project site and documentation pages
 - [x] Build validation script and GitHub Pages deployment workflow
 
-## Phase 2: next
+## Phase 2: hosting and desktop
+
+- [x] Regex builder beside the station search
+- [x] Container image published to GitHub Container Registry
+- [x] Compose file and `host.bat` with detached and interactive log modes
+- [x] Portable desktop app with offline content, native open and save, recent maps
+- [x] Portable server setup wizard (Docker check, port, pull, start, health, network address)
+- [x] Design artboards for the desktop app and the wizard
+- [x] Release workflow publishing both executables and the offline site
+- [x] Local verification script that drives the built executables hidden
+
+## Phase 3: next
 
 - [ ] Cantonese station names for the template (needs a verified source)
 - [ ] Shared bend setting across all lines on a bundled segment
 - [ ] Box selection and copy and paste
 - [ ] Geographic background layer and import from GTFS
-- [ ] Full visual regular expression builder beside every search field
 - [ ] Touch gestures for pinch zoom
-- [ ] Automated browser tests in CI
-- [ ] Portable desktop companion for offline documentation
+- [ ] ~~Automated browser tests in CI~~ Not doing: CI deliberately runs no tests here; browser checks run locally with `scripts/verify/`
+- [ ] Search across the documentation articles with the same regex builder
+- [ ] Application icon for the executables
+- [ ] Sign-in option for the hosted server
 - [ ] Per-line station markers (ticks) style option

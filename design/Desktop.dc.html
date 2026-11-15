@@ -10,85 +10,80 @@
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<style>
-body{margin:0}
-.dk button{font:inherit}
-</style>
+<style>body{margin:0}</style>
 </helmet>
-<div class="dk" style="font-family: Inter, 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: #16181D; background: #E9E7E1; width: 1280px; height: 800px; display: flex; flex-direction: column">
-<div style="height: 36px; display: flex; align-items: center; background: #FFFFFF; border-bottom: 1px solid #DDDAD2">
-<div style="padding: 0 12px; font-weight: 600">GTHA Metro Map Creator</div>
-<div style="color: #6B6960">union-loop.json</div>
+<div style="font-family: Inter, 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: #16181D; background: #FBFAF7; width: 1280px; height: 800px; display: flex; flex-direction: column; position: relative; overflow: hidden">
+<div style="height: 32px; flex: none; display: flex; align-items: center; background: #FFFFFF">
+<div style="padding: 0 12px; font-size: 12px">GTHA Metro Map Creator - union-loop.json</div>
 <div style="flex: 1 1 auto"></div>
-<div style="display: flex; height: 100%">
-<span style="width: 46px; display: flex; align-items: center; justify-content: center; color: #3B3A35">&#8212;</span>
-<span style="width: 46px; display: flex; align-items: center; justify-content: center; color: #3B3A35">&#9633;</span>
-<span style="width: 46px; display: flex; align-items: center; justify-content: center; color: #3B3A35">&#10005;</span>
+<span style="width: 46px; text-align: center; color: #3B3A35">&#8212;</span><span style="width: 46px; text-align: center; color: #3B3A35">&#9633;</span><span style="width: 46px; text-align: center; color: #3B3A35">&#10005;</span>
 </div>
-</div>
-<div style="height: 34px; display: flex; align-items: center; gap: 4px; padding: 0 8px; background: #FFFFFF; border-bottom: 1px solid #DDDAD2">
+<div style="height: 28px; flex: none; display: flex; align-items: center; gap: 2px; padding: 0 4px; background: #FFFFFF; border-bottom: 1px solid #DDDAD2">
 <sc-for list="{{menus}}" as="m" hint-placeholder-count="5">
-<span style="padding: 6px 10px; border-radius: 6px">{{m}}</span>
+<span style="padding: 4px 10px; border-radius: 4px; background: {{m.bg}}">{{m.name}}</span>
+</sc-for>
+</div>
+<div style="height: 56px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: #FFFFFF; border-bottom: 1px solid #DDDAD2">
+<strong style="font-size: 15px; margin-right: 8px">GTHA Metro Map Creator</strong>
+<span style="min-height: 36px; width: 210px; display: flex; align-items: center; padding: 0 10px; border: 1px solid #8E8B80; border-radius: 8px">Union loop study</span>
+<sc-for list="{{tools}}" as="t" hint-placeholder-count="5">
+<span style="min-height: 36px; display: flex; align-items: center; padding: 0 14px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; color: {{t.ink}}; font-weight: 600">{{t.name}}</span>
 </sc-for>
 <div style="flex: 1 1 auto"></div>
-<span style="padding: 4px 10px; border-radius: 999px; background: #E6F1EA; color: #0B6E4F; font-weight: 600">Works offline</span>
+<span style="min-height: 36px; display: flex; align-items: center; padding: 0 14px; border-radius: 8px; border: 1px solid #8E8B80; font-weight: 600">Undo</span>
+<span style="min-height: 36px; display: flex; align-items: center; padding: 0 14px; border-radius: 8px; background: {{accent}}; color: #FFFFFF; font-weight: 600">Export</span>
 </div>
-<div style="flex: 1 1 auto; display: flex; min-height: 0">
-<aside style="width: 260px; background: #FFFFFF; border-right: 1px solid #DDDAD2; padding: 16px 12px; display: flex; flex-direction: column; gap: 12px">
-<div style="font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #6B6960; padding: 0 4px">Recent maps</div>
-<sc-for list="{{recent}}" as="r" hint-placeholder-count="4">
-<div style="padding: 10px 12px; border-radius: 8px; background: {{r.bg}}; display: flex; flex-direction: column; gap: 4px">
-<span style="font-weight: 600">{{r.name}}</span>
-<span style="color: #6B6960; font-size: 12px">{{r.meta}}</span>
-</div>
-</sc-for>
-<div style="flex: 1 1 auto"></div>
-<div style="display: flex; flex-direction: column; gap: 8px">
-<span style="min-height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: {{accent}}; color: #FFFFFF; font-weight: 600">New map from template</span>
-<span style="min-height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #8E8B80; font-weight: 600">Open map file</span>
-</div>
-</aside>
-<main style="flex: 1 1 auto; position: relative; background: #FBFAF7; overflow: hidden">
-<svg viewBox="0 0 1020 690" width="1020" height="690" role="img" aria-label="Map canvas with four lines" style="display: block">
+<svg viewBox="0 0 1280 684" width="1280" height="684" role="img" aria-label="Map canvas" style="display: block; flex: 1 1 auto">
 <defs><pattern id="g" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#D9D6CC"></circle></pattern></defs>
-<rect width="1020" height="690" fill="url(#g)"></rect>
-<path d="M60 430 L960 430" stroke="#3E8EDE" stroke-width="10" fill="none" stroke-linecap="round"></path>
-<path d="M500 80 L500 330 L548 378 L548 430 L452 430 L452 378 L470 360" stroke="#F8C300" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
-<path d="M120 610 L330 610 L420 520 L960 520" stroke="#2E8B57" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
-<path d="M760 150 L760 430 L860 530 L860 640" stroke="#8B4AA0" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="14 10"></path>
+<rect width="1280" height="684" fill="url(#g)"></rect>
+<path d="M120 420 L1180 420" stroke="#3E8EDE" stroke-width="10" fill="none" stroke-linecap="round"></path>
+<path d="M640 70 L640 320 L688 368 L688 420 L592 420 L592 368 L610 350" stroke="#F8C300" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M140 600 L420 600 L520 500 L1180 500" stroke="#2E8B57" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M940 110 L940 420 L1040 520 L1040 640" stroke="#8B4AA0" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="14 10"></path>
 <g fill="#FFFFFF" stroke="#16181D" stroke-width="3">
-<circle cx="500" cy="430" r="11"></circle><circle cx="760" cy="430" r="11"></circle><circle cx="420" cy="520" r="8"></circle><circle cx="500" cy="200" r="8"></circle><circle cx="240" cy="430" r="8"></circle><circle cx="860" cy="600" r="8"></circle>
+<circle cx="640" cy="420" r="11"></circle><circle cx="940" cy="420" r="11"></circle><circle cx="520" cy="500" r="8"></circle><circle cx="640" cy="190" r="8"></circle><circle cx="340" cy="420" r="8"></circle><circle cx="1040" cy="600" r="8"></circle><circle cx="940" cy="200" r="8"></circle>
 </g>
 <g font-family="Inter, Segoe UI, sans-serif" font-size="15" fill="#16181D" font-weight="600">
-<text x="514" y="458">Union</text><text x="774" y="418">Bloor-Yonge</text><text x="432" y="548">Exhibition</text><text x="516" y="205">St Clair</text>
+<text x="654" y="448">Union</text><text x="954" y="408">Bloor-Yonge</text><text x="532" y="528">Exhibition</text><text x="656" y="195">St Clair</text><text x="300" y="404">Spadina</text><text x="1054" y="605">Leaside</text><text x="954" y="205">Davisville</text>
 </g>
 </svg>
-<div style="position: absolute; right: 24px; top: 24px; width: 300px; background: #FFFFFF; border-radius: 12px; box-shadow: 0 12px 32px rgba(22,24,29,.16); padding: 16px; display: flex; flex-direction: column; gap: 12px">
-<div style="font-weight: 700; font-size: 15px">Save map as</div>
-<div style="display: flex; flex-direction: column; gap: 4px"><span style="color: #6B6960; font-size: 12px">File name</span><span style="min-height: 34px; display: flex; align-items: center; padding: 0 10px; border: 2px solid {{accent}}; border-radius: 8px">union-loop.json</span></div>
-<div style="display: flex; flex-direction: column; gap: 4px"><span style="color: #6B6960; font-size: 12px">Format</span><span style="min-height: 34px; display: flex; align-items: center; padding: 0 10px; border: 1px solid #8E8B80; border-radius: 8px">Map file (JSON)</span></div>
-<div style="display: flex; gap: 8px; justify-content: flex-end">
-<span style="min-height: 34px; display: flex; align-items: center; padding: 0 14px; border-radius: 8px; border: 1px solid #8E8B80; font-weight: 600">Cancel</span>
-<span style="min-height: 34px; display: flex; align-items: center; padding: 0 14px; border-radius: 8px; background: {{accent}}; color: #FFFFFF; font-weight: 600">Save</span>
+<div style="position: absolute; left: 4px; top: 60px; width: 268px; background: #FFFFFF; border: 1px solid #DDDAD2; border-radius: 8px; box-shadow: 0 10px 28px rgba(22,24,29,.18); padding: 4px; display: flex; flex-direction: column">
+<sc-for list="{{file}}" as="f" hint-placeholder-count="8">
+<div style="display: flex; align-items: center; gap: 12px; min-height: 30px; padding: 0 12px; border-radius: 4px; background: {{f.bg}}; border-top: {{f.rule}}"><span style="flex: 1 1 auto">{{f.name}}</span><span style="color: #6B6960; font-size: 12px">{{f.key}}</span></div>
+</sc-for>
 </div>
-</div>
-</main>
-</div>
-<div style="height: 28px; display: flex; align-items: center; gap: 16px; padding: 0 12px; background: #FFFFFF; border-top: 1px solid #DDDAD2; color: #6B6960; font-size: 12px">
-<span>171 stations, 16 lines</span><span>Saved 2 minutes ago</span><div style="flex: 1 1 auto"></div><span>Version 1.1.0</span>
+<div style="position: absolute; left: 270px; top: 156px; width: 300px; background: #FFFFFF; border: 1px solid #DDDAD2; border-radius: 8px; box-shadow: 0 10px 28px rgba(22,24,29,.18); padding: 4px; display: flex; flex-direction: column">
+<sc-for list="{{recent}}" as="r" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: 4px; background: {{r.bg}}"><span style="font-weight: 600">{{r.name}}</span><span style="color: #6B6960; font-size: 12px">{{r.dir}}</span></div>
+</sc-for>
+<div style="border-top: 1px solid #DDDAD2; margin-top: 4px; padding: 8px 12px">Clear recent maps</div>
 </div>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0B6E4F","#16181D"]},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
   renderVals() {
+    const accent = this.props.accent ?? '#1F5FBF';
+    const plain = { border: '#8E8B80', bg: '#FFFFFF', ink: '#16181D' };
     return {
-      accent: this.props.accent ?? '#1F5FBF',
-      menus: ['File', 'Edit', 'View', 'Guides', 'Help'],
+      accent,
+      menus: [{ name: 'File', bg: '#E7EEF9' }, { name: 'Edit', bg: 'transparent' }, { name: 'View', bg: 'transparent' }, { name: 'Help', bg: 'transparent' }],
+      tools: [Object.assign({ name: 'Select' }, { border: accent, bg: accent, ink: '#FFFFFF' }), Object.assign({ name: 'Station' }, plain), Object.assign({ name: 'Draw line' }, plain), Object.assign({ name: 'Label' }, plain), Object.assign({ name: 'Erase' }, plain)],
+      file: [
+        { name: 'New map from GTHA template', key: 'Ctrl+N', bg: 'transparent', rule: 'none' },
+        { name: 'New blank map', key: 'Ctrl+Shift+N', bg: 'transparent', rule: 'none' },
+        { name: 'Open map...', key: 'Ctrl+O', bg: 'transparent', rule: '1px solid #DDDAD2' },
+        { name: 'Open recent', key: '▸', bg: '#E7EEF9', rule: 'none' },
+        { name: 'Save', key: 'Ctrl+S', bg: 'transparent', rule: '1px solid #DDDAD2' },
+        { name: 'Save as...', key: 'Ctrl+Shift+S', bg: 'transparent', rule: 'none' },
+        { name: 'Export SVG...', key: '', bg: 'transparent', rule: '1px solid #DDDAD2' },
+        { name: 'Export PNG...', key: '', bg: 'transparent', rule: 'none' },
+        { name: 'Exit', key: '', bg: 'transparent', rule: '1px solid #DDDAD2' }
+      ],
       recent: [
-        { name: 'union-loop.json', meta: 'Edited today', bg: '#EEF3FB' },
-        { name: 'hamilton-lrt.json', meta: 'Edited yesterday', bg: 'transparent' },
-        { name: 'gtha-2031.json', meta: 'Edited last week', bg: 'transparent' }
+        { name: 'union-loop.json', dir: 'Documents\\Maps', bg: '#E7EEF9' },
+        { name: 'hamilton-lrt.json', dir: 'Documents\\Maps', bg: 'transparent' },
+        { name: 'gtha-2031.json', dir: 'Desktop', bg: 'transparent' }
       ]
     };
   }

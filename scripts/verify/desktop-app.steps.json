@@ -1,0 +1,10 @@
+[
+ {"wait": 2500},
+ {"name": "loaded", "js": "({url: location.href, stations: Object.keys(GMMC.getMap().stations).length, lines: GMMC.getMap().lines.length, title: document.title, rx: !!document.getElementById('rxBuilder')})"},
+ {"name": "load", "js": "GMMC.loadJson(JSON.stringify({version:1,title:'Desk test',stations:{a:{name:'Alpha',x:0,y:0},b:{name:'Beta',x:4,y:2}},lines:[{id:'x',name:'X',color:'#FF0000',path:['a','b']}],labels:[]}))"},
+ {"name": "after", "js": "({title: GMMC.getMap().title, n: Object.keys(GMMC.getMap().stations).length})"},
+ {"name": "new", "js": "(GMMC.newMap('gtha'), Object.keys(GMMC.getMap().stations).length)"},
+ {"name": "docs", "js": "fetch('../docs/index.html').then(r => r.status + ' ' + r.headers.get('content-type'))"},
+ {"name": "site", "js": "fetch('../index.html').then(r => r.status)"},
+ {"name": "offline", "js": "[...document.querySelectorAll('script[src],link[href]')].map(e => e.src || e.href).filter(u => !u.startsWith('gmmc://'))"}
+]

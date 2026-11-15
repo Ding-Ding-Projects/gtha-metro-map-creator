@@ -25,6 +25,8 @@
       <li><a href="#export">Saving, import and export</a></li>
       <li><a href="#settings">Settings</a></li>
       <li><a href="#keys">Keyboard shortcuts</a></li>
+      <li><a href="#desktop">Desktop app</a></li>
+      <li><a href="#server">Host it on your network</a></li>
       <li><a href="#format">Map file format</a></li>
     </ul>
   </nav>
@@ -51,7 +53,18 @@
       <p>Free text labels come from the Label tool. Edit their text and size in the Inspector.</p></section>
     <section id="search"><h2>Finding stations</h2>
       <p>Type in Find station. Plain text mode matches any part of a name. Regular expression mode uses JavaScript Unicode patterns, for example <code>^St </code> or <code>(Park|Square)$</code>. Ignore case is on by default. Invalid patterns show the error. Click a result to select and centre it.</p>
-      <p>The pattern search is a plain field with mode and case options, not a full visual pattern builder.</p></section>
+      <h3>Regex builder</h3>
+      <p>Open <strong>Regex builder</strong> under the search box. It edits the same search field, so the search and the builder always agree.</p>
+      <ul>
+        <li><strong>Tokens:</strong> buttons insert start and end anchors, character classes such as <code>\d</code> and <code>\p{L}</code>, sets, groups, named groups, alternation, quantifiers, lookahead and lookbehind, and back references. With text selected, a group token wraps the selection.</li>
+        <li><strong>Escape as literal text</strong> turns what you typed into a pattern that matches it exactly.</li>
+        <li><strong>Flags:</strong> Ignore case, Multiline (<code>m</code>) and Dot matches newline (<code>s</code>). Unicode mode is always on. The full pattern with flags is shown next to the engine name.</li>
+        <li><strong>What the pattern means</strong> explains each part in plain words.</li>
+        <li><strong>Test text</strong> highlights matches. It uses the station names on the current map until you type your own text, up to 5000 characters, and stops counting at 500 matches.</li>
+        <li><strong>Groups</strong> lists numbered and named groups from the first match. <strong>Replace with</strong> previews a replacement using <code>$1</code> or <code>$&lt;name&gt;</code>.</li>
+        <li><strong>Pattern library:</strong> start from a built-in pattern, or name and save your own (up to 30, kept in this browser).</li>
+      </ul>
+      <p>The engine is the JavaScript regular expression engine in your browser. Other engines' syntax, such as possessive quantifiers or atomic groups, is not available, and patterns over 200 characters are refused.</p></section>
     <section id="check"><h2>Map check</h2>
       <p>The Map check panel updates on every change and lists stations that no line serves, lines with fewer than two stops, names used more than once, and stations sharing one position. Click an item to jump to it.</p></section>
     <section id="export"><h2>Saving, import and export</h2>
@@ -61,6 +74,30 @@
       <p>Language, theme, label size, grid visibility, snapping, export legend and sound effects are saved in this browser. Sound effects are short tones for actions; turn them off here. Reset settings returns everything to defaults. Reset all labels to automatic clears pinned label positions.</p></section>
     <section id="keys"><h2>Keyboard shortcuts</h2>
       <p><kbd>V</kbd> Select, <kbd>S</kbd> Station, <kbd>L</kbd> Draw line, <kbd>T</kbd> Label, <kbd>E</kbd> Erase, <kbd>F</kbd> Fit, <kbd>Delete</kbd> delete selection, <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo, <kbd>Ctrl</kbd>+<kbd>Y</kbd> or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> redo, arrows nudge, <kbd>Esc</kbd> clears selection.</p></section>
+    <section id="desktop"><h2>Desktop app</h2>
+      <p>Download <code>GTHA-Metro-Map-Creator-&lt;version&gt;-portable.exe</code> from the project's GitHub releases and run it. It is one file with nothing to install, and it works with no internet connection: the editor, this documentation and the project page are all inside it.</p>
+      <ul>
+        <li><strong>File:</strong> New map from the GTHA template (Ctrl+N), New blank map, Open map (Ctrl+O), Open recent, Save (Ctrl+S), Save as, Export SVG and Export PNG. Exports ask where to save.</li>
+        <li><strong>Unsaved changes:</strong> closing or starting a new map asks whether to save a map that came from a file. Your work is also kept automatically inside the app.</li>
+        <li><strong>View:</strong> Editor (Ctrl+1), Guides and documentation (Ctrl+2) and Project home (Ctrl+3), plus zoom and full screen.</li>
+        <li>Opening a <code>.json</code> map file with the app loads it.</li>
+      </ul>
+      <p>The app is not code signed, so Windows SmartScreen may warn the first time you run it. Choose More info, then Run anyway, if you trust the download.</p></section>
+    <section id="server"><h2>Host it on your network</h2>
+      <p>You can run the editor as a small web server so other devices on your home network can open it. It needs Docker Desktop.</p>
+      <h3>With the setup wizard</h3>
+      <p>Download <code>GTHA-Metro-Map-Creator-Server-Setup-&lt;version&gt;-portable.exe</code> from the releases and run it. It walks through five steps: check Docker, choose a port, download the image, start the server, and open it on your network. When it finishes it shows the network address, such as <code>http://192.168.1.20:8080/</code>, with Open and Copy buttons. It remembers your choices if you close it and run it again, and it can stop the server.</p>
+      <h3>With host.bat</h3>
+      <p>From a copy of the project, run <code>host.bat</code> and choose a mode, or pass it directly:</p>
+      <ul>
+        <li><code>host.bat --detached</code> downloads the image, starts the server in the background, waits for the health check and prints the network address.</li>
+        <li><code>host.bat --logs</code> does the same, then shows a menu: F follows logs, T shows the last 50 lines, S shows status, R restarts, X stops the server and Q leaves with the server still running.</li>
+        <li><code>host.bat --stop</code> stops the server.</li>
+      </ul>
+      <p>Set <code>GMMC_PORT</code> to use another port (default 8080) and <code>GMMC_TAG</code> to pin an image version (default <code>latest</code>).</p>
+      <h3>With Docker Compose</h3>
+      <p>The image is <code>ghcr.io/ding-ding-projects/gtha-metro-map-creator</code>. Run <code>docker compose up -d</code> next to the project's <code>compose.yaml</code>. The container runs nginx as a non-root user on port 8080 with a read-only file system, and answers <code>/healthz</code> for health checks.</p>
+      <p>If other devices cannot connect, allow the port through Windows Firewall. The server has no sign-in, so only run it on a network you trust.</p></section>
     <section id="format"><h2>Map file format</h2>
       <p>A map is JSON with <code>version: 1</code>, <code>title</code>, <code>stations</code> (an object keyed by id, each with <code>name</code>, <code>nameZh</code>, <code>x</code>, <code>y</code>, <code>label</code>, <code>interchange</code>), <code>lines</code> (each with <code>name</code>, <code>color</code>, <code>width</code>, <code>style</code>, <code>visible</code>, <code>path</code>, <code>bends</code>), and <code>labels</code>. A path entry is a station id or a bend point written <code>@x,y</code>. <code>bends</code> maps a segment index to <code>late</code> for straight first.</p></section>
   </div>

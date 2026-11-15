@@ -28,7 +28,11 @@ on a middle segment it splits the line.
 ## Search and map check
 
 Search matches English and Chinese names in plain text or as a JavaScript Unicode regular
-expression (patterns over 200 characters are refused). Map check lists unserved stations,
+expression (patterns over 200 characters are refused). The regex builder
+(`site/app/regex-builder.js`) edits the same field and mode: token buttons, escape as literal,
+flags (`i` shared with Ignore case, `m` on by default, `s`), a plain-language explanation of each
+token, test text with highlighted matches (5000 characters, 500 matches), the first match's
+groups, a replacement preview and a pattern library with saved patterns in `gmmc.regex.v1`. Map check lists unserved stations,
 short lines, duplicate names and stacked stations.
 
 ## History and storage

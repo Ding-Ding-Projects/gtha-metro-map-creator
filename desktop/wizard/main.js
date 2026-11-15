@@ -41,9 +41,11 @@ function lanAddresses() {
   for (const [name, addrs] of Object.entries(os.networkInterfaces())) {
     for (const a of addrs || []) if (a.family === 'IPv4' && !a.internal && !a.address.startsWith('169.254.')) list.push({ name, address: a.address });
   }
+  // Prefer real adapters; virtual ones (Hyper-V, WSL, Docker, VirtualBox, VMware) are not reachable from other devices.
+  const virtual = (x) => /vEthernet|WSL|Docker|VirtualBox|VMware|Hyper-V|Loopback/i.test(x.name) || x.address.startsWith('192.168.56.');
   const rank = (ip) => (ip.startsWith('192.168.') ? 0 : ip.startsWith('10.') ? 1 : /^172\.(1[6-9]|2\d|3[01])\./.test(ip) ? 2 : 3);
-  return list.filter((x) => !/vEthernet|WSL|Docker|VirtualBox|VMware/i.test(x.name)).concat(list.filter((x) => /vEthernet|WSL|Docker|VirtualBox|VMware/i.test(x.name)))
-    .sort((a, b) => rank(a.address) - rank(b.address)).map((x) => x.address).filter((v, i, arr) => arr.indexOf(v) === i);
+  const real = list.filter((x) => !virtual(x));
+  return (real.length ? real : list).sort((a, b) => rank(a.address) - rank(b.address)).map((x) => x.address).filter((v, i, arr) => arr.indexOf(v) === i);
 }
 function get(url) {
   return new Promise((resolve) => {
@@ -61,10 +63,17 @@ ipcMain.handle('check', async () => {
 });
 ipcMain.handle('port-free', (_e, p) => new Promise((resolve) => {
   const n = portNum(p); if (!n) { resolve({ ok: false, reason: 'range' }); return; }
-  const s = net.createServer();
-  s.once('error', () => resolve({ ok: false, reason: 'busy' }));
-  s.once('listening', () => s.close(() => resolve({ ok: true })));
-  s.listen(n, '0.0.0.0');
+  // A test bind is not enough on Windows, where Docker's port forwarding may not block it,
+  // so first see whether anything already answers on the port.
+  const probe = net.connect({ host: '127.0.0.1', port: n });
+  const done = (busy) => { probe.destroy(); if (busy) { resolve({ ok: false, reason: 'busy' }); return; }
+    const s = net.createServer();
+    s.once('error', () => resolve({ ok: false, reason: 'busy' }));
+    s.once('listening', () => s.close(() => resolve({ ok: true })));
+    s.listen(n, '0.0.0.0'); };
+  probe.setTimeout(700, () => done(false));
+  probe.once('connect', () => done(true));
+  probe.once('error', () => done(false));
 }));
 ipcMain.handle('existing', async () => {
   const r = await run('docker', ['ps', '--filter', 'label=com.docker.compose.project=gtha-metro-map-creator', '--format', '{{.Ports}}']);

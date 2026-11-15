@@ -1,12 +1,22 @@
 @echo off
 setlocal
-rem Builds the site, then packages it as a portable offline ZIP in dist\.
-rem This is a static web app; there is no Windows installer package yet.
+rem Builds every release file into dist\:
+rem   dist\gtha-metro-map-creator-site.zip                         offline copy of the site
+rem   dist\desktop-app\GTHA-Metro-Map-Creator-<v>-portable.exe      desktop app (one file)
+rem   dist\desktop-wizard\GTHA-Metro-Map-Creator-Server-Setup-<v>-portable.exe  server setup wizard
+rem Pass /s to skip the pause at the end.
 cd /d "%~dp0"
 call build.bat /s
 if errorlevel 1 exit /b 1
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path 'dist\site\*' -DestinationPath 'dist\gtha-metro-map-creator-site.zip' -Force"
-if errorlevel 1 ( echo Packaging failed. & exit /b 1 )
-echo Packaged dist\gtha-metro-map-creator-site.zip
+if errorlevel 1 ( echo Packaging the site failed. & exit /b 1 )
+pushd desktop
+if exist package-lock.json ( call npm ci --no-audit --no-fund ) else ( call npm install --no-audit --no-fund )
+if errorlevel 1 ( popd & echo Installing desktop build tools failed. & exit /b 1 )
+call npm run dist
+if errorlevel 1 ( popd & echo Building the desktop executables failed. & exit /b 1 )
+popd
+echo Packaged:
+dir /b dist\gtha-metro-map-creator-site.zip dist\desktop-app\*.exe dist\desktop-wizard\*.exe
 if not "%~1"=="/s" pause
 exit /b 0
