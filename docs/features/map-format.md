@@ -25,4 +25,6 @@ references to missing stations, clamps lengths and numbers, and rejects files ov
 ## GTHA template
 
 `site/app/gtha-template.js`. Schematic coordinates, simplified station lists, approximate
-colours. `scripts/build.mjs` fails if any path reference is missing or a station is on no line.
+colours, and unofficial Traditional Chinese names for every station and line (`ZH` and `LINE_ZH`).
+`scripts/build.mjs` fails if any path reference is missing, a station is on no line, or a station
+or line has no Chinese name.

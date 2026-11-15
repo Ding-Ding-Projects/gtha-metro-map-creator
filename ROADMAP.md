@@ -29,16 +29,17 @@
 - [x] Design artboards for the desktop app and the wizard
 - [x] Release workflow publishing both executables and the offline site
 - [x] Local verification script that drives the built executables hidden
+- [x] Unofficial Traditional Chinese names for every template station and line (1.1.1)
+- [x] Application icon for both executables (1.1.1)
+- [x] File menu verification: save as, recent, open, unsaved-changes prompt (1.1.1)
 
 ## Phase 3: next
 
-- [ ] Cantonese station names for the template (needs a verified source)
 - [ ] Shared bend setting across all lines on a bundled segment
 - [ ] Box selection and copy and paste
 - [ ] Geographic background layer and import from GTFS
 - [ ] Touch gestures for pinch zoom
 - [ ] ~~Automated browser tests in CI~~ Not doing: CI deliberately runs no tests here; browser checks run locally with `scripts/verify/`
 - [ ] Search across the documentation articles with the same regex builder
-- [ ] Application icon for the executables
 - [ ] Sign-in option for the hosted server
 - [ ] Per-line station markers (ticks) style option

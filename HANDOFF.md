@@ -2,7 +2,7 @@
 
 ## State (2026-11-15)
 
-Version 1.1.0: editor with regex builder, container hosting, portable desktop app and portable
+Version 1.1.1: Chinese template names, app icon and verified File menu on top of 1.1.0's editor with regex builder, container hosting, portable desktop app and portable
 server setup wizard, plus the project site and documentation.
 
 ### Verified locally
@@ -46,9 +46,19 @@ server setup wizard, plus the project site and documentation.
   `docs/wiki/pending/` with publishing steps.
 - GitHub Projects: the CLI token has no `project` scope, so no Project was created.
 
+### 1.1.1 (verified locally)
+
+- Desktop File menu through the real menu items in the built executable: Save as wrote a
+  171-station file and added it to Open recent; Open loaded a file from disk; an edit made the
+  map dirty; New blank map with Cancel kept the edit; with Don't save it replaced the map.
+  Dialog answers came from the hidden test path, so the operating system's own dialog windows
+  were not displayed.
+- Cantonese mode in the built app shows Chinese station labels, line names and search results.
+- The executable carries the app icon.
+
 ### Not yet verified
 
-- Native open, save and unsaved-changes dialogs in the desktop app (they need a visible window).
+- The operating system's own file dialog windows (only their answers were simulated).
 - The executables on a computer without Docker, and on a second device opening the LAN address.
 - Windows SmartScreen behaviour for the unsigned executables.
 - Interactive `host.bat` menu mode typed by hand, and Ctrl+C out of follow mode.
@@ -59,7 +69,6 @@ server setup wizard, plus the project site and documentation.
 - Template station names are English only (no verified Cantonese source yet).
 - The regex builder uses the browser's JavaScript engine; other engines' syntax is not offered.
 - The hosted server has no sign-in.
-- The executables use the default Electron icon.
 
 ## Next steps
 

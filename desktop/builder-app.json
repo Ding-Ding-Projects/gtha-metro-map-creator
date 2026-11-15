@@ -1,9 +1,27 @@
 {
   "appId": "io.github.dingdingprojects.gthametromapcreator",
   "productName": "GTHA Metro Map Creator",
-  "directories": { "output": "../dist/desktop-app" },
-  "files": ["app/**", "content/**", "package.json"],
-  "extraMetadata": { "main": "app/main.js" },
-  "win": { "target": ["portable"], "artifactName": "GTHA-Metro-Map-Creator-${version}-portable.exe", "signAndEditExecutable": false },
-  "portable": { "unicode": true }
+  "directories": {
+    "output": "../dist/desktop-app",
+    "buildResources": "build"
+  },
+  "files": [
+    "app/**",
+    "content/**",
+    "package.json"
+  ],
+  "extraMetadata": {
+    "main": "app/main.js"
+  },
+  "win": {
+    "target": [
+      "portable"
+    ],
+    "artifactName": "GTHA-Metro-Map-Creator-${version}-portable.exe",
+    "signAndEditExecutable": true,
+    "icon": "build/icon.png"
+  },
+  "portable": {
+    "unicode": true
+  }
 }

@@ -34,6 +34,8 @@ for (const l of m.lines) {
 }
 const used = new Set(m.lines.flatMap((l) => l.path));
 for (const id of ids) if (!used.has(id)) errors.push(`template: station ${id} is on no line`);
+for (const s of Object.values(m.stations)) if (!s.nameZh) errors.push(`template: station ${s.id} has no Chinese name`);
+for (const l of m.lines) if (!l.nameZh) errors.push(`template: line ${l.id} has no Chinese name`);
 
 // Local links in HTML
 for (const f of files.filter((f) => extname(f) === '.html')) {

@@ -1,7 +1,8 @@
 # Desktop app and server setup wizard
 
 Both are Electron apps in `desktop/`, packaged by electron-builder as single portable `.exe`
-files (no installer, no folder beside them). They are not code signed.
+files (no installer, no folder beside them), with the app icon from `desktop/build/icon.png`.
+They are not code signed.
 
 ## Desktop app (`desktop/app/main.js`)
 
@@ -44,6 +45,12 @@ then returns to the port step with a welcome-back note.
 `scripts/verify/drive-exe.mjs` launches a built executable with `GMMC_HIDDEN=1` (window never
 shown), drives it over a loopback DevTools port with the steps in `scripts/verify/*.steps.json`,
 then ends its process tree. It refuses to run if more than one page is open.
+
+`scripts/verify/desktop-files.mjs` checks the real File menu in a built app: Save as, Open recent,
+Open, and the unsaved-changes prompt (Cancel, then Don't save). With `GMMC_HIDDEN=1` the app
+takes dialog answers from `GMMC_TEST_SAVE`, `GMMC_TEST_OPEN` and `GMMC_TEST_CONFIRM`, and its
+user data folder from `GMMC_TEST_USERDATA`; without `GMMC_HIDDEN=1` these are ignored and real
+dialogs are shown. It drives the main process through a loopback inspector port.
 
 ## Failure modes
 

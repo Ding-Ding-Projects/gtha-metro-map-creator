@@ -24,6 +24,15 @@ function addRecent(file) {
   writeState(s); app.addRecentDocument(file); buildMenu();
 }
 
+// Hidden verification only (GMMC_HIDDEN=1): answer file dialogs from environment variables so a
+// script can exercise open, save and the unsaved-changes prompt without a visible dialog.
+const TEST = process.env.GMMC_HIDDEN === '1' ? { save: process.env.GMMC_TEST_SAVE, open: process.env.GMMC_TEST_OPEN, confirm: (process.env.GMMC_TEST_CONFIRM || '').split(',').filter(Boolean) } : null;
+const ask = {
+  open: (opts) => (TEST && TEST.open ? Promise.resolve({ canceled: false, filePaths: [TEST.open] }) : dialog.showOpenDialog(win, opts)),
+  save: (opts) => (TEST && TEST.save ? Promise.resolve({ canceled: false, filePath: TEST.save }) : dialog.showSaveDialog(win, opts)),
+  box: (opts) => (TEST && opts.buttons && TEST.confirm.length ? Promise.resolve({ response: Number(TEST.confirm.shift()) }) : TEST && !opts.buttons ? Promise.resolve({ response: 0 }) : dialog.showMessageBox(win, opts))
+};
+
 const page = (js) => (win ? win.webContents.executeJavaScript(js, true) : Promise.resolve(null));
 const mapJson = () => page('JSON.stringify(window.GMMC.getMap(), null, 2)');
 
@@ -39,7 +48,7 @@ async function isDirty() {
 
 async function openFile(file) {
   if (!file) {
-    const r = await dialog.showOpenDialog(win, { title: 'Open map', properties: ['openFile'], filters: [{ name: 'Map file', extensions: ['json'] }] });
+    const r = await ask.open({ title: 'Open map', properties: ['openFile'], filters: [{ name: 'Map file', extensions: ['json'] }] });
     if (r.canceled || !r.filePaths[0]) return;
     file = r.filePaths[0];
   }
@@ -51,14 +60,14 @@ async function openFile(file) {
     if (!ok) throw new Error('That file is not a valid map.');
     currentFile = file; savedSnapshot = await mapJson(); setTitle(); addRecent(file);
   } catch (e) {
-    dialog.showMessageBox(win, { type: 'error', title: 'Could not open map', message: 'Could not open ' + path.basename(file), detail: String(e.message || e) });
+    ask.box({ type: 'error', title: 'Could not open map', message: 'Could not open ' + path.basename(file), detail: String(e.message || e) });
     const s = readState(); s.recent = (s.recent || []).filter((f) => f !== file); writeState(s); buildMenu();
   }
 }
 async function saveFile(saveAs) {
   let file = currentFile;
   if (!file || saveAs) {
-    const r = await dialog.showSaveDialog(win, { title: 'Save map as', defaultPath: file || 'gtha-map.json', filters: [{ name: 'Map file', extensions: ['json'] }] });
+    const r = await ask.save({ title: 'Save map as', defaultPath: file || 'gtha-map.json', filters: [{ name: 'Map file', extensions: ['json'] }] });
     if (r.canceled || !r.filePath) return false;
     file = r.filePath;
   }
@@ -68,7 +77,7 @@ async function saveFile(saveAs) {
     currentFile = file; savedSnapshot = json; setTitle(); addRecent(file);
     return true;
   } catch (e) {
-    dialog.showMessageBox(win, { type: 'error', title: 'Could not save map', message: 'Could not save ' + path.basename(file), detail: String(e.message || e) });
+    ask.box({ type: 'error', title: 'Could not save map', message: 'Could not save ' + path.basename(file), detail: String(e.message || e) });
     return false;
   }
 }
@@ -78,7 +87,7 @@ async function newMap(kind) {
   currentFile = null; savedSnapshot = await mapJson(); setTitle();
 }
 async function confirmDiscard() {
-  const r = await dialog.showMessageBox(win, { type: 'question', buttons: ['Save', "Don't save", 'Cancel'], defaultId: 0, cancelId: 2, title: 'Unsaved changes', message: 'Save changes to ' + (currentFile ? path.basename(currentFile) : 'this map') + '?', detail: 'Your work is also kept automatically inside the app, but it is not in a file yet.' });
+  const r = await ask.box({ type: 'question', buttons: ['Save', "Don't save", 'Cancel'], defaultId: 0, cancelId: 2, title: 'Unsaved changes', message: 'Save changes to ' + (currentFile ? path.basename(currentFile) : 'this map') + '?', detail: 'Your work is also kept automatically inside the app, but it is not in a file yet.' });
   if (r.response === 0) return (await saveFile(false)) ? 'saved' : 'cancel';
   return r.response === 1 ? 'discard' : 'cancel';
 }
@@ -86,6 +95,7 @@ const go = (rel) => win && win.loadURL(`${SCHEME}://local/${rel}`);
 
 function buildMenu() {
   const recent = (readState().recent || []).filter((f) => fs.existsSync(f));
+  if (TEST) global.__gmmcTest = { openFile, saveFile, newMap, isDirty, state: () => ({ currentFile, savedSnapshot: savedSnapshot !== null, recent: readState().recent }) };
   const tpl = [
     { label: 'File', submenu: [
       { label: 'New map from GTHA template', accelerator: 'CmdOrCtrl+N', click: () => newMap('gtha') },
@@ -146,6 +156,7 @@ function createWindow() {
   go('app/index.html');
 }
 
+if (TEST && process.env.GMMC_TEST_USERDATA) app.setPath('userData', process.env.GMMC_TEST_USERDATA);
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', (_e, argv) => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); const f = argv.find((a) => a.toLowerCase().endsWith('.json')); if (f) openFile(f); } });

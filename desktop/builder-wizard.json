@@ -1,9 +1,28 @@
 {
   "appId": "io.github.dingdingprojects.gthametromapcreator.serversetup",
   "productName": "GTHA Metro Map Creator Server Setup",
-  "directories": { "output": "../dist/desktop-wizard" },
-  "files": ["wizard/**", "content/compose.yaml", "package.json"],
-  "extraMetadata": { "main": "wizard/main.js", "name": "gtha-metro-map-creator-server-setup" },
-  "win": { "target": ["portable"], "artifactName": "GTHA-Metro-Map-Creator-Server-Setup-${version}-portable.exe", "signAndEditExecutable": false },
-  "portable": { "unicode": true }
+  "directories": {
+    "output": "../dist/desktop-wizard",
+    "buildResources": "build"
+  },
+  "files": [
+    "wizard/**",
+    "content/compose.yaml",
+    "package.json"
+  ],
+  "extraMetadata": {
+    "main": "wizard/main.js",
+    "name": "gtha-metro-map-creator-server-setup"
+  },
+  "win": {
+    "target": [
+      "portable"
+    ],
+    "artifactName": "GTHA-Metro-Map-Creator-Server-Setup-${version}-portable.exe",
+    "signAndEditExecutable": true,
+    "icon": "build/icon.png"
+  },
+  "portable": {
+    "unicode": true
+  }
 }

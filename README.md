@@ -30,7 +30,8 @@ It runs entirely in the browser, has no dependencies, and stores your work local
 - Map check: unserved stations, short lines, duplicate names, stacked stations
 - Undo and redo (200 steps), autosave in local storage
 - Export SVG with title and legend, PNG at up to 2x, and JSON; import JSON by menu or drag and drop
-- English, Cantonese and bilingual interface and station names
+- English, Cantonese and bilingual interface and station names; the template includes unofficial
+  Traditional Chinese names for every station and line
 - Light, dark and system themes; first-run setup wizard; optional sound effects; keyboard shortcuts
 - Portable Windows desktop app: works offline, native open and save, recent maps
 - Docker image, Compose file, `host.bat` (detached or interactive log view) and a portable server
