@@ -100,6 +100,7 @@ Captured from the 1.6.0 and 1.7.0 builds on 16 November 2026: the editor and GTF
   setup wizard that prints the address other devices on your network can open
 - Per-line station markers, one bend for shared track, and fewer crossings in auto-schematic (1.7)
 - Documentation search with the regex builder (1.7)
+- Password sign-in on the appliance from a small config disk or a file on the Raspberry Pi card (1.8)
 - Optional password sign-in for the hosted server (off by default; `host.bat --password`, the wizard and the deploy app)
 - The appliance images read a password hash from a small configuration disk or a file on the Raspberry Pi boot partition, so a virtual machine or a drive can require a password too (see [the appliance guide](docs/features/appliance.md#password-sign-in))
 

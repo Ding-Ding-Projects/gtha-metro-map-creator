@@ -1,6 +1,10 @@
 # Handoff
 
-## Appliance password sign-in (merged to main, not yet released)
+## 1.8.0 (2026-11-16): appliance password sign-in
+
+Proven in CI (appliance check run 43930391800 at 2664fc9): six boot tests passed, covering no password,
+a FAT config disk, the ISO config disk the deploy app writes, an invalid setting (editor refused,
+nothing secret on the console), and on the Raspberry Pi virt twin no password and a boot-partition file.
 
 The appliance reads an optional password hash at boot (`appliance/skel/usr/local/sbin/gmmc-signin`, called by the
 `gmmc-app` service) from a read-only disk labelled `GMMCCONF` (FAT or ISO 9660, file `password-hash`) or a
