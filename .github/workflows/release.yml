@@ -1,5 +1,15 @@
 name: Release
 
+# Release flow for a v* tag:
+#   image      waits (bounded) for the container image of that tag and records its digest
+#   release    builds the Windows executables, the site zip and the hosting bundle, and creates
+#              the normal GitHub release with SHA256SUMS.txt
+#   appliance  builds the appliance disk images from that exact image digest, boot-tests them,
+#              then adds them and their hashes to the same release
+# Manual runs: choose an existing tag. "appliance_only" skips the Windows job (the release must
+# already exist when publishing), and turning "publish" off keeps the appliance outputs as
+# workflow artifacts only.
+
 on:
   push:
     tags: ['v*']
@@ -8,33 +18,192 @@ on:
       tag:
         description: Existing tag to release, for example v1.1.0
         required: true
+      appliance_only:
+        description: Only build and test the appliance images (skip the Windows build)
+        type: boolean
+        default: false
+      publish:
+        description: Upload the appliance images to the release
+        type: boolean
+        default: true
 
 permissions:
   contents: write
+  packages: read
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  IMAGE: ghcr.io/ding-ding-projects/gtha-metro-map-creator
 
 jobs:
+  image:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.wait.outputs.version }}
+      digest: ${{ steps.wait.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Wait for the container image of this tag
+        id: wait
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          commit="$(git rev-parse HEAD)"
+          digest=""
+          # The "Container image" workflow publishes this tag; allow up to 40 minutes.
+          for i in $(seq 1 80); do
+            if digest="$(docker buildx imagetools inspect "$IMAGE:$version" --format '{{.Manifest.Digest}}' 2>/dev/null)" && [ -n "$digest" ]; then
+              break
+            fi
+            digest=""
+            echo "Image $IMAGE:$version is not published yet (attempt $i of 80)"
+            sleep 30
+          done
+          [ -n "$digest" ] || { echo "::error::Image $IMAGE:$version did not appear within 40 minutes. Check the Container image workflow for $TAG."; exit 1; }
+          docker pull "$IMAGE@$digest"
+          revision="$(docker image inspect "$IMAGE@$digest" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')"
+          if [ "$revision" != "$commit" ]; then
+            echo "::error::Image $IMAGE:$version was built from $revision, but $TAG points at $commit."
+            exit 1
+          fi
+          echo "Image $IMAGE:$version = $digest (revision $revision)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
   release:
+    needs: image
+    if: ${{ github.event.inputs.appliance_only != 'true' }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          ref: ${{ env.TAG }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Build site and desktop executables
         shell: cmd
         run: build-installer.bat /s
+      - name: Build the hosting bundle
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.image.outputs.version }}
+        run: |
+          node scripts/make-server-bundle.mjs $env:VERSION dist/server-bundle
+          if ($LASTEXITCODE -ne 0) { throw 'Could not build the hosting bundle' }
+          Compress-Archive -Path dist/server-bundle/* -DestinationPath "dist/gtha-metro-map-creator-server-$($env:VERSION).zip" -Force
       - name: Publish a normal release
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          VERSION: ${{ needs.image.outputs.version }}
+          DIGEST: ${{ needs.image.outputs.digest }}
         run: |
-          $files = @('dist/gtha-metro-map-creator-site.zip') + (Get-ChildItem dist/desktop-app/*.exe, dist/desktop-wizard/*.exe, dist/desktop-deploy/*.exe | ForEach-Object FullName)
+          $files = @('dist/gtha-metro-map-creator-site.zip', "dist/gtha-metro-map-creator-server-$($env:VERSION).zip") + (Get-ChildItem dist/desktop-app/*.exe, dist/desktop-wizard/*.exe, dist/desktop-deploy/*.exe | ForEach-Object FullName)
           $hashes = $files | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_ -Algorithm SHA256).Hash.ToLower(), (Split-Path $_ -Leaf) }
-          $hashes | Set-Content dist/SHA256SUMS.txt
+          ($hashes -join "`n") + "`n" | Set-Content -NoNewline -Encoding ascii dist/SHA256SUMS.txt
           $files += 'dist/SHA256SUMS.txt'
-          $notes = "Desktop app, server setup wizard, deploy app and offline site for $env:TAG. The executables are portable and not code signed. Container image: ghcr.io/ding-ding-projects/gtha-metro-map-creator:$($env:TAG.TrimStart('v'))"
+          $lines = @(
+            "Desktop app, server setup wizard, deploy app and offline site for $($env:TAG). The executables are portable and not code signed.",
+            '',
+            '**Host it yourself**',
+            "- Container image: ``$($env:IMAGE):$($env:VERSION)``",
+            "- Image digest: ``$($env:DIGEST)``",
+            "- ``gtha-metro-map-creator-server-$($env:VERSION).zip``: ``compose.yaml`` and ``host.bat`` pinned to this version, with a README. Run ``host.bat --detached``.",
+            '- Appliance disk images (qcow2, vhdx, ova) for virtual machines are attached after they pass a boot test. See docs/features/appliance.md.',
+            '',
+            'Verify downloads with `SHA256SUMS.txt`.'
+          )
+          $notes = $lines -join "`n"
           gh release view $env:TAG *> $null
-          if ($LASTEXITCODE -eq 0) { gh release upload $env:TAG @files --clobber } else { gh release create $env:TAG @files --title "GTHA Metro Map Creator $env:TAG" --notes $notes --verify-tag }
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:TAG @files --clobber
+            gh release edit $env:TAG --notes $notes
+          } else {
+            gh release create $env:TAG @files --title "GTHA Metro Map Creator $env:TAG" --notes $notes --verify-tag
+          }
+
+  appliance:
+    needs: [image, release]
+    # Runs after the release job, or alone when appliance_only skipped it.
+    if: ${{ !cancelled() && needs.image.result == 'success' && (needs.release.result == 'success' || needs.release.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.image.outputs.version }}
+      DIGEST: ${{ needs.image.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qemu-system-x86 qemu-utils rsync e2fsprogs dosfstools fdisk zip xz-utils curl
+      - name: Allow KVM if the runner has it
+        run: |
+          if [ -e /dev/kvm ]; then
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger --name-match=kvm
+          else
+            echo "No /dev/kvm: the boot test will use software emulation (slower)."
+          fi
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch the exact container image
+        run: |
+          set -euo pipefail
+          docker pull "$IMAGE@$DIGEST"
+          docker tag "$IMAGE@$DIGEST" "$IMAGE:$VERSION"
+      - name: Build the appliance images
+        run: sudo appliance/build.sh "$VERSION" "$IMAGE:$VERSION" "$PWD/appliance-out"
+      - name: Boot test
+        run: |
+          sudo chown -R "$USER" appliance-out
+          appliance/boot-test.sh "appliance-out/gtha-metro-map-creator-appliance-$VERSION-x86_64.qcow2" "$VERSION" 600
+      - name: Collect the uploads
+        run: |
+          mkdir -p upload
+          cd appliance-out
+          mv ./*.qcow2.xz ./*.vhdx.zip ./*.ova.zip ../upload/
+          ls -l ../upload
+          for f in ../upload/*; do
+            size=$(stat -c %s "$f")
+            [ "$size" -lt 1800000000 ] || { echo "::error::$f is $size bytes, over the release asset limit"; exit 1; }
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appliance-images
+          path: upload/*
+          retention-days: 14
+          compression-level: 0
+      - name: Add the images and their hashes to the release
+        if: ${{ github.event.inputs.publish != 'false' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" >/dev/null
+          gh release upload "$TAG" upload/* --clobber
+          mkdir -p sums
+          gh release download "$TAG" -p SHA256SUMS.txt -D sums --clobber || : > sums/SHA256SUMS.txt
+          # Keep every other line; replace only this appliance's lines.
+          grep -v 'gtha-metro-map-creator-appliance-' sums/SHA256SUMS.txt > sums/new.txt || true
+          (cd upload && sha256sum ./*) >> sums/new.txt
+          cp sums/new.txt SHA256SUMS.txt
+          gh release upload "$TAG" SHA256SUMS.txt --clobber
+          gh release view "$TAG" --json isDraft,isPrerelease,assets --jq '{isDraft,isPrerelease,assets:[.assets[]|.name+" "+(.size|tostring)]}'

@@ -90,6 +90,10 @@ health check and prints an address such as `http://192.168.1.20:8080/`. `host.ba
 status and log view; `host.bat --stop` stops it. Or run the server setup wizard from the releases.
 See [docs/features/hosting.md](docs/features/hosting.md).
 
+Each release also attaches a hosting bundle (`compose.yaml` and `host.bat` pinned to that version) and
+appliance virtual machine images for Hyper-V, VirtualBox, VMware, Proxmox and QEMU that boot straight into
+the server and show its address on the console. See [docs/features/appliance.md](docs/features/appliance.md).
+
 ## Build
 
 - `build.bat` validates JavaScript syntax, template integrity and local links, then writes `dist/site`.
@@ -107,6 +111,7 @@ to `main`. Pushing a `v*` tag builds the executables and publishes a release.
 | `site/app/` | The editor: `app.js` (engine), `regex-builder.js`, `gtha-template.js`, `i18n.js`, `app.css` |
 | `desktop/` | Desktop app (`app/`), server setup wizard (`wizard/`) and deploy app (`deploy/`) |
 | `Dockerfile`, `docker/`, `compose.yaml`, `host.bat` | Container hosting |
+| `appliance/` | Appliance virtual machine images |
 | `site/index.html`, `site/docs/` | Project site and documentation |
 | `design/` | Design canvas source for the editor, project site, desktop app and wizard |
 | `docs/features/` | Feature documentation |
