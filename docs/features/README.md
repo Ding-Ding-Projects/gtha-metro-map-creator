@@ -7,5 +7,6 @@
 | Geographic | [geographic.md](geographic.md) | Layouts, OpenStreetMap background, drawing onto real stops |
 | Desktop | [desktop.md](desktop.md) | Portable desktop app and server setup wizard |
 | Hosting | [hosting.md](hosting.md) | Container image, Compose, host.bat |
+| GTFS export | [gtfs-export.md](gtfs-export.md) | Export a GTFS feed from the map, round trip with the importer |
 
 There is no HTTP API, so no Postman collection applies.
