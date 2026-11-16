@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GTHA Metro Map Creator deploy</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="font-family:Inter,'Segoe UI',system-ui,sans-serif;font-size:14px;color:#1b1b1f;background:#fefbff;width:960px;height:760px;display:flex;flex-direction:column;overflow:hidden">
+<div style="height:40px;display:flex;align-items:center;padding:0 16px;gap:10px;border-bottom:1px solid #c4c6d0"><span style="width:20px;height:20px;border-radius:6px;background:#185bbb"></span><span style="font-weight:600">Deploy your map</span><div style="flex:1"></div><span style="color:#44474f">English ▾</span><span style="width:46px;text-align:center">✕</span></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;padding:20px 28px 24px;min-height:0">
+<div style="display:flex;align-items:center;gap:16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:24px;line-height:32px">Put your map online, everywhere at once</span><span style="color:#44474f">Map: <b>2031 plan.gmmc.json</b> · version 1.6.0 · pick where it goes, then press Deploy</span></div><span style="height:40px;display:flex;align-items:center;padding:0 16px;border-radius:20px;border:1px solid #75777f;color:#185bbb;font-weight:500">Choose map</span></div>
+<div style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:16px;background:#f5f3f7;border:1px solid #c4c6d0">
+<div style="display:flex;align-items:center;gap:14px"><span style="width:18px;height:18px;border-radius:2px;background:#185bbb;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center">✓</span><div style="flex:1;display:flex;flex-direction:column"><span style="font-weight:600">This computer with Docker</span><span style="font-size:12px;color:#44474f">Container image from GitHub, port 8080, your home network</span></div><span style="height:28px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:8px;background:#C8F0D2;color:#0B5A26;font-size:12px;font-weight:600">✓ Live</span></div>
+<div style="display:flex;align-items:center;gap:8px;padding-left:32px"><span style="flex:1;height:36px;display:flex;align-items:center;padding:0 12px;border-radius:8px;background:#e3e2e6;font-family:Consolas,monospace;color:#185bbb">http://192.168.1.20:8080/</span><span style="height:32px;display:flex;align-items:center;padding:0 14px;border-radius:16px;font-weight:500;border:1px solid #75777f;color:#185bbb">Copy</span><span style="height:32px;display:flex;align-items:center;padding:0 14px;border-radius:16px;font-weight:500;background:#185bbb;color:#ffffff">Open</span></div>
+
+
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:16px;background:#f5f3f7;border:1px solid #c4c6d0">
+<div style="display:flex;align-items:center;gap:14px"><span style="width:18px;height:18px;border-radius:2px;background:#185bbb;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center">✓</span><div style="flex:1;display:flex;flex-direction:column"><span style="font-weight:600">This computer, no Docker</span><span style="font-size:12px;color:#44474f">Built-in web server, port 8090, starts with Windows</span></div><span style="height:28px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:8px;background:#C8F0D2;color:#0B5A26;font-size:12px;font-weight:600">✓ Live</span></div>
+<div style="display:flex;align-items:center;gap:8px;padding-left:32px"><span style="flex:1;height:36px;display:flex;align-items:center;padding:0 12px;border-radius:8px;background:#e3e2e6;font-family:Consolas,monospace;color:#185bbb">http://192.168.1.20:8090/</span><span style="height:32px;display:flex;align-items:center;padding:0 14px;border-radius:16px;font-weight:500;border:1px solid #75777f;color:#185bbb">Copy</span><span style="height:32px;display:flex;align-items:center;padding:0 14px;border-radius:16px;font-weight:500;background:#185bbb;color:#ffffff">Open</span></div>
+
+
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:16px;background:#f5f3f7;border:1px solid #c4c6d0">
+<div style="display:flex;align-items:center;gap:14px"><span style="width:18px;height:18px;border-radius:2px;background:#185bbb;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center">✓</span><div style="flex:1;display:flex;flex-direction:column"><span style="font-weight:600">Remote server over SSH</span><span style="font-size:12px;color:#44474f">docker@192.168.1.50, Docker Compose in ~/gtha-map</span></div><span style="height:28px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:8px;background:#dbe2f9;color:#141b2c;font-size:12px;font-weight:600">Uploading 62%</span></div>
+
+<div style="margin-left:32px;height:4px;border-radius:2px;background:#dbe2f9;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:62%;border-radius:2px;background:#185bbb"></div></div>
+
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:16px;background:#f5f3f7;border:1px solid #c4c6d0">
+<div style="display:flex;align-items:center;gap:14px"><span style="width:18px;height:18px;border-radius:2px;background:#185bbb;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center">✓</span><div style="flex:1;display:flex;flex-direction:column"><span style="font-weight:600">GitHub Pages</span><span style="font-size:12px;color:#44474f">your-name/my-metro-map, public website</span></div><span style="height:28px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:8px;background:#fcd7fb;color:#29132d;font-size:12px;font-weight:600">Needs sign-in</span></div>
+
+
+<div style="display:flex;align-items:center;gap:8px;padding-left:32px"><span style="flex:1;font-size:12px;color:#44474f">Sign in once with your GitHub account. The key is kept by Windows, never in a file.</span><span style="height:32px;display:flex;align-items:center;padding:0 14px;border-radius:16px;font-weight:500;background:#185bbb;color:#ffffff">Sign in with GitHub</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:16px;background:#f5f3f7;border:1px solid #c4c6d0">
+<div style="display:flex;align-items:center;gap:14px"><span style="width:18px;height:18px;border-radius:2px;border:2px solid #44474f;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center"></span><div style="flex:1;display:flex;flex-direction:column"><span style="font-weight:600">Folder or ZIP</span><span style="font-size:12px;color:#44474f">Static website for any web host</span></div><span style="height:28px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:8px;background:#e3e2e6;color:#44474f;font-size:12px;font-weight:600">Skipped</span></div>
+
+
+
+</div>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="color:#44474f">2 live · 1 uploading · 1 waiting for you</span><div style="flex:1"></div><span style="height:40px;display:flex;align-items:center;padding:0 16px;color:#185bbb;font-weight:500">Copy all links</span><span style="height:56px;display:flex;align-items:center;gap:10px;padding:0 28px;border-radius:16px;background:#d8e2ff;color:#001a42;font-weight:600;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.2)">▶ Deploy to 4 places</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":960,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
