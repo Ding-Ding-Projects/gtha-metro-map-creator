@@ -81,7 +81,7 @@
 - [x] Multiple instances and an instance manager (registry, live health, start, stop, restart, logs, update, duplicate, remove; verified against real Docker with a foreign container left untouched)
 - [ ] A real write of the appliance image to a USB drive or SD card from the deploy app: helper script written and its file-target path verified; the physical-drive path (clearing, offline, unbuffered I/O) has never run on hardware
 - [ ] The appliance booting in real VirtualBox and VMware from the deploy app: needs a released appliance image (it cannot be built on Windows); only import, conversion, ownership and removal are verified
-- [ ] Raspberry Pi appliance image: image built and its boot partition inspected locally under emulation, QEMU virt-twin boot test written for CI; unticked until a tagged CI run passes the boot test and someone boots a real Pi 4 or Pi 5
+- [ ] Raspberry Pi appliance image: image built locally under arm64 emulation with a real arm64 container image, its boot partition inspected, and the QEMU virt-twin boot test passed locally (healthz, app and console banner); unticked until a tagged CI run passes the boot test and someone boots a real Pi 4 or Pi 5
 - [ ] Raw x86_64 USB image: built by the release job; legacy BIOS only, UEFI boot not provided and never tried on hardware
 - [ ] Redesigned GTFS import dialog with route preview: in progress
 

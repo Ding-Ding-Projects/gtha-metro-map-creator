@@ -14,8 +14,10 @@ never touched); the desktop window driven end to end (hidden Electron); real Vir
 Workstation tools (import, conversion, ownership marks, removal, refusal of machines not created by the app)
 with a stand-in appliance and a wrapper that refuses to start any machine; the write-and-read-back path
 against a file standing in for a drive, including cancelled and failed permission prompts; the real drive
-list, which offers no Windows disk. The Raspberry Pi image was built locally under arm64 emulation and its
-boot partition inspected (firmware, kernel, device trees, built-in ext4, SD and USB drivers).
+list, which offers no Windows disk. The Raspberry Pi image was built locally under arm64 emulation with a real arm64
+build of the container image, its boot partition inspected (firmware, kernel, device trees, built-in ext4, SD
+and USB drivers), and the virt-twin boot test (appliance/boot-test-rpi.sh, QEMU aarch64 in an Alpine
+container) passed: /healthz and /app/ answered after 38 s and the console banner showed the address.
 
 Not verified: any real write to a USB drive or SD card (no write to a physical disk and no permission
 prompt was triggered here), the appliance actually booting in VirtualBox or VMware, a Raspberry Pi booting

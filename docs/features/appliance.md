@@ -70,6 +70,11 @@ and the kernel's built-in ext4, SD and USB storage drivers). **Real Raspberry Pi
 booted with this image**, so the firmware, kernel and device-tree path on a real Pi 4 or Pi 5 is
 unverified until someone tries it.
 
+The virt-twin boot test was also run once locally (Windows, Docker Desktop, QEMU 'virt' in an Alpine
+container, software emulation): the image built from a real arm64 build of the container image booted,
+Docker loaded the bundled image, `/healthz` and `/app/` answered after 38 seconds and the console showed
+`GTHA Metro Map Creator 1.5.0 is ready at: http://10.0.2.15:8080/`. The CI jobs themselves have not run yet.
+
 ## What is inside
 
 - Alpine Linux with Docker, started at boot, and DHCP networking.
