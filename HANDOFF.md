@@ -18,7 +18,12 @@ In their place, without touching any real drive:
   54 s, banner "GTHA Metro Map Creator 1.8.0 is ready at". With a second `GMMCCONF` FAT stick on the same USB bus
   (`--config-disk vfat`): `/app/` redirects to sign-in, wrong password refused, right password signs in, banner
   "Password required". With an invalid value on that stick: the editor was not started and the banner said so.
-- Both workflows now repeat the USB boot and the second-stick sign-in boot for every appliance build.
+- Both workflows now repeat the USB boot and the second-stick sign-in boot for every appliance build; appliance check
+  run 43959202237 at c6b318f passed it with the other six boot tests.
+- The SSH target with sign-in was run twice more, with 1.8.0 and a fresh random password each time, through the real
+  `desktop/deploy/targets/ssh.js` against a throwaway OpenSSH container on 127.0.0.1 that drives this computer's Docker:
+  both returned the link, `/healthz` 200, `/app/` 302 to sign-in, wrong password refused, right password 303, `/app/` 200
+  with the session, state running, then removed. The known_hosts file was restored byte for byte afterwards.
 
 Still not verified: the helper's physical-drive path (clearing, offline, unbuffered I/O, the Windows permission
 prompt), a physical PC booting the stick, and a real Raspberry Pi 4 or 5 booting the card (QEMU cannot run the Pi
