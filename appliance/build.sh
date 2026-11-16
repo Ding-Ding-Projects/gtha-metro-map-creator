@@ -45,7 +45,11 @@ for f in vhdx vmdk; do
 done
 
 echo "== Packing the OVA"
-capacity=$(qemu-img info --output=json "$work/$base.qcow2" | sed -n 's/.*"virtual-size": *\([0-9]*\).*/\1/p' | head -n 1)
+# The top-level virtual size of the disk. Newer qemu-img lists the underlying file (with its own, smaller
+# "virtual-size") before it, so read the JSON properly instead of taking the first match. VMware's
+# importer refuses an OVA whose capacity disagrees with the VMDK.
+capacity=$(qemu-img info --output=json "$work/$base.qcow2" | python3 -c 'import json, sys; print(json.load(sys.stdin)["virtual-size"])')
+case "$capacity" in ''|*[!0-9]*) echo "Could not read the disk capacity" >&2; exit 1 ;; esac
 sed -e "s|@DISK@|$base.vmdk|" -e "s|@DISKSIZE@|$(stat -c %s "$work/$base.vmdk")|" \
 	-e "s|@CAPACITY@|$capacity|" -e "s|@NAME@|GTHA Metro Map Creator $version|" \
 	-e "s|@VERSION@|$version|" "$here/ovf.template" > "$work/$base.ovf"

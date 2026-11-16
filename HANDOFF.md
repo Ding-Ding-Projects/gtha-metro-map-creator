@@ -1,5 +1,16 @@
 # Handoff
 
+## 1.7.2 (2026-11-16)
+
+Fix: the appliance `.ova` declared the qcow2 file size (about 378 MB) as its disk capacity instead of the
+2 GiB virtual size, because `appliance/build.sh` took the first `"virtual-size"` in `qemu-img info` JSON,
+which newer qemu gives for the underlying file. VMware's importer refused it with "Capacity mismatch";
+VirtualBox accepted it. The build now reads the top-level value with a JSON parser and stops if it is not
+a number. Checked on this computer: the released 1.7.1 `.ova` boots in VirtualBox 7.2 (first boot about
+6 minutes while the built-in image loads, then `/healthz` ok and `/app/` 200 through a NAT port forward);
+with the capacity corrected it imports into VMware Workstation and answers `/healthz` and `/app/` 10 s
+after start.
+
 ## 1.7.1 (2026-11-16)
 
 Fix: `gmmc-auth hash` now ignores a leading UTF-8 byte order mark. Windows PowerShell put one in front of
