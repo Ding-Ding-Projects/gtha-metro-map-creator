@@ -1,15 +1,19 @@
 #!/sbin/openrc-run
-# Loads the bundled container image on first boot and keeps the container running.
+# Loads the bundled container image on first boot and keeps the container running. Before starting it,
+# looks for an optional sign-in password hash (see /usr/local/sbin/gmmc-signin).
 description="GTHA Metro Map Creator container"
 
 depend() {
 	need docker
-	after networking
+	after networking localmount
 }
 
 start() {
 	ebegin "Starting GTHA Metro Map Creator"
 	. /opt/gmmc/appliance.env
+	state_dir="${GMMC_STATE_DIR:-/run/gmmc}"
+	/usr/local/sbin/gmmc-signin
+	signin_status=$?
 	i=0
 	until docker info >/dev/null 2>&1; do
 		i=$((i + 1))
@@ -19,6 +23,12 @@ start() {
 		fi
 		sleep 1
 	done
+	if [ "$signin_status" -ne 0 ]; then
+		# Docker may have restarted an older container on its own: make sure nothing answers.
+		docker rm -f gmmc >/dev/null 2>&1
+		eend 1 "The sign-in password on the configuration disk is not valid, so the editor was not started"
+		return 1
+	fi
 	if ! docker image inspect "$GMMC_IMAGE" >/dev/null 2>&1; then
 		einfo "First start: loading the bundled image"
 		if ! docker load -i /opt/gmmc/image.tar; then
@@ -26,11 +36,23 @@ start() {
 			return 1
 		fi
 	fi
-	if docker container inspect gmmc >/dev/null 2>&1; then
+	# The container carries a label naming the sign-in setting it was made with ("off" or a digest of
+	# the hash). When the setting changed since it was created, it is replaced; the editor stores
+	# nothing on the server, so nothing is lost.
+	want=$(cat "$state_dir/signin-fingerprint")
+	have=$(docker container inspect -f '{{index .Config.Labels "gmmc.signin"}}' gmmc 2>/dev/null)
+	if [ -n "$have" ] && [ "$have" = "$want" ]; then
 		docker start gmmc >/dev/null
 	else
-		docker run -d --name gmmc --restart unless-stopped \
-			--read-only --tmpfs /tmp -p 8080:8080 "$GMMC_IMAGE" >/dev/null
+		docker rm -f gmmc >/dev/null 2>&1
+		# The restart policy is on-failure so that Docker never starts the container by itself at boot,
+		# before this script has checked the sign-in setting.
+		set -- -d --name gmmc --restart on-failure --read-only --tmpfs /tmp -p 8080:8080 --label "gmmc.signin=$want"
+		# The hash goes in through a root-only file, never on a command line that ps could show.
+		if [ "$(cat "$state_dir/signin-state")" = "on" ]; then
+			set -- "$@" --env-file "$state_dir/app.env"
+		fi
+		docker run "$@" "$GMMC_IMAGE" >/dev/null
 	fi
 	eend $?
 }

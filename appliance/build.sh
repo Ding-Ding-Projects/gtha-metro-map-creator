@@ -33,7 +33,7 @@ chmod 0644 "$work/skel/opt/gmmc/appliance.env"
 echo "== Building the Alpine disk image"
 "$work/amvi" --image-format qcow2 --image-size 2G --branch "$ALPINE_BRANCH" \
 	--serial-console --initfs-features ata \
-	--packages "docker docker-openrc iproute2" \
+	--packages "docker docker-openrc iproute2 blkid" \
 	--fs-skel-dir "$work/skel" --fs-skel-chown root:root \
 	--script-chroot "$work/$base.qcow2" "$here/chroot-setup.sh"
 

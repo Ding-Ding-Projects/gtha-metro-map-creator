@@ -1,0 +1,140 @@
+#!/bin/sh
+# Finds the optional sign-in password hash and prepares it for the app container. Run by the gmmc-app
+# service before the container starts.
+#
+# Where the hash can be (first match wins):
+#   1. A read-only configuration disk whose file system label is GMMCCONF (FAT or ISO 9660, as a USB stick,
+#      a virtual disk or a virtual CD-ROM) holding a file named "password-hash" (or "password_hash").
+#   2. A file named "gmmc-password-hash" on the boot partition: /boot on a Raspberry Pi, or any FAT
+#      partition labelled GMMCBOOT.
+#
+# Result, in $GMMC_STATE_DIR (default /run/gmmc, root only):
+#   signin-state        "off", "on" or "invalid:<reason>"
+#   signin-fingerprint  "off", or the SHA-256 of the hash (used to notice a changed password)
+#   app.env             only when sign-in is on: GMMC_PASSWORD_HASH=<hash>, mode 0600, for docker --env-file
+# The hash and the password are never printed, logged or put on a command line.
+# Exit status: 0 for "off" and "on", 3 for "invalid".
+set -u
+umask 077
+STATE="${GMMC_STATE_DIR:-/run/gmmc}"
+BOOT_DIR="${GMMC_BOOT_DIR:-/boot}"
+TRIES="${GMMC_SCAN_TRIES:-4}"
+VALUE=""
+REASON=""
+
+say() { echo "gmmc-signin: $*"; }
+
+invalid() {
+	REASON="$1"
+	rm -f "$STATE/app.env"
+	echo "invalid:$REASON" > "$STATE/signin-state"
+	echo "invalid" > "$STATE/signin-fingerprint"
+	say "sign-in configuration is not valid: $REASON"
+	exit 3
+}
+
+# A hash has the form pbkdf2-sha256:<iterations>:<salt>:<hash>, the same format the web app checks.
+hash_check() {
+	if ! printf '%s\n' "$1" | grep -Eq '^pbkdf2-sha256:[0-9]{6,7}:[A-Za-z0-9_-]{22,}:[A-Za-z0-9_-]{43}$'; then
+		REASON="the value is not a pbkdf2-sha256 hash in the expected format"
+		return 1
+	fi
+	iter=${1#pbkdf2-sha256:}
+	iter=${iter%%:*}
+	if [ "$iter" -lt 100000 ] || [ "$iter" -gt 5000000 ]; then
+		REASON="the iteration count is outside 100000 to 5000000"
+		return 1
+	fi
+	return 0
+}
+
+# First line of a file, without a byte order mark, carriage return or surrounding blanks.
+read_value() {
+	head -c 2048 "$1" 2>/dev/null | head -n 1 | tr -d '\357\273\277\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
+}
+
+load_modules() {
+	for m in sr_mod cdrom isofs vfat nls_cp437 nls_iso8859_1 nls_utf8 usb_storage sd_mod virtio_blk; do
+		modprobe -q "$m" 2>/dev/null || true
+	done
+}
+
+# The block device whose file system label is $1, or a non-zero status. Every block device is probed
+# directly (blkid -p), because the cached lookups can name a device that has just been removed.
+find_dev() {
+	for sys in "${GMMC_SYS_BLOCK:-/sys/class/block}"/*; do
+		[ -e "$sys" ] || continue
+		d="/dev/${sys##*/}"
+		if [ -b "$d" ] && [ "$(blkid -p -s LABEL -o value "$d" 2>/dev/null)" = "$1" ]; then
+			echo "$d"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Reads the first existing file among $2 ... from the volume labelled $1, read-only, and leaves it in $VALUE.
+# Status: 0 read, 1 no such volume, 2 the volume could not be mounted, 3 the file is missing.
+read_label_file() {
+	label=$1
+	shift
+	dev=$(find_dev "$label") || return 1
+	mkdir -p "$STATE/mnt"
+	mounted=""
+	for t in vfat iso9660; do
+		if mount -t "$t" -o ro,noexec,nosuid,nodev "$dev" "$STATE/mnt" 2>/dev/null; then mounted=1; break; fi
+	done
+	[ -n "$mounted" ] || return 2
+	rc=3
+	for f in "$@"; do
+		if [ -f "$STATE/mnt/$f" ]; then
+			VALUE=$(read_value "$STATE/mnt/$f")
+			rc=0
+			break
+		fi
+	done
+	umount "$STATE/mnt" 2>/dev/null || true
+	return "$rc"
+}
+
+mkdir -p "$STATE"
+chmod 0700 "$STATE"
+rm -f "$STATE/app.env" "$STATE/signin-state" "$STATE/signin-fingerprint"
+load_modules
+
+found=""
+n=0
+while :; do
+	# ISO 9660 without extensions cannot hold a hyphen, so the same file may be called password_hash there.
+	read_label_file GMMCCONF password-hash password_hash PASSWORD-HASH PASSWORD_HASH
+	case $? in
+	0) found=disk; break ;;
+	2) invalid "the configuration disk could not be read" ;;
+	3) invalid "the configuration disk has no file named password-hash" ;;
+	esac
+	if [ -f "$BOOT_DIR/gmmc-password-hash" ]; then
+		VALUE=$(read_value "$BOOT_DIR/gmmc-password-hash")
+		found=boot
+		break
+	fi
+	read_label_file GMMCBOOT gmmc-password-hash && { found=boot; break; }
+	n=$((n + 1))
+	[ "$n" -lt "$TRIES" ] || break
+	sleep 1
+done
+
+if [ -z "$found" ]; then
+	echo off > "$STATE/signin-state"
+	echo off > "$STATE/signin-fingerprint"
+	say "no password configured, sign-in is off"
+	exit 0
+fi
+
+[ -n "$VALUE" ] || invalid "the password file is empty"
+hash_check "$VALUE" || invalid "$REASON"
+printf 'GMMC_PASSWORD_HASH=%s\n' "$VALUE" > "$STATE/app.env"
+chmod 0600 "$STATE/app.env"
+printf '%s' "$VALUE" | sha256sum | cut -d ' ' -f 1 > "$STATE/signin-fingerprint"
+echo on > "$STATE/signin-state"
+say "a password hash was found ($found), sign-in is on"
+exit 0

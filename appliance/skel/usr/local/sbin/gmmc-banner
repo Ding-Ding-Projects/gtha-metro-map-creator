@@ -1,13 +1,19 @@
 #!/bin/sh
 # Writes /etc/issue with the address of this appliance and repeats it on the consoles
-# whenever the address changes. Runs until stopped.
+# whenever the address or the sign-in setting changes. Runs until stopped.
 . /opt/gmmc/appliance.env
+state_dir="${GMMC_STATE_DIR:-/run/gmmc}"
+issue="${GMMC_ISSUE_FILE:-/etc/issue}"
 last=""
 while :; do
 	ip=$(ip -4 -o addr show scope global 2>/dev/null \
 		| awk '$2 !~ /^(docker|br-|veth)/ { split($4, a, "/"); print a[1]; exit }')
-	if [ "$ip" != "$last" ]; then
-		last="$ip"
+	state=$(cat "$state_dir/signin-state" 2>/dev/null || echo pending)
+	case "$state" in
+	invalid:*) state=invalid ;;
+	esac
+	if [ "$ip|$state" != "$last" ]; then
+		last="$ip|$state"
 		if [ -n "$ip" ]; then
 			url="http://$ip:8080/"
 			addr="Open the editor from any device on your network:  $url"
@@ -15,19 +21,30 @@ while :; do
 			url=""
 			addr="No network address yet. Check that the virtual network adapter is connected."
 		fi
-		cat > /etc/issue <<ISSUE
+		case "$state" in
+		on) access="Password required: sign-in is on. Use the password you chose for this appliance." ;;
+		invalid) access="The password setting is not valid, so the editor was NOT started. Fix or remove the password file, then restart the machine." ;;
+		off) access="Sign-in is off: anyone on the network can open the editor. To turn it on, see the appliance documentation." ;;
+		*) access="Checking the sign-in setting..." ;;
+		esac
+		cat > "$issue" <<ISSUE
 
 GTHA Metro Map Creator appliance $GMMC_VERSION
 $addr
 Documentation: /docs/   Health check: /healthz
-This console only shows the address; there is no login password.
+$access
+This console only shows the address; there is no console login password.
 
 ISSUE
 		msg="GTHA Metro Map Creator $GMMC_VERSION is ready at: $url"
 		[ -n "$url" ] || msg="GTHA Metro Map Creator $GMMC_VERSION: waiting for a network address"
-		for t in /dev/tty1 /dev/ttyS0 /dev/ttyAMA0; do
+		case "$state" in
+		on) msg="$msg (Password required)" ;;
+		invalid) msg="GTHA Metro Map Creator $GMMC_VERSION: the password setting is not valid, the editor was not started" ;;
+		esac
+		for t in ${GMMC_CONSOLES:-/dev/tty1 /dev/ttyS0 /dev/ttyAMA0}; do
 			[ -w "$t" ] && echo "$msg" > "$t" 2>/dev/null
 		done
 	fi
-	sleep 5
+	sleep "${GMMC_BANNER_INTERVAL:-5}"
 done

@@ -2,7 +2,7 @@
 # Runs inside the image (alpine-make-vm-image --script-chroot). Enables services and locks root.
 set -eu
 
-chmod 0755 /etc/init.d/gmmc-app /etc/init.d/gmmc-banner /usr/local/sbin/gmmc-banner
+chmod 0755 /etc/init.d/gmmc-app /etc/init.d/gmmc-banner /usr/local/sbin/gmmc-banner /usr/local/sbin/gmmc-signin
 
 echo gmmc > /etc/hostname
 rc-update add networking boot
