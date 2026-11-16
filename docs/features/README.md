@@ -28,5 +28,6 @@
 | Journey | [journey.md](journey.md) | Trip planner and travel-time map |
 | Live vehicles | [realtime.md](realtime.md) | GTFS-Realtime vehicle positions in the desktop app |
 | Extensions | [extensions.md](extensions.md) | Hook API used by the feature modules |
+| Docs search | [docs-search.md](docs-search.md) | Documentation search with a regex builder, bounded matching, English and Cantonese |
 
 There is no HTTP API, so no Postman collection applies.

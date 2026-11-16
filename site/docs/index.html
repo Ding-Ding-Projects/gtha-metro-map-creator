@@ -5,15 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Documentation · GTHA Metro Map Creator</title>
 <link rel="stylesheet" href="../site.css">
+<link rel="stylesheet" href="docs-search.css">
 </head>
 <body>
 <header class="wrap top">
   <a href="../"><strong>GTHA Metro Map Creator</strong></a>
   <nav aria-label="Site"><a href="../app/">Open the editor</a><a href="https://github.com/Ding-Ding-Projects/gtha-metro-map-creator">Source</a></nav>
 </header>
+<div class="ds-bar" id="dsBar"></div>
+<div class="ds-panel" id="dsPanel" hidden></div>
 <main class="wrap doc">
   <nav class="toc" aria-label="Contents">
-    <label class="docsearch">Filter articles <input id="docFilter" type="search" placeholder="Type a word"></label>
     <ul id="tocList">
       <li><a href="#start">Getting started</a></li>
       <li><a href="#template">The GTHA template</a></li>
@@ -216,19 +218,6 @@
       <p>A map is JSON with <code>version: 1</code>, <code>title</code>, <code>stations</code> (an object keyed by id, each with <code>name</code>, <code>nameZh</code>, <code>x</code>, <code>y</code>, <code>label</code>, <code>interchange</code>), <code>lines</code> (each with <code>name</code>, <code>color</code>, <code>width</code>, <code>style</code>, <code>visible</code>, <code>path</code>, <code>bends</code>), and <code>labels</code>. A path entry is a station id or a bend point written <code>@x,y</code>. <code>bends</code> maps a segment index to <code>late</code> for straight first.</p></section>
   </div>
 </main>
-<script>
-(function(){
-  var input = document.getElementById('docFilter');
-  input.addEventListener('input', function(){
-    var q = input.value.trim().toLowerCase();
-    document.querySelectorAll('#articles section').forEach(function(s){
-      var hit = !q || s.textContent.toLowerCase().indexOf(q) !== -1;
-      s.hidden = !hit;
-      var link = document.querySelector('#tocList a[href="#' + s.id + '"]');
-      if (link) link.parentElement.hidden = !hit;
-    });
-  });
-})();
-</script>
+<script src="docs-search.js"></script>
 </body>
 </html>

@@ -1,0 +1,58 @@
+/* Documentation search and regex builder. Uses the site's colour tokens from ../site.css. */
+.ds-bar { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); padding: 8px 0; }
+.ds-row { display: flex; align-items: center; gap: 8px; }
+.ds-field { position: relative; flex: 1 1 0; min-width: 0; }
+.ds-field input { width: 100%; height: 56px; border-radius: 28px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 17px; padding: 0 52px 0 52px; }
+.ds-field input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.ds-field input.bad { border-color: #B3261E; }
+.ds-ico { position: absolute; left: 16px; top: 16px; color: var(--muted); pointer-events: none; }
+.ds-clear { position: absolute; right: 6px; top: 4px; width: 48px; height: 48px; border: 0; border-radius: 24px; background: transparent; color: var(--ink); font-size: 26px; cursor: pointer; }
+.ds-btn { flex: none; width: 56px; height: 56px; border-radius: 28px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.ds-btn code { font-size: 18px; }
+.ds-btn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.ds-btn:focus-visible, .ds-clear:focus-visible, .ds-tbtn:focus-visible, .ds-res:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.ds-panel { padding-top: 16px; }
+.ds-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.ds-has-builder .ds-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); align-items: start; }
+.ds-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 4px 20px 18px; min-width: 0; }
+.ds-card[hidden] { display: none; }
+.ds-card h2 { font-size: 20px; margin: 14px 0 6px; }
+.ds-card h3 { font-size: 15px; margin: 16px 0 6px; color: var(--muted); }
+.ds-note { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+.ds-flags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-bottom: 8px; }
+.ds-chk { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
+.ds-chk input { width: 20px; height: 20px; accent-color: var(--accent); }
+.ds-out, .ds-prev { overflow-wrap: anywhere; word-break: break-word; }
+.ds-out { font-size: 13px; color: var(--muted); }
+.ds-tgrp { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; }
+.ds-tlab { flex: 0 0 100%; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.ds-tbtn { min-width: 48px; min-height: 48px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
+.ds-tbtn:hover { background: var(--bg); }
+.ds-wide { margin-top: 6px; }
+.ds-explain { background: var(--bg); border-radius: 12px; padding: 10px 12px; margin: 0; min-height: 3em; overflow-wrap: anywhere; }
+.ds-card textarea { width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--bg); color: var(--ink); resize: vertical; }
+.ds-prev { white-space: pre-wrap; background: var(--bg); border-radius: 12px; padding: 10px 12px; margin: 8px 0 4px; font-family: inherit; }
+.ds-err { margin: 10px 0 0; padding: 8px 12px; border-radius: 12px; background: #FCE8E6; color: #7A1410; overflow-wrap: anywhere; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ds-err { background: #4A1C19; color: #FFDAD6; } }
+:root[data-theme="dark"] .ds-err { background: #4A1C19; color: #FFDAD6; }
+.ds-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ds-summary { margin: 0 0 8px; color: var(--muted); }
+.ds-summary.ds-warn { color: #B3261E; font-weight: 600; }
+:root[data-theme="dark"] .ds-summary.ds-warn { color: #F2B8B5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ds-summary.ds-warn { color: #F2B8B5; } }
+.ds-group { border-top: 1px solid var(--line); padding: 8px 0; }
+.ds-group h3 { margin: 0; font-size: 16px; color: var(--ink); }
+.ds-group ul { list-style: none; margin: 0; padding: 0; }
+.ds-res { display: block; width: 100%; text-align: left; min-height: 48px; padding: 8px 10px; border: 0; border-radius: 10px; background: transparent; color: var(--ink); font: inherit; line-height: 1.4; cursor: pointer; overflow-wrap: anywhere; }
+.ds-res:hover { background: var(--bg); }
+.ds-title { font-weight: 700; color: var(--accent); }
+.ds-n { display: inline-block; min-width: 24px; padding: 0 8px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font-size: 13px; text-align: center; }
+.ds-more, .ds-none { margin: 0 10px 4px; font-size: 13px; color: var(--muted); }
+mark { background: #FFE08A; color: #16181D; border-radius: 3px; padding: 0 1px; }
+mark.ds-cur { background: #FFB300; outline: 2px solid var(--accent); }
+.article section { scroll-margin-top: 84px; }
+#tocList a[data-n]::after { content: " (" attr(data-n) ")"; color: var(--muted); font-size: 13px; }
+#tocList a.ds-dim { opacity: .5; }
+@media (max-width: 600px) { .ds-btn { width: 48px; height: 48px; } .ds-field input { padding-left: 46px; padding-right: 48px; } .ds-ico { left: 12px; } .ds-card { padding: 4px 14px 16px; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+.ds-field input::-webkit-search-cancel-button, .ds-field input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
