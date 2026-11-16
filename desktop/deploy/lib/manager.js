@@ -112,6 +112,8 @@ class Manager {
     try {
       if (PORT_KINDS.includes(kind) || (kind === 'ssh')) await this.choosePort(inst, s, kind, fresh, log);
       if (kind === 'docker' || kind === 'ssh') { inst.tag = String(s.tag || 'latest').trim() || 'latest'; await this.applyPassword(inst, s); }
+      // A virtual machine gets the hash on a small configuration disk that the appliance reads at boot.
+      else if (kind === 'virtualbox' || kind === 'vmware') await this.applyPassword(inst, s);
       if (kind === 'virtualbox') inst.run.netMode = s.netMode === 'nat' ? 'nat' : 'bridged';
       if (kind === 'ssh') inst.run = Object.assign({}, inst.run, { host: String(s.host || '').trim(), user: String(s.user || '').trim(), sshPort: Number(s.sshPort || 22), key: String(s.key || '').trim(), remoteDir: String(s.folder || '~/gtha-map').trim() });
       if (kind === 'folder' || kind === 'pages') inst.slug = inst.slug || slugify(name);

@@ -20,7 +20,7 @@ cat > "$R/etc/mkinitfs/mkinitfs.conf" <<'CONF'
 features="base ext4 mmc usb"
 CONF
 apk add --root "$R" --initdb --keys-dir /etc/apk/keys --no-cache --no-progress \
-	alpine-base openrc docker docker-openrc iproute2 e2fsprogs \
+	alpine-base openrc docker docker-openrc iproute2 e2fsprogs blkid \
 	linux-rpi raspberrypi-bootloader mkinitfs
 
 echo gmmc > "$R/etc/hostname"
@@ -31,7 +31,7 @@ mkdir -p "$R/opt/gmmc"
 cp /work/image.tar "$R/opt/gmmc/image.tar"
 cp /work/appliance.env "$R/opt/gmmc/appliance.env"
 chmod 0644 "$R/opt/gmmc/appliance.env"
-chmod 0755 "$R/etc/init.d/gmmc-app" "$R/etc/init.d/gmmc-banner" "$R/usr/local/sbin/gmmc-banner"
+chmod 0755 "$R/etc/init.d/gmmc-app" "$R/etc/init.d/gmmc-banner" "$R/usr/local/sbin/gmmc-banner" "$R/usr/local/sbin/gmmc-signin"
 
 for s in devfs dmesg mdev hwdrivers; do chroot "$R" rc-update add "$s" sysinit; done
 for s in modules sysctl hostname bootmisc syslog networking swclock; do chroot "$R" rc-update add "$s" boot; done

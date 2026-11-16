@@ -27,13 +27,23 @@ async function addressFromNeighbours(mac) {
   return '';
 }
 
+// With sign-in on, /app/ must send a visitor to the sign-in page (or answer 401) and never serve the editor.
+const SIGNIN_GATE = [301, 302, 303, 307, 401];
+
 // Waits until the appliance answers, then returns { ip, url }. `find` is an async function returning an address or ''.
-async function waitForAppliance({ find, port = 8080, timeoutMs = 240000, signal, emit, label }) {
+// With `signin` set, "answers" means /healthz is open and /app/ asks for a password.
+// Hidden test runs may lengthen the wait with GMMC_VM_BOOT_TIMEOUT_MS: a first boot can be slow on a busy computer.
+const defaultBootWait = () => (process.env.GMMC_HIDDEN === '1' && Number(process.env.GMMC_VM_BOOT_TIMEOUT_MS) > 0 ? Number(process.env.GMMC_VM_BOOT_TIMEOUT_MS) : 240000);
+async function waitForAppliance({ find, port = 8080, timeoutMs = defaultBootWait(), signal, emit, label, signin = false }) {
   const t0 = Date.now(); let ip = '';
   while (Date.now() - t0 < timeoutMs) {
     if (signal && signal.aborted) throw new Error('Cancelled.');
     ip = (await find()) || ip;
-    if (ip && (await get('http://' + ip + ':' + port + '/healthz', 3000)) === 200 && (await get('http://' + ip + ':' + port + '/app/', 3000)) === 200) return { ip, url: 'http://' + ip + ':' + port + '/' };
+    if (ip && (await get('http://' + ip + ':' + port + '/healthz', 3000)) === 200) {
+      const app = await get('http://' + ip + ':' + port + '/app/', 3000);
+      if (signin ? SIGNIN_GATE.includes(app) : app === 200) return { ip, url: 'http://' + ip + ':' + port + '/' };
+      if (signin && app === 200) throw new Error('The appliance is running but did not ask for a password. It may be an image from before password sign-in was added: update the deploy app and the appliance to the same version.');
+    }
     if (emit) emit(Math.min(95, 70 + Math.round(((Date.now() - t0) / timeoutMs) * 25)), label + (ip ? ' (' + ip + ' not answering yet)' : ' (waiting for an address)'));
     await sleep(3000);
   }

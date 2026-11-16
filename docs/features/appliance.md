@@ -75,11 +75,44 @@ container, software emulation): the image built from a real arm64 build of the c
 Docker loaded the bundled image, `/healthz` and `/app/` answered after 38 seconds and the console showed
 `GTHA Metro Map Creator 1.5.0 is ready at: http://10.0.2.15:8080/`. The CI jobs themselves have not run yet.
 
+## Password sign-in
+
+The editor can ask for a password before it shows anything except `/healthz`. The appliance has no console login and no
+keyboard setup, so the password is given to it as a **password hash on a small disk or file**, read at every boot. Make the hash
+with the deploy app (it does everything below for you on VirtualBox, VMware and a Raspberry Pi card) or by hand with the
+container image's own tool, which reads the password from standard input:
+
+```
+printf 'your password here' | docker run --rm -i ghcr.io/ding-ding-projects/gtha-metro-map-creator:<version> gmmc-auth hash
+```
+
+The result looks like `pbkdf2-sha256:600000:<salt>:<hash>` and cannot be turned back into the password. Then put it in one of these:
+
+| Where | How |
+| --- | --- |
+| **Configuration disk** (any appliance) | A disk whose file system label is `GMMCCONF`, FAT or ISO 9660, holding a text file named `password-hash` with the hash on its first line. Attach it to the virtual machine as a second disk or as a CD-ROM, or plug in a small FAT32 USB stick named `GMMCCONF`. The appliance mounts it read-only. On an ISO 9660 disk without Rock Ridge or Joliet extensions the name may appear as `password_hash`, which is accepted too |
+| **Raspberry Pi boot partition** | A file named `gmmc-password-hash` in the root of the FAT boot partition (the card shows it as a normal drive on any computer once it is written, like the `ssh` file of Raspberry Pi OS). The deploy app adds it for you before writing the card |
+
+What the appliance does with it, at every boot, before it starts the editor:
+
+- **No disk and no file:** sign-in stays off, as before. Removing the disk or the file turns sign-in off again at the next boot.
+- **A valid hash:** the editor starts with sign-in on. The hash goes to the container through a file that only root can read (docker `--env-file`), never on a command line.
+  The console banner adds **Password required**. The container carries a label with a digest of the setting, so when the hash changes on a later boot the container is replaced
+  with one that has the new hash (the editor stores nothing on the server, so nothing is lost).
+- **An invalid value** (not a `pbkdf2-sha256:<100000 to 5000000>:<salt>:<hash>` hash, an empty file, or a configuration disk without the file): the editor is **not started**,
+  any older container is removed so nothing answers, and the console says the password setting is not valid. The value itself is never printed. Fix or remove the file and restart the machine.
+- If both exist, the configuration disk wins over the boot-partition file.
+
+The disk or file holds a hash, not the password, but anyone who can read the hash can try to guess the password offline, so treat it like a secret: do not put it on a shared disk.
+A virtual machine's configuration disk is a file in the instance's folder; the container's environment (`docker inspect`, root only) also holds it.
+The hash alone does not let anyone sign in.
+
 ## What is inside
 
 - Alpine Linux with Docker, started at boot, and DHCP networking.
 - The container image of the same release, stored on the disk and loaded on first boot.
-- The container runs with a read-only file system, restart set to `unless-stopped`, and port 8080.
+- The container runs with a read-only file system, restart set to `on-failure` (the appliance's own service starts it at boot, after it has checked the sign-in setting), and port 8080.
+- `gmmc-signin`, which looks for the password hash at boot (above), and `blkid` to find the labelled disk.
 - A service that refreshes the address on the console whenever it changes (screen, serial port and, on
   a Pi, `ttyAMA0`).
 
@@ -94,15 +127,10 @@ one only after the new one answers. Keep the old machine until the new one answe
 
 - The root account has no password and SSH is not installed, so the machine cannot be logged into over
   the network. The console shows the address only.
-- The editor has no sign-in unless you turn it on (below). Run the appliance on a network you trust and do not forward
+- The editor has no sign-in unless you turn it on (see Password sign-in above). Run the appliance on a network you trust and do not forward
   its port to the internet.
-- **Password sign-in is not yet built into the appliance.** The deploy app's password switch does not apply to
-  virtual machines or drive images, and there is no first-boot option or boot-partition file for it yet. The appliance runs the same container image, so you
-  can turn sign-in on by hand from its console (log in as described above): make a hash with
-  `printf 'your password' | docker run --rm -i "$GMMC_IMAGE" gmmc-auth hash` (read `GMMC_IMAGE` from `/opt/gmmc/appliance.env`),
-  then replace the container with `docker rm -f gmmc` and the `docker run` line from `/etc/init.d/gmmc-app` plus
-  `-e GMMC_PASSWORD_HASH=<the hash>`. The init script starts the existing container on later boots, so the setting
-  survives a reboot. This route has not been tested on a booted appliance. See [hosting.md](hosting.md) for what sign-in does.
+- Password sign-in is built in and off until you give the appliance a password hash (next section). With it off,
+  anyone on the network can open the editor, and the console says so.
 - To get a shell for maintenance, open the console, edit the boot entry at the boot menu to add
   `init=/bin/sh`, then set a password with `passwd root`. This is a deliberate local-only step.
 - The images are not signed. Check them against `SHA256SUMS.txt` on the release page. The deploy app
@@ -118,11 +146,16 @@ forwarded, waits up to ten minutes for `/healthz` and `/app/` to answer, and che
 banner shows the address and version. A second job on an `ubuntu-24.04-arm` runner builds the Raspberry
 Pi image in an arm64 Alpine container (`appliance/build-rpi.sh`, `appliance/rpi-in-container.sh`) and
 runs the virt-twin boot test (`appliance/boot-test-rpi.sh`). If a boot test fails nothing is uploaded.
-Only the QEMU boots are tested automatically; the Hyper-V, VirtualBox and VMware formats are checked
+Password sign-in is tested in three more boots of the x86_64 image and one of the Raspberry Pi virt twin, each with a random password hashed by the container image's own `gmmc-auth`: a FAT configuration disk, the ISO that the deploy app writes
+(made by the same Node code, `desktop/deploy/lib/config-disk.js`), an invalid disk (the editor must not start and the banner must say so without showing the value), and, for the Pi, a FAT disk labelled `GMMCBOOT`
+standing in for the boot partition. Each checks that `/healthz` stays open, `/app/` redirects to `/signin`, a wrong password is refused, the right one signs in and then `/app/` is 200, and that the console banner says **Password required**.
+The Pi virt twin cannot prove that a real Pi mounts its own boot partition at `/boot`; the lookup for that path (and for FAT, ISO, empty, malformed and out-of-range values) is covered by `appliance/test-signin.sh`, which runs
+against real loop devices before the images are built, and `appliance/test-service.sh` runs the openrc service against a fake `docker` (container created, kept, replaced when the hash changes, recreated without sign-in when the file is removed,
+refused when invalid, hash never on a command line). Only the QEMU boots are tested automatically; the Hyper-V, VirtualBox and VMware formats are checked
 for identical contents but not started in those products, and the raw USB image's legacy BIOS boot on
 physical hardware has not been tried.
 
 Files: `appliance/build.sh`, `appliance/chroot-setup.sh`, `appliance/boot-test.sh`,
 `appliance/build-rpi.sh`, `appliance/rpi-in-container.sh`, `appliance/boot-test-rpi.sh`,
-`appliance/ovf.template` and the files under `appliance/skel/`. The `Appliance check` workflow runs both
+`appliance/ovf.template`, the sign-in tests below and the files under `appliance/skel/`. The `Appliance check` workflow runs both
 builds and boot tests from `main` without releasing anything.

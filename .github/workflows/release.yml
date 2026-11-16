@@ -151,7 +151,7 @@ jobs:
       - name: Install build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends qemu-system-x86 qemu-utils rsync e2fsprogs dosfstools fdisk zip xz-utils curl
+          sudo apt-get install -y --no-install-recommends qemu-system-x86 qemu-utils rsync e2fsprogs dosfstools mtools fdisk zip xz-utils curl
       - name: Allow KVM if the runner has it
         run: |
           if [ -e /dev/kvm ]; then
@@ -171,12 +171,28 @@ jobs:
           set -euo pipefail
           docker pull "$IMAGE@$DIGEST"
           docker tag "$IMAGE@$DIGEST" "$IMAGE:$VERSION"
+      - name: Appliance sign-in logic tests (real loop devices, fake docker)
+        run: |
+          set -euo pipefail
+          hash1="$(echo 'test-password-one' | docker run --rm -i "$IMAGE:$VERSION" gmmc-auth hash)"
+          hash2="$(echo 'test-password-two' | docker run --rm -i "$IMAGE:$VERSION" gmmc-auth hash)"
+          iso="$RUNNER_TEMP/config-disk.iso"
+          echo "$hash1" > "$RUNNER_TEMP/hash1"
+          node desktop/deploy/lib/config-disk.js "$RUNNER_TEMP/hash1" "$iso"
+          sudo env "PATH=$PATH" bash appliance/test-signin.sh "$hash1" "$iso"
+          sudo env "PATH=$PATH" GMMC_TEST_DISPOSABLE=1 sh appliance/test-service.sh "$hash1" "$hash2"
       - name: Build the appliance images
         run: sudo appliance/build.sh "$VERSION" "$IMAGE:$VERSION" "$PWD/appliance-out"
       - name: Boot test
         run: |
           sudo chown -R "$USER" appliance-out
           appliance/boot-test.sh "appliance-out/gtha-metro-map-creator-appliance-$VERSION-x86_64.qcow2" "$VERSION" 600
+      - name: Boot test with a FAT configuration disk (password sign-in)
+        run: appliance/boot-test.sh "appliance-out/gtha-metro-map-creator-appliance-$VERSION-x86_64.qcow2" "$VERSION" 600 --config-disk vfat --image "$IMAGE:$VERSION"
+      - name: Boot test with the ISO configuration disk the deploy app makes
+        run: appliance/boot-test.sh "appliance-out/gtha-metro-map-creator-appliance-$VERSION-x86_64.qcow2" "$VERSION" 600 --config-disk iso --image "$IMAGE:$VERSION"
+      - name: Boot test with an invalid password setting (the app must refuse to start)
+        run: appliance/boot-test.sh "appliance-out/gtha-metro-map-creator-appliance-$VERSION-x86_64.qcow2" "$VERSION" 600 --config-disk invalid
       - name: Collect the uploads
         run: |
           mkdir -p upload
@@ -226,7 +242,7 @@ jobs:
       - name: Install build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends qemu-system-arm qemu-utils xz-utils curl
+          sudo apt-get install -y --no-install-recommends qemu-system-arm qemu-utils mtools dosfstools xz-utils curl
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -252,6 +268,8 @@ jobs:
           fi
       - name: Boot test (QEMU virt twin of the same root file system)
         run: appliance/boot-test-rpi.sh "$PWD/appliance-rpi-out" "$VERSION" 1500
+      - name: Boot test with a boot-partition password file (password sign-in)
+        run: appliance/boot-test-rpi.sh "$PWD/appliance-rpi-out" "$VERSION" 1500 --config-disk boot --image "$IMAGE:$VERSION"
       - name: Collect the upload
         run: |
           mkdir -p upload

@@ -9,6 +9,7 @@ const site = require('./lib/site');
 const { Manager } = require('./lib/manager');
 const { listDisks } = require('./lib/flash');
 const usb = require('./targets/usb');
+const { hashPasswordAsync } = require('../shared/password');
 const targets = {
   docker: require('./targets/docker'), builtin: require('./targets/builtin'), virtualbox: require('./targets/virtualbox'), vmware: require('./targets/vmware'),
   ssh: require('./targets/ssh'), usb: usb.usb, rpi: usb.rpi, pages: require('./targets/pages'), folder: require('./targets/folder')
@@ -22,11 +23,11 @@ const FLASH = ['usb', 'rpi'];
 const DEFAULT_SETTINGS = {
   docker: { name: '', port: 8080, tag: 'latest', requirePassword: false },
   builtin: { name: '', port: 8090, keepRunning: false },
-  virtualbox: { name: '', netMode: 'bridged' },
-  vmware: { name: '' },
+  virtualbox: { name: '', netMode: 'bridged', requirePassword: false },
+  vmware: { name: '', requirePassword: false },
   ssh: { name: '', host: '', user: '', sshPort: 22, folder: '~/gtha-map', key: '', port: 8080, tag: 'latest', requirePassword: false },
   usb: { disk: -1 },
-  rpi: { disk: -1 },
+  rpi: { disk: -1, requirePassword: false },
   pages: { name: '', repo: '' },
   folder: { name: '', mode: 'folder', path: '' }
 };
@@ -92,8 +93,14 @@ async function runFlash(id, number) {
   const status = (patch) => send('status', Object.assign({ id }, patch));
   status({ state: 'running', pct: 2, msg: 'Starting', links: [], error: '', note: '' });
   try {
+    // A password for the Raspberry Pi is hashed here and only the hash goes on to the image; it is never saved.
+    let passwordHash = '';
+    if (id === 'rpi' && state && state.settings.rpi && state.settings.rpi.requirePassword) {
+      if (!secrets.rpi) throw new Error('Enter a password, or turn off "Require a password".');
+      passwordHash = await hashPasswordAsync(secrets.rpi);
+    }
     const ctx = {
-      settings: { disk: number }, confirmedDisk: confirmed.get(id), userData: path.join(app.getPath('userData'), 'deploy'), version: APP_VERSION, signal: ctl.signal,
+      passwordHash, settings: { disk: number }, confirmedDisk: confirmed.get(id), userData: path.join(app.getPath('userData'), 'deploy'), version: APP_VERSION, signal: ctl.signal,
       emit: (pct, msg) => status({ state: 'running', pct, msg }), log: (line) => send('log', { id, line: String(line).slice(0, 400) })
     };
     fs.mkdirSync(ctx.userData, { recursive: true });

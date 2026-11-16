@@ -10,6 +10,7 @@ const { run } = require('../lib/proc');
 const { downloadRelease, applianceName } = require('../lib/download');
 const { unzipOne, untarOne } = require('../lib/archive');
 const { addressFromSerialLog, addressFromNeighbours, waitForAppliance, sleep, tail, MARKER_NAME } = require('../lib/vm-common');
+const { writeConfigIso } = require('../lib/config-disk');
 
 const NEED = 'VMware Workstation (or Workstation Player) was not found. Install it, or install VMware OVF Tool, and try again.';
 
@@ -36,6 +37,18 @@ function vmxText(name, vmdk, serial) {
     'tools.syncTime = "FALSE"', 'mks.enable3d = "FALSE"'
   ].join('\n') + '\n';
 }
+// Adds the sign-in configuration disk to the machine file: an ISO as a CD-ROM on the second IDE channel, connected
+// at power-on. Only the hash is on it, never the password. Any earlier definition of that drive is replaced.
+function attachConfigDisk(vmx, hash, ctx) {
+  const dir = path.join(ctx.instDir, 'config'); fs.mkdirSync(dir, { recursive: true });
+  const iso = path.join(dir, 'gmmc-config.iso');
+  writeConfigIso(iso, hash);
+  const lines = fs.readFileSync(vmx, 'utf8').split(/\r?\n/).filter((l) => !/^ide1:0\./i.test(l));
+  while (lines.length && lines[lines.length - 1] === '') lines.pop();
+  lines.push('ide1:0.present = "TRUE"', 'ide1:0.deviceType = "cdrom-image"', 'ide1:0.fileName = "' + iso.replace(/\\/g, '/') + '"', 'ide1:0.startConnected = "TRUE"');
+  fs.writeFileSync(vmx, lines.join('\n') + '\n');
+  return iso;
+}
 const macOf = (vmxFile) => { try { const m = /ethernet0\.(?:address|generatedAddress)\s*=\s*"([^"]+)"/.exec(fs.readFileSync(vmxFile, 'utf8')); return m ? m[1].toLowerCase() : ''; } catch { return ''; } };
 
 // The machine folder is ours only when it lies inside this instance's folder and holds a matching marker.
@@ -56,7 +69,7 @@ async function bootAndFind(t, inst, ctx) {
   if (r.code !== 0) throw new Error('VMware could not start the machine: ' + tail(r.out, 2).slice(0, 300));
   ctx.emit(72, 'Starting the machine');
   const mac = inst.run.mac || macOf(inst.run.vmx);
-  return waitForAppliance({ find: async () => addressFromSerialLog(serial) || (await addressFromNeighbours(mac)), signal: ctx.signal, emit: ctx.emit, label: 'Waiting for the web app' });
+  return waitForAppliance({ find: async () => addressFromSerialLog(serial) || (await addressFromNeighbours(mac)), signal: ctx.signal, emit: ctx.emit, label: 'Waiting for the web app', signin: !!inst.passwordHash });
 }
 
 async function deploy(ctx) {
@@ -92,10 +105,11 @@ async function deploy(ctx) {
     fs.rmSync(raw, { force: true });
     fs.writeFileSync(vmx, vmxText(name, path.basename(out), serial));
   }
+  if (inst.passwordHash) { ctx.emit(60, 'Attaching the password disk'); attachConfigDisk(vmx, inst.passwordHash, ctx); }
   inst.run = Object.assign({}, inst.run, { vm: name, vmx, mac: macOf(vmx) }); inst.version = ctx.version; inst.where = 'VMware'; ctx.persist(inst);
   const up = await bootAndFind(t, inst, ctx);
   inst.url = up.url;
-  return { links: [{ label: name, url: up.url, kind: 'url' }], note: 'Bridged network. Verified: /healthz and /app/ answered.', patch: { url: up.url, run: inst.run, version: ctx.version, where: 'VMware' } };
+  return { links: [{ label: name, url: up.url, kind: 'url' }], note: 'Bridged network. ' + (inst.passwordHash ? 'Verified: /healthz answered and /app/ asks for the password.' : 'Verified: /healthz and /app/ answered.'), patch: { url: up.url, run: inst.run, version: ctx.version, where: 'VMware' } };
 }
 
 const isRunning = async (t, inst) => { const r = await vm(t, ['list'], { timeout: 30000 }); return r.out.split(/\r?\n/).some((l) => l.trim().toLowerCase() === path.resolve(inst.run.vmx).toLowerCase() || l.trim().toLowerCase() === inst.run.vmx.toLowerCase()); };
@@ -134,7 +148,7 @@ async function update(inst, ctx, latest) {
   const oldDir = path.join(ctx.instDir, 'vm'); const asideDir = path.join(ctx.instDir, 'vm-old');
   fs.rmSync(asideDir, { recursive: true, force: true }); fs.renameSync(oldDir, asideDir);
   try {
-    const res = await deploy(Object.assign({}, ctx, { inst: { id: inst.id, slug: inst.slug, run: {} }, version: latest, persist: () => {} }));
+    const res = await deploy(Object.assign({}, ctx, { inst: { id: inst.id, slug: inst.slug, run: {}, passwordHash: inst.passwordHash || '' }, version: latest, persist: () => {} }));
     fs.rmSync(asideDir, { recursive: true, force: true });
     return res;
   } catch (e) { fs.rmSync(oldDir, { recursive: true, force: true }); fs.renameSync(asideDir, oldDir); throw e; }

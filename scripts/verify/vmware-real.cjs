@@ -55,6 +55,20 @@ const check = (name, ok, detail) => { console.log((ok ? 'PASS ' : 'FAIL ') + nam
   check('the folder holds the ownership marker', JSON.parse(fs.readFileSync(path.join(manager.instDir(rec.id), 'vm', 'gmmc-instance.json'), 'utf8')).id === rec.id);
   const st = await manager.checkOne(manager.registry.get(rec.id));
   check('the manager sees the machine as stopped', st.state === 'stopped', st);
+  // the same with "Require a password": the machine file must carry the configuration disk, which holds only the hash
+  const pw = 'check-' + crypto.randomBytes(6).toString('hex');
+  const res2 = await manager.deploy('vmware', { name: 'VMW Pw', requirePassword: true, password: pw }, null);
+  check('a deployment with a password also stops at the blocked start', !res2.ok && /could not start the machine|refused by the test wrapper/i.test(res2.error), res2.error);
+  const rec2 = manager.list().find((i) => i.name === 'VMW Pw');
+  const full2 = manager.registry.get(rec2.id);
+  const vmx2 = fs.readFileSync(rec2.run.vmx, 'utf8');
+  const iso2 = path.join(manager.instDir(rec2.id), 'config', 'gmmc-config.iso');
+  const isoBytes = fs.existsSync(iso2) ? fs.readFileSync(iso2) : Buffer.alloc(0);
+  check('the machine file attaches the configuration ISO as a CD-ROM', /ide1:0\.deviceType\s*=\s*"cdrom-image"/i.test(vmx2) && vmx2.includes('gmmc-config.iso') && /ide1:0\.startConnected\s*=\s*"TRUE"/i.test(vmx2), (vmx2.match(/^ide1:0.*$/gm) || []).join(' | '));
+  check('the ISO holds the hash and not the password', /^pbkdf2-sha256:/.test(full2.passwordHash) && isoBytes.includes(Buffer.from(full2.passwordHash)) && !isoBytes.includes(Buffer.from(pw)) && isoBytes.includes(Buffer.from('GMMCCONF')));
+  check('the password itself is not in the registry or the machine file', !JSON.stringify(full2).includes(pw) && !vmx2.includes(pw));
+  const rm2 = await manager.action(rec2.id, 'remove');
+  check('the machine with a password is removed too', rm2.ok && !fs.existsSync(rec2.run.vmx), rm2);
   // a record whose machine file is somewhere else is refused
   const stray = path.join(work, 'stray'); fs.mkdirSync(stray); fs.writeFileSync(path.join(stray, 'x.vmx'), '.encoding = "UTF-8"\n');
   manager.registry.upsert({ id: 'cccccccccccc', kind: 'vmware', name: 'Stray', slug: 'stray', run: { vm: 'x', vmx: path.join(stray, 'x.vmx') } });
