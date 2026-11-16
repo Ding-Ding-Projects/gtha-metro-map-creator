@@ -149,7 +149,7 @@ async function readStopTimes(file, entries, tripIx, stopIx, nTrips) {
   const G = { trip: new Grow(Int32Array), stop: new Grow(Int32Array), seq: new Grow(Int32Array), arr: new Grow(Int32Array), dep: new Grow(Int32Array), flags: new Grow(Uint8Array), dist: new Grow(Float32Array) };
   const extras = []; let seen = 0, last = -5, badTimes = 0, orphanStops = 0, orphanTrips = 0, noSeq = 0; const orphanStopIds = new Set(), orphanTripIds = new Set();
   const X = ['stop_headsign', 'start_pickup_drop_off_window', 'end_pickup_drop_off_window', 'continuous_pickup', 'continuous_drop_off', 'pickup_booking_rule_id', 'drop_off_booking_rule_id', 'location_group_id', 'location_id', 'mean_duration_factor', 'mean_duration_offset', 'safe_duration_factor', 'safe_duration_offset'];
-  let cols = [];
+  let cols = []; const KNOWN = new Set(['trip_id', 'arrival_time', 'departure_time', 'stop_id', 'stop_sequence', 'pickup_type', 'drop_off_type', 'shape_dist_traveled', 'timepoint']); let extraCols = [];
   await streamCsv(file, e, (f, col) => {
     const c = (k) => { const i = col[k]; return i === undefined || f[i] === undefined ? '' : f[i].trim(); };
     const tid = c('trip_id'), sid = c('stop_id');
@@ -165,10 +165,10 @@ async function readStopTimes(file, entries, tripIx, stopIx, nTrips) {
     G.flags.push((pu & 3) | ((dr & 3) << 2) | ((tp === '' ? 0 : tp === '0' ? 1 : 2) << 4));
     const sd = c('shape_dist_traveled'); G.dist.push(sd === '' ? NaN : +sd);
     let ex = null;
-    for (const k of X) { const v = c(k); if (v !== '') { (ex || (ex = {}))[k] = I(v); } }
+    for (const k of extraCols) { const v = c(k); if (v !== '') { (ex || (ex = {}))[k] = I(v); } }
     if (sid !== '' && si < 0) (ex || (ex = {})).stop_id = sid;
     if (ex) extras.push([row, ex]);
-  }, (n) => { seen += n; const p = 100 * Math.min(1, seen / total); if (p - last >= 2) { last = p; post('stop_times.txt', p); } }, (h) => { cols = h; });
+  }, (n) => { seen += n; const p = 100 * Math.min(1, seen / total); if (p - last >= 2) { last = p; post('stop_times.txt', p); } }, (h) => { cols = h; extraCols = h.filter((k) => !KNOWN.has(k)); });
   let n = G.trip.n, trip = G.trip.done(), stop = G.stop.done(), seq = G.seq.done(), arr = G.arr.done(), dep = G.dep.done(), flags = G.flags.done(), dist = G.dist.done();
   let tripStart;
   const ord = orderRows(n, trip, seq, nTrips);
@@ -208,6 +208,7 @@ async function parse(file) {
   const entries = await zipEntries(file);
   const out = {}, cols = {}, files = {}; const t0 = Date.now();
   for (const [name, e] of entries) files[name] = { bytes: e.usize, rows: 0, name: e.name };
+  self.postMessage({ type: 'plan', files: [...entries].map(([name, e]) => ({ name, bytes: e.usize })) });
   const special = new Set(['stop_times.txt', 'shapes.txt']);
   const txt = [...entries.keys()].filter((n) => n.endsWith('.txt') && !special.has(n));
   txt.sort((a, b) => (b === 'trips.txt') - (a === 'trips.txt') || (b === 'stops.txt') - (a === 'stops.txt'));

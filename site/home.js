@@ -12,7 +12,7 @@
     { k: 'timeline', icon: 'explore', img: 'assets/timeline.webp', en: ['Network timeline', 'Slide through the years and watch the network grow since 1954.'], yue: ['網絡時間線', '拉動年份，睇住網絡由 1954 年開始點樣擴展。'] }
   ];
   var YUE = {
-    skip: '跳到內容', navFeatures: '功能', navGuides: '指南', navGet: '下載', navDocs: '說明文件', navSource: '原始碼',
+    skip: '跳到內容', navFeatures: '功能', navGuides: '指南', navGet: '下載', navDocs: '說明文件', navGtfs: 'GTFS 檢視器', g6b: '開 GTFS 檢視器 →', navSource: '原始碼',
     new: '新', eyebrow: '方案、模擬同覆蓋範圍', h1a: '設計大多倫多同咸美頓嘅', h1b: '交通未來',
     lead: '喺真實地圖上畫地鐵、輕鐵、GO 同巴士路線。規劃行程、比較方案、睇吓車站附近住咗幾多人，再發佈去任何地方。全部喺瀏覽器運行，你嘅地圖唔會離開你部電腦。',
     open: '打開編輯器', download: '下載 Windows 版', sStations: '個車站同站點', sRoutes: '條範本路線', sPeople: '人口普查人數', sServers: '個伺服器',

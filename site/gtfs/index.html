@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GTFS Viewer</title>
+<meta name="description" content="Open any GTFS feed in your browser: routes, stops, trips, blocks, calendars, shapes, fares, flex service and validation. Nothing is uploaded.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="gtfs-tokens.css">
+<link rel="stylesheet" href="gtfs-components.css">
+</head>
+<body>
+<a id="skipLink" class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <a class="brand" href="../" aria-label="GTHA Metro Map Creator"><span class="brand-ic" id="brandIc"></span><span class="brand-t">GTFS Viewer</span></a>
+  <button type="button" class="feed-chip" id="feedChip" hidden></button>
+  <span class="spacer"></span>
+  <button type="button" class="search-btn" id="searchBtn" disabled aria-keyshortcuts="Control+K"><span id="sbIc"></span><span class="sb-t">Search routes, stops, trips</span><kbd>Ctrl K</kbd></button>
+  <button type="button" class="btn tonal" id="openBtn" aria-haspopup="menu"><span>Open feed</span></button>
+  <button type="button" class="btn filled" id="addMapBtn" hidden><span>Add to map</span></button>
+  <button type="button" class="ibtn" id="moreBtn" aria-haspopup="menu"></button>
+</header>
+<div class="shell">
+  <nav class="rail" id="rail" aria-label="Views"></nav>
+  <main id="main" tabindex="-1" aria-live="off"></main>
+</div>
+<div id="dropOverlay" hidden>Drop a GTFS .zip to open it</div>
+<noscript><p style="padding:24px">The GTFS viewer needs JavaScript. Everything runs in your browser and nothing is uploaded.</p></noscript>
+<script src="../app/icons.js"></script>
+<script src="../app/i18n.js"></script>
+<script src="gtfs-strings.js"></script>
+<script src="gtfs-core.js"></script>
+<script src="gtfs-validate.js"></script>
+<script src="gtfs-rt.js"></script>
+<script src="gtfs-map.js"></script>
+<script src="gtfs-ui.js"></script>
+<script src="gtfs-app.js"></script>
+<script src="gtfs-views.js"></script>
+<script src="gtfs-views2.js"></script>
+<script>
+  document.getElementById('brandIc').innerHTML = window.GUI.icon('bus', 24);
+  document.getElementById('sbIc').innerHTML = window.GUI.icon('search', 20);
+  document.getElementById('moreBtn').innerHTML = window.GUI.icon('more', 24);
+  document.querySelector('#openBtn').insertAdjacentHTML('afterbegin', window.GUI.icon('upload_file', 18));
+  document.querySelector('#addMapBtn').insertAdjacentHTML('afterbegin', window.GUI.icon('add_map', 18));
+  window.GA.start();
+</script>
+</body>
+</html>

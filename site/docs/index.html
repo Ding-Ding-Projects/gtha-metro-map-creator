@@ -36,6 +36,7 @@
       <li><a href="#scenarios">Scenarios and sharing</a></li>
       <li><a href="#simulate">Simulation</a></li>
       <li><a href="#gtfsexport">Export GTFS</a></li>
+      <li><a href="#gtfsviewer">GTFS viewer</a></li>
       <li><a href="#coverage">Coverage and ridership</a></li>
       <li><a href="#realtime">Live vehicles</a></li>
       <li><a href="#geographic">Geographic layout</a></li>
@@ -155,6 +156,15 @@
       <p>Press <strong>Simulate</strong> to see vehicles run along every route at its speed and frequency, spaced by the headway for the chosen time band. Pause, play and change speed from 1x to 60x. <strong>Record clip</strong> saves a short WebM video. With reduced motion turned on, the simulation starts paused.</p></section>
     <section id="gtfsexport"><h2>Export a GTFS feed</h2>
       <p><strong>Export, GTFS feed</strong> turns your map into a standard GTFS ZIP with agency, stops, routes, calendar, trips, stop times, frequencies and shapes, so trip planners and validators can read it. Times are estimates from distance and a typical speed for each service type, with a short stop at each station.</p></section>
+    <section id="gtfsviewer"><h2>GTFS viewer</h2>
+      <p>The <a href="../gtfs/">GTFS viewer</a> opens any GTFS feed in your browser without uploading it: drop a ZIP, choose a file, or open it from the map editor with <strong>Export, View this map as GTFS</strong>. Large feeds with millions of stop times load in a background worker.</p>
+      <ul>
+        <li><strong>Routes</strong> with drawn shapes, patterns, timetables for any date, headways and first and last trips.</li>
+        <li><strong>Stops</strong> with station hierarchy, departure boards, transfers and pathway graphs.</li>
+        <li><strong>Blocks</strong> as a Gantt chart with layovers, deadhead moves and overlap flags.</li>
+        <li><strong>Calendar, shapes, fares, flex service and translations</strong>, plus a validator that opens each problem.</li>
+        <li><strong>Realtime</strong> files show vehicles, delays and alerts. Press <kbd>Ctrl K</kbd> to search everything. <strong>Add to map</strong> sends chosen routes to the editor importer.</li>
+      </ul></section>
     <section id="coverage"><h2>Coverage and ridership</h2>
       <p><strong>Coverage</strong> counts the people living within 400 m and 800 m of your stations, using Statistics Canada 2021 Census population for every dissemination area in the GTHA, and shows totals for each line. Turn on walksheds to draw the circles on the map. Job counts are not included because they are not published openly at this level.</p>
       <p><strong>Ridership estimate</strong> draws each line wider where more people would ride it, from a simple gravity model on the fastest trips. It is an illustrative estimate to compare plans, not a forecast, and the map says so.</p></section>
