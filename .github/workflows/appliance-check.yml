@@ -1,0 +1,80 @@
+name: Appliance check
+
+# Builds and boot-tests the appliance disk images from main, using the container image that the
+# "Container image" workflow publishes for this exact commit (tag sha-<short sha>). Nothing is
+# released; the images are kept as workflow artifacts. The release workflow runs the same build
+# for v* tags.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'appliance/**'
+      - '.github/workflows/appliance-check.yml'
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: appliance-check-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/ding-ding-projects/gtha-metro-map-creator
+
+jobs:
+  appliance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qemu-system-x86 qemu-utils rsync e2fsprogs dosfstools fdisk zip xz-utils curl
+      - name: Allow KVM if the runner has it
+        run: |
+          if [ -e /dev/kvm ]; then
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger --name-match=kvm
+          else
+            echo "No /dev/kvm: the boot test will use software emulation (slower)."
+          fi
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Wait for the container image of this commit
+        id: img
+        run: |
+          set -euo pipefail
+          short="$(git rev-parse --short=7 HEAD)"
+          version="$(node -p "require('./desktop/package.json').version")"
+          ref="$IMAGE:sha-$short"
+          for i in $(seq 1 60); do
+            if docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then break; fi
+            echo "Waiting for $ref (attempt $i of 60)"; sleep 30
+          done
+          docker pull "$ref"
+          docker tag "$ref" "$IMAGE:$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Build the appliance images
+        run: sudo appliance/build.sh "${{ steps.img.outputs.version }}" "$IMAGE:${{ steps.img.outputs.version }}" "$PWD/appliance-out"
+      - name: Boot test
+        run: |
+          sudo chown -R "$USER" appliance-out
+          appliance/boot-test.sh "appliance-out/gtha-metro-map-creator-appliance-${{ steps.img.outputs.version }}-x86_64.qcow2" "${{ steps.img.outputs.version }}" 600
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: appliance-check
+          path: |
+            appliance-out/*.qcow2.xz
+            appliance-out/*.log
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: ignore
