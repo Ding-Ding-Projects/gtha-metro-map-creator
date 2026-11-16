@@ -11,6 +11,7 @@ const { run } = require('../lib/proc');
 const { downloadRelease, applianceName } = require('../lib/download');
 const { unzipOne } = require('../lib/archive');
 const { addressFromSerialLog, addressFromNeighbours, waitForAppliance, sleep, tail } = require('../lib/vm-common');
+const { writeConfigIso } = require('../lib/config-disk');
 
 const DOWNLOAD_PAGE = 'https://www.virtualbox.org/wiki/Downloads';
 
@@ -53,6 +54,25 @@ async function activeBridgeAdapter(exe) {
 
 function lanIp() { return lanAddresses()[0] || ''; }
 
+// Gives the machine the small configuration disk that carries the sign-in hash: an ISO attached as a CD-ROM on
+// the second IDE channel. Only the hash is on it, never the password. Returns the ISO's path.
+async function attachConfigDisk(exe, uuid, inst, ctx) {
+  const dir = path.join(ctx.instDir, 'config'); fs.mkdirSync(dir, { recursive: true });
+  const iso = path.join(dir, 'gmmc-config.iso');
+  writeConfigIso(iso, inst.passwordHash);
+  const info = kv((await vbox(exe, ['showvminfo', uuid, '--machinereadable'], { timeout: 20000 })).out);
+  let ctl = '';
+  for (let i = 0; info['storagecontrollername' + i]; i++) if (/PIIX|ICH6/i.test(info['storagecontrollertype' + i] || '')) { ctl = info['storagecontrollername' + i]; break; }
+  if (!ctl) {
+    ctl = 'IDE Controller';
+    const add = await vbox(exe, ['storagectl', uuid, '--name', ctl, '--add', 'ide', '--controller', 'PIIX4'], { timeout: 30000 });
+    if (add.code !== 0) throw new Error('VirtualBox could not add a drive for the password: ' + tail(add.out, 2).slice(0, 300));
+  }
+  const att = await vbox(exe, ['storageattach', uuid, '--storagectl', ctl, '--port', '1', '--device', '0', '--type', 'dvddrive', '--medium', iso], { timeout: 30000 });
+  if (att.code !== 0) throw new Error('VirtualBox could not attach the password disk: ' + tail(att.out, 2).slice(0, 300));
+  return iso;
+}
+
 async function bootAndFind(exe, inst, ctx, port) {
   const serial = path.join(ctx.instDir, 'serial.log');
   const start = await vbox(exe, ['startvm', inst.run.uuid, '--type', 'headless'], { timeout: 120000 });
@@ -61,7 +81,7 @@ async function bootAndFind(exe, inst, ctx, port) {
   const nat = inst.run.netMode === 'nat';
   const find = nat ? async () => '127.0.0.1' : async () => addressFromSerialLog(serial) || (await addressFromNeighbours(inst.run.mac));
   const hostPort = nat ? port : 8080;
-  const r = await waitForAppliance({ find, port: hostPort, signal: ctx.signal, emit: ctx.emit, label: 'Waiting for the web app' });
+  const r = await waitForAppliance({ find, port: hostPort, signal: ctx.signal, emit: ctx.emit, label: 'Waiting for the web app', signin: !!inst.passwordHash });
   if (nat) { const ip = lanIp(); return { url: 'http://' + (ip || '127.0.0.1') + ':' + port + '/', checked: r.url }; }
   return { url: r.url, checked: r.url };
 }
@@ -106,12 +126,14 @@ async function deploy(ctx) {
   }
   const m = await vbox(exe, mod, { timeout: 30000 });
   if (m.code !== 0) throw new Error('VirtualBox could not configure the machine: ' + tail(m.out, 2).slice(0, 300));
+  if (inst.passwordHash) { ctx.emit(62, 'Attaching the password disk'); await attachConfigDisk(exe, uuid, inst, ctx); }
   const mac = (kv((await vbox(exe, ['showvminfo', uuid, '--machinereadable'], { timeout: 20000 })).out).macaddress1 || '').toLowerCase();
   inst.run = Object.assign({}, inst.run, { mac, netMode: mode });
 
   const up = await bootAndFind(exe, inst, ctx, inst.port);
   inst.url = up.url;
-  return { links: [{ label: inst.run.vm, url: up.url, kind: 'url' }], note: note || (mode === 'bridged' ? 'Bridged to ' + adapter + '. Verified: /healthz and /app/ answered.' : 'NAT with port ' + inst.port + ' forwarded. Verified: /healthz and /app/ answered.'), patch: { url: up.url, port: inst.port, run: inst.run, version: ctx.version, where: 'VirtualBox' } };
+  const verified = inst.passwordHash ? 'Verified: /healthz answered and /app/ asks for the password.' : 'Verified: /healthz and /app/ answered.';
+  return { links: [{ label: inst.run.vm, url: up.url, kind: 'url' }], note: note || (mode === 'bridged' ? 'Bridged to ' + adapter + '. ' + verified : 'NAT with port ' + inst.port + ' forwarded. ' + verified), patch: { url: up.url, port: inst.port, run: inst.run, version: ctx.version, where: 'VirtualBox' } };
 }
 
 async function state(inst) {
@@ -154,7 +176,7 @@ async function update(inst, ctx, latest) {
   await owned(exe, inst);
   const old = Object.assign({}, inst, { run: Object.assign({}, inst.run) });
   await stop(old, ctx);
-  const draft = { id: inst.id, slug: inst.slug, run: { netMode: inst.run.netMode }, port: inst.port };
+  const draft = { id: inst.id, slug: inst.slug, run: { netMode: inst.run.netMode }, port: inst.port, passwordHash: inst.passwordHash || '' };
   // A second machine with a different name, so the old one stays until the new one is verified.
   draft.slug = inst.slug + '-n' + latest.replace(/\./g, '');
   const res = await deploy(Object.assign({}, ctx, { inst: draft, version: latest, settings: { netMode: inst.run.netMode }, persist: () => {} }));

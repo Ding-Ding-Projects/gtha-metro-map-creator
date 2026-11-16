@@ -9,6 +9,8 @@ const { pipeline } = require('node:stream/promises');
 const { run } = require('./proc');
 const { downloadRelease, applianceName } = require('./download');
 const { buildScript, encode } = require('./flash-helper');
+const { addFileToFirstPartition } = require('./fat32');
+const { hashOk } = require('../../shared/password');
 
 const TEST = process.env.GMMC_HIDDEN === '1';
 // Hidden test runs may use a plain file as the "drive": GMMC_TEST_FLASH_FILE=<path>.
@@ -64,6 +66,23 @@ async function prepareImage({ version, kind, cacheDir, signal, emit, log }) {
   return Object.assign(out, { name: path.basename(raw) });
 }
 
+async function sha256File(file) {
+  const hash = crypto.createHash('sha256');
+  await pipeline(fs.createReadStream(file), hash);
+  return hash.digest('hex');
+}
+
+// Puts the sign-in password hash on the FAT boot partition of an unpacked Raspberry Pi image, as the file
+// gmmc-password-hash that the appliance reads at boot. This changes only the unpacked copy on this computer,
+// before anything is written to a drive, and returns the image with its new checksum, which the write then
+// checks every byte against. Only the hash is stored, never the password.
+async function addBootPassword(image, hash, emit) {
+  if (!hashOk(hash)) throw new Error('The sign-in setting is not a valid password hash.');
+  emit(76, 'Adding the password to the boot partition');
+  addFileToFirstPartition(image.file, 'gmmc-password-hash', hash + '\n');
+  return Object.assign({}, image, { sha256: await sha256File(image.file) });
+}
+
 // Starts the helper. In a test run with a file target it runs without elevation. Otherwise it goes
 // through the Windows permission prompt; declining it ends the run as "cancelled".
 // Returns { ok, cancelled, message, sha256 }.
@@ -94,4 +113,4 @@ async function writeImage({ disk, image, userData, emit, log, signal }) {
   } finally { clearInterval(timer); try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* temp folder */ } }
 }
 
-module.exports = { listDisks, prepareImage, writeImage, decompress, TEST_DISK_NUMBER };
+module.exports = { listDisks, prepareImage, writeImage, decompress, addBootPassword, TEST_DISK_NUMBER };

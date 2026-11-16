@@ -57,7 +57,8 @@ returns to the page they asked for.
 | --- | --- |
 | `host.bat --password` | Hidden prompt, then `GMMC_PASSWORD_HASH` is written to `.env` next to `compose.yaml`. `.env` is git-ignored. `host.bat --no-password` turns it off |
 | Server setup wizard | Step 2 has a **Require a password** switch and a password field. The wizard hashes it and starts Compose with only the hash |
-| [Deploy app](deploy.md) | The Docker and SSH cards have the same switch and field. The hash is kept per instance |
+| [Deploy app](deploy.md) | The Docker, SSH, VirtualBox, VMware and Raspberry Pi cards have the same switch and field. The hash is kept per instance (not for a Raspberry Pi card, which is written once) |
+| [Appliance images](appliance.md#password-sign-in) | The hash is read at boot from a small disk labelled `GMMCCONF` or a `gmmc-password-hash` file on the Raspberry Pi boot partition and given to the same container |
 | Compose or `docker run` by hand | Set `GMMC_PASSWORD_HASH` in the environment, or `GMMC_PASSWORD_HASH_FILE` to a mounted file (a Docker secret works) holding the hash on its first line |
 
 The value is a hash, never the password: `pbkdf2-sha256:600000:<salt>:<hash>` (PBKDF2-HMAC-SHA256, 600,000

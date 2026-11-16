@@ -59,15 +59,28 @@ which stores it unencrypted in this browser's local storage and says so; it is s
 | GitHub Pages | Creates the repository (public) if missing, writes the site to the `gh-pages` branch through the GitHub REST API (blobs, tree, commit, ref), turns Pages on and polls the build for up to 10 minutes. | The Pages build reports `built` and `https://<owner>.github.io/<repo>/app/index.html` answers 200. |
 | Folder or ZIP | Writes the static site to a folder, or a ZIP file written by the app itself. | The copy is read back (`app/index.html` must exist). Open reveals it in Explorer. |
 
-**Require a password.** The Docker and SSH cards have a **Require a password** switch (off by default) and a
+**Require a password.** The Docker, SSH, VirtualBox, VMware and Raspberry Pi cards have a **Require a password** switch (off by default) and a
 password field (8 to 200 characters). The password is hashed in the app (PBKDF2-SHA256, 600,000 rounds) and only the hash goes on:
 the Docker target writes it to a private `.env` beside the instance's `compose.yaml`, the SSH target uploads that `.env` over stdin (never on
 a command line). The registry keeps only the hash, the typed password is never saved with the settings or
 shown again, and the window never receives the hash. Deploying again with the switch on and the field empty keeps the
 instance's current password. Verification asks `/healthz` (open) and then checks that `/app/` answers with a redirect to
-the sign-in page or 401, and the card then says **Live, password required**. See [hosting.md](hosting.md). The built-in server, VirtualBox,
-VMware, USB drive and Raspberry Pi targets have no password option: the built-in server is not the container image, and the appliance
-disks are covered in [appliance.md](appliance.md).
+the sign-in page or 401, and the card then says **Live, password required**. See [hosting.md](hosting.md). The built-in server is not the
+container image and has no password option.
+
+*VirtualBox and VMware.* The password is hashed in the app and the app makes a small ISO image next to the
+instance (`config/gmmc-config.iso`, label `GMMCCONF`, holding only the hash) and attaches it to the machine as a CD-ROM on the second IDE channel,
+as a `ide1:0` CD-ROM in the VMware machine file. The appliance reads it at boot and starts the editor with sign-in on. The deploy app waits
+until `/healthz` answers and `/app/` asks for a password, then reports **Live, password required**. If the machine answers without asking
+for a password (an appliance image from before this option) the deployment is reported as failed with that reason, never as live. **Update** keeps
+the instance's password and attaches a new disk to the new machine. Both options need an appliance image from the same release as the deploy app or later.
+
+*Raspberry Pi.* The hash is added to the unpacked image on this computer, as a file named `gmmc-password-hash` in the root of the FAT boot partition,
+before anything is written to the card. The write then verifies every byte against the changed image, so the file is part of what is read back. The password
+is not kept; to change it later, replace or delete that file on the card from any computer (the boot partition shows up as a normal drive).
+
+*USB drive for a PC.* The raw x86 image has no FAT partition to put a file on, so the app has no password option for it. To require a password, plug in a
+second small USB stick formatted as FAT32 with the label `GMMCCONF` that holds a text file named `password-hash`, as described in [appliance.md](appliance.md#password-sign-in).
 
 If VirtualBox or VMware is missing, the card says so with a download link; VMware without OVF Tool and
 without `vmware-vdiskmanager` says exactly that. The virtual machine targets serve the standard map:

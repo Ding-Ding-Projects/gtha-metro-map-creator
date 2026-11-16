@@ -39,8 +39,10 @@
     dp_stopServer: 'Stop the built-in servers', dp_f_host: 'Server name or address', dp_f_user: 'User name', dp_f_sshPort: 'SSH port', dp_f_folder: 'Remote folder',
     dp_f_key: 'Key file (optional, otherwise ssh-agent)', dp_f_webPort: 'Website port', dp_sshNote: 'Uses the Windows OpenSSH client with key login only. No password is typed here. Each instance gets its own sub-folder.',
     dp_f_repo: 'Repository (owner/name)', dp_pagesNote: 'The repository is created as public if it does not exist. The site is published from the gh-pages branch.',
-    dp_f_net: 'Network', dp_m_bridged: 'Bridged', dp_m_nat: 'NAT', dp_vboxNote: 'Downloads the appliance image of this version from the GitHub release, checks its SHA-256 against the release, imports it as a new machine and starts it without a window. Bridged gives it its own address on your network.',
-    dp_vmwareNote: 'Downloads the appliance image, converts it with VMware OVF Tool (or vmware-vdiskmanager) and starts it with vmrun. The map editor serves the standard map: the appliance has no map seeding.',
+    dp_f_net: 'Network', dp_m_bridged: 'Bridged', dp_m_nat: 'NAT', dp_vboxNote: 'Downloads the appliance image of this version from the GitHub release, checks its SHA-256 against the release, imports it as a new machine and starts it without a window. Bridged gives it its own address on your network. With a password, only its hash is put on a small virtual CD-ROM that the appliance reads when it starts.',
+    dp_vmwareNote: 'Downloads the appliance image, converts it with VMware OVF Tool (or vmware-vdiskmanager) and starts it with vmrun. The map editor serves the standard map: the appliance has no map seeding. With a password, only its hash is put on a small virtual CD-ROM that the appliance reads when it starts.',
+    dp_usbNote: 'Only removable USB and SD drives are listed, never the Windows disk. Nothing is chosen for you. You confirm the exact drive before anything is erased. To protect the editor with a password on a PC started from this drive, plug in a second, small USB stick formatted as FAT32 and named GMMCCONF that holds a text file named password-hash with a password hash in it. See the appliance guide.',
+    dp_rpiNote: 'Only removable USB and SD drives are listed, never the Windows disk. Nothing is chosen for you. You confirm the exact drive before anything is erased. With a password, only its hash is written to the card, as a file named gmmc-password-hash on the boot partition. You can also add or remove that file later from any computer.',
     dp_driveNote: 'Only removable USB and SD drives are listed, never the Windows disk. Nothing is chosen for you. You confirm the exact drive before anything is erased.', dp_refreshDrives: 'Refresh drives', dp_noDrives: 'No removable USB or SD drive was found. Plug one in and press Refresh drives.', dp_drivesFailed: 'The drives could not be listed',
     dp_driveLine: 'Disk {n} · {bus} · {p} partitions', dp_driveRO: 'write protected', dp_writeBtn: 'Erase and write…', dp_chooseFirst: 'Choose a drive first.',
     dp_signIn: 'Sign in with GitHub', dp_signedIn: 'Signed in as', dp_signOut: 'Sign out', dp_cliFound: 'The GitHub CLI is signed in as',
@@ -78,8 +80,10 @@
     dp_stopServer: '停止內置伺服器', dp_f_host: '伺服器名稱或地址', dp_f_user: '用戶名稱', dp_f_sshPort: 'SSH 連接埠', dp_f_folder: '遠端資料夾',
     dp_f_key: '密鑰檔案（可選，否則用 ssh-agent）', dp_f_webPort: '網站連接埠', dp_sshNote: '用 Windows 內置嘅 OpenSSH，只用密鑰登入，唔會喺度輸入密碼。每個實例有自己嘅子資料夾。',
     dp_f_repo: '儲存庫（擁有者/名稱）', dp_pagesNote: '儲存庫如果未有，會建立做公開。網站會由 gh-pages 分支發佈。',
-    dp_f_net: '網絡', dp_m_bridged: '橋接', dp_m_nat: 'NAT', dp_vboxNote: '會由 GitHub 發佈版本下載呢個版本嘅應用映像，對照發佈嘅 SHA-256 檢查，匯入做新虛擬機，再用冇視窗方式啟動。橋接會令佢喺你嘅網絡有自己嘅地址。',
-    dp_vmwareNote: '會下載應用映像，用 VMware OVF Tool（或 vmware-vdiskmanager）轉換，再用 vmrun 啟動。地圖編輯器會顯示標準地圖：應用映像唔支援預載地圖。',
+    dp_f_net: '網絡', dp_m_bridged: '橋接', dp_m_nat: 'NAT', dp_vboxNote: '會由 GitHub 發佈版本下載呢個版本嘅應用映像，對照發佈嘅 SHA-256 檢查，匯入做新虛擬機，再用冇視窗方式啟動。橋接會令佢喺你嘅網絡有自己嘅地址。設定密碼嘅話，只會將密碼雜湊放喺一隻細細嘅虛擬光碟，應用映像開機時會讀取。',
+    dp_vmwareNote: '會下載應用映像，用 VMware OVF Tool（或 vmware-vdiskmanager）轉換，再用 vmrun 啟動。地圖編輯器會顯示標準地圖：應用映像唔支援預載地圖。設定密碼嘅話，只會將密碼雜湊放喺一隻細細嘅虛擬光碟，應用映像開機時會讀取。',
+    dp_usbNote: '只會列出可移除嘅 USB 同 SD 磁碟，唔會列出 Windows 磁碟。程式唔會幫你預先揀。擦除任何嘢之前，你要確認確切嘅磁碟。如果想用呢隻磁碟開機嘅電腦要密碼先可以用編輯器，請插多一隻細 USB 手指，格式化做 FAT32、名叫 GMMCCONF，入面放一個叫 password-hash 嘅文字檔，內容係密碼雜湊。詳情睇應用映像指南。',
+    dp_rpiNote: '只會列出可移除嘅 USB 同 SD 磁碟，唔會列出 Windows 磁碟。程式唔會幫你預先揀。擦除任何嘢之前，你要確認確切嘅磁碟。設定密碼嘅話，只會將密碼雜湊寫入記憶卡，做開機分割區入面一個叫 gmmc-password-hash 嘅檔案。之後你亦可以喺任何電腦加入或者刪除呢個檔案。',
     dp_driveNote: '只會列出可移除嘅 USB 同 SD 磁碟，唔會列出 Windows 磁碟。程式唔會幫你預先揀。擦除任何嘢之前，你要確認確切嘅磁碟。', dp_refreshDrives: '重新整理磁碟', dp_noDrives: '搵唔到可移除嘅 USB 或 SD 磁碟。插好之後，㩒「重新整理磁碟」。', dp_drivesFailed: '列唔到磁碟',
     dp_driveLine: '磁碟 {n} · {bus} · {p} 個分割區', dp_driveRO: '防寫', dp_writeBtn: '擦除並寫入……', dp_chooseFirst: '請先揀一個磁碟。',
     dp_signIn: '用 GitHub 登入', dp_signedIn: '已登入為', dp_signOut: '登出', dp_cliFound: 'GitHub CLI 已登入為',
@@ -98,9 +102,9 @@
 
   const DEFAULTS = {
     docker: { name: '', port: 8080, tag: 'latest', requirePassword: false }, builtin: { name: '', port: 8090, keepRunning: false },
-    virtualbox: { name: '', netMode: 'bridged' }, vmware: { name: '' },
+    virtualbox: { name: '', netMode: 'bridged', requirePassword: false }, vmware: { name: '', requirePassword: false },
     ssh: { name: '', host: '', user: '', sshPort: 22, folder: '~/gtha-map', key: '', port: 8080, tag: 'latest', requirePassword: false },
-    usb: { disk: -1 }, rpi: { disk: -1 }, pages: { name: '', repo: '' }, folder: { name: '', mode: 'zip', path: '' }
+    usb: { disk: -1 }, rpi: { disk: -1, requirePassword: false }, pages: { name: '', repo: '' }, folder: { name: '', mode: 'zip', path: '' }
   };
 
   // ---------------------------------------------------------------- browser backend
@@ -320,16 +324,17 @@
       docker: [NAME, ['port', 'number', 'dp_f_port', { min: 1024, max: 65535, hint: 'dp_f_portHint' }], ['tag', 'text', 'dp_f_tag', {}],
         ['requirePassword', 'switch', 'dp_f_requirePw', { wide: true }], ['password', 'secret', 'dp_f_password', { wide: true, hint: 'dp_f_passwordHint', needs: 'requirePassword' }]],
       builtin: [NAME, ['port', 'number', 'dp_f_port', { min: 1024, max: 65535, hint: 'dp_f_portHint' }], ['keepRunning', 'switch', 'dp_f_keep', { wide: true }]],
-      virtualbox: [NAME, ['netMode', 'seg', 'dp_f_net', { wide: true, options: [['bridged', 'dp_m_bridged'], ['nat', 'dp_m_nat']] }]],
-      vmware: [NAME],
+      virtualbox: [NAME, ['netMode', 'seg', 'dp_f_net', { wide: true, options: [['bridged', 'dp_m_bridged'], ['nat', 'dp_m_nat']] }],
+        ['requirePassword', 'switch', 'dp_f_requirePw', { wide: true }], ['password', 'secret', 'dp_f_password', { wide: true, hint: 'dp_f_passwordHint', needs: 'requirePassword' }]],
+      vmware: [NAME, ['requirePassword', 'switch', 'dp_f_requirePw', { wide: true }], ['password', 'secret', 'dp_f_password', { wide: true, hint: 'dp_f_passwordHint', needs: 'requirePassword' }]],
       ssh: [NAME, ['host', 'text', 'dp_f_host', {}], ['user', 'text', 'dp_f_user', {}], ['sshPort', 'number', 'dp_f_sshPort', { min: 1, max: 65535 }], ['folder', 'text', 'dp_f_folder', {}],
         ['port', 'number', 'dp_f_webPort', { min: 1024, max: 65535 }], ['tag', 'text', 'dp_f_tag', {}], ['key', 'text', 'dp_f_key', { wide: true }],
         ['requirePassword', 'switch', 'dp_f_requirePw', { wide: true }], ['password', 'secret', 'dp_f_password', { wide: true, hint: 'dp_f_passwordHint', needs: 'requirePassword' }]],
-      usb: [], rpi: [],
+      usb: [], rpi: [['requirePassword', 'switch', 'dp_f_requirePw', { wide: true }], ['password', 'secret', 'dp_f_password', { wide: true, hint: 'dp_f_passwordHint', needs: 'requirePassword' }]],
       pages: [NAME, ['repo', 'text', 'dp_f_repo', { wide: true }]],
       folder: [NAME, ['mode', 'seg', 'dp_f_mode', { wide: true, options: [['zip', 'dp_m_zip'], ['folder', 'dp_m_folder']] }]].concat(desk ? [['path', 'path', 'dp_f_path', { wide: true }]] : [])
     };
-    const NOTES = { virtualbox: 'dp_vboxNote', vmware: 'dp_vmwareNote', ssh: 'dp_sshNote', pages: 'dp_pagesNote', builtin: 'dp_keepNote', usb: 'dp_driveNote', rpi: 'dp_driveNote' };
+    const NOTES = { virtualbox: 'dp_vboxNote', vmware: 'dp_vmwareNote', ssh: 'dp_sshNote', pages: 'dp_pagesNote', builtin: 'dp_keepNote', usb: 'dp_usbNote', rpi: 'dp_rpiNote' };
     const SUB = {
       docker: () => t('dp_d_docker') + ' · ' + t('dp_port') + ' ' + st.settings.docker.port, builtin: () => t('dp_d_builtin') + ' · ' + t('dp_port') + ' ' + st.settings.builtin.port,
       virtualbox: () => t('dp_d_virtualbox') + ' · ' + t(st.settings.virtualbox.netMode === 'nat' ? 'dp_net_nat' : 'dp_net_bridged'), vmware: () => t('dp_d_vmware'),
