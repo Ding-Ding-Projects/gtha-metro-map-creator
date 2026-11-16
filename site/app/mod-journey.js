@@ -208,7 +208,23 @@
     });
     return out;
   }
-  window.GMMCJourney = { plan, times };
+  /** One search from fromId, then the legs to each destination (used by the ridership estimate).
+   * Returns { id: { minutes, rides: [{ lineId, via: [stop ids in travel order] }] } }. */
+  function pathsFrom(Gr, fromId, destIds) {
+    const res = search(Gr, fromId), out = {};
+    for (const id of destIds) {
+      const d = Gr.idx[id];
+      if (d === undefined || id === fromId) continue;
+      const r = legsTo(Gr, res, d);
+      if (r) out[id] = { minutes: r.total, rides: r.legs.filter((l) => l.type === 'ride').map((l) => ({ lineId: l.lineId, via: l.via })) };
+    }
+    return out;
+  }
+  function graph(band) {
+    const map = C ? C.getMap() : null;
+    return map ? build(map, BANDS.includes(band) ? band : 'peak') : null;
+  }
+  window.GMMCJourney = { plan, times, graph, pathsFrom };
 
   // ---------- state and panel ----------
   const J = { open: false, from: '', to: '', fromText: '', toText: '', band: 'peak', trip: null, times: null, err: '', sig: '', lang: '', timer: 0 };

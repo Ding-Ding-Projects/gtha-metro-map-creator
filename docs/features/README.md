@@ -11,6 +11,8 @@
 | Schematic | [schematic.md](schematic.md) | Auto-schematic: octilinear layout from real positions |
 | Scenarios | [scenarios.md](scenarios.md) | Named map versions, swipe compare, change list |
 | Share | [share.md](share.md) | Share link in the URL fragment |
+| Coverage | [coverage.md](coverage.md) | People within 400 m and 800 m of stations, walksheds, per-line totals |
+| Demand | [demand.md](demand.md) | Illustrative gravity-model ridership and line widths |
 | Hosting | [hosting.md](hosting.md) | Container image, Compose, host.bat |
 | Simulation | [simulate.md](simulate.md) | Live service simulation, vehicle model, clip recording |
 | GTFS export | [gtfs-export.md](gtfs-export.md) | Export a GTFS feed from the map, round trip with the importer |
