@@ -37,6 +37,28 @@
     return Math.hypot(a.x - b.x, a.y - b.y) * GRID_KM;
   }
   const pos = (v) => (v > 0 ? v : null);
+
+  // ---------- segment times (shared with the simulation, the GTFS export and the travel-time pills) ----------
+  /** The minutes the user set for the stop pair a-b on this line, or null. The key is direction-agnostic. */
+  function segmentOverride(line, a, b) {
+    const tm = line && line.times;
+    if (!tm || typeof tm !== 'object') return null;
+    const v = tm[a + '>' + b] !== undefined ? tm[a + '>' + b] : tm[b + '>' + a];
+    return Number.isFinite(+v) && +v > 0 ? +v : null;
+  }
+  /** Estimated minutes between two stops of a line: distance / speed for its style, plus the dwell at the stop. */
+  function estimateMinutes(line, a, b, map) {
+    map = map || (C ? C.getMap() : null);
+    const sa = map && map.stations[a], sb = map && map.stations[b];
+    if (!sa || !sb) return null;
+    return distKm(sa, sb) / (SPEED[line.style] || SPEED.solid) * 60 + DWELL_MIN;
+  }
+  /** Minutes between two consecutive stops of a line: the user's value when set, otherwise the estimate. */
+  function segmentMinutes(line, a, b, map) {
+    const o = segmentOverride(line, a, b);
+    return o !== null ? o : estimateMinutes(line, a, b, map);
+  }
+
   function headway(line, band) {
     const f = line.freq || {};
     const mid = pos(f.midday) ?? pos(f.offpeak);
@@ -89,9 +111,8 @@
         stops.push({ id: r, i: idx[r], pi, ok: !(Array.isArray(l.skip) && l.skip.includes(r)) });
       });
       if (stops.length < 2) continue;
-      const speed = SPEED[l.style] || SPEED.solid;
       const seg = [];
-      for (let k = 0; k < stops.length - 1; k++) seg.push(distKm(map.stations[stops[k].id], map.stations[stops[k + 1].id]) / speed * 60 + DWELL_MIN);
+      for (let k = 0; k < stops.length - 1; k++) seg.push(segmentMinutes(l, stops[k].id, stops[k + 1].id, map));
       const li = lines.length;
       lines.push({ l, stops, base: total, hw: headway(l, band), seg, oneWay: !!l.oneWay });
       for (let p = 0; p < stops.length; p++) { lnOf.push(li); pOf.push(p); }
@@ -224,7 +245,7 @@
     const map = C ? C.getMap() : null;
     return map ? build(map, BANDS.includes(band) ? band : 'peak') : null;
   }
-  window.GMMCJourney = { plan, times, graph, pathsFrom };
+  window.GMMCJourney = { plan, times, graph, pathsFrom, segmentMinutes, segmentOverride, estimateMinutes, DWELL_MIN };
 
   // ---------- state and panel ----------
   const J = { open: false, from: '', to: '', fromText: '', toText: '', band: 'peak', trip: null, times: null, err: '', sig: '', lang: '', timer: 0 };
@@ -251,7 +272,7 @@
   function signature() {
     const m = C.getMap();
     return [C.isGeo() ? 'g' : 's', Object.keys(m.stations).length, (m.transfers || []).length,
-      m.lines.map((l) => l.id + (l.visible ? '1' : '0') + l.path.join(',') + (l.freq ? [l.freq.peak, l.freq.offpeak, l.freq.midday, l.freq.evening, l.freq.weekend].join('/') : '')).join('|')].join('#');
+      m.lines.map((l) => l.id + (l.visible ? '1' : '0') + l.path.join(',') + (l.freq ? [l.freq.peak, l.freq.offpeak, l.freq.midday, l.freq.evening, l.freq.weekend].join('/') : '') + (l.times ? JSON.stringify(l.times) : '')).join('|')].join('#');
   }
 
   function shell() {
@@ -276,6 +297,11 @@
   }
 
   const fmt = (m) => Math.max(1, Math.round(m));
+  /** The vehicles that run on a route, as one more detail line of a trip leg. */
+  function vehicleLine(line) {
+    const V = window.GMMCVehicles, s = V && line ? V.summary(line) : '';
+    return s ? [`<span class="jy-veh">${icon('directions_bus', 14)} ${esc(s)}</span>`] : [];
+  }
   function result() {
     const box = $('jyResult'); if (!box) return;
     let html = '';
@@ -292,7 +318,7 @@
         if (leg.type === 'ride') {
           const line = C.lineById(leg.lineId);
           const wait = `${esc(t('jyWait'))} ${fmt(leg.wait)} ${esc(t('jyMin'))} · `;
-          rows.push({ color: leg.color, head: esc(stName(leg.from)), body: [`<span class="jy-chip" style="--c:${esc(leg.color)}">${esc(line ? C.lineName(line) : leg.lineId)}</span> ${esc(t('jyTowards'))} ${esc(stName(leg.dirTo))}`, `${wait}${fmt(leg.minutes)} ${esc(t('jyMin'))} ${esc(t('jyRide'))} · ${leg.stops} ${esc(leg.stops === 1 ? t('jyStop') : t('jyStops'))}`] });
+          rows.push({ color: leg.color, head: esc(stName(leg.from)), body: [`<span class="jy-chip" style="--c:${esc(leg.color)}">${esc(line ? C.lineName(line) : leg.lineId)}</span> ${esc(t('jyTowards'))} ${esc(stName(leg.dirTo))}`, `${wait}${fmt(leg.minutes)} ${esc(t('jyMin'))} ${esc(t('jyRide'))} · ${leg.stops} ${esc(leg.stops === 1 ? t('jyStop') : t('jyStops'))}`].concat(vehicleLine(line)) });
           if (!next) rows.push({ head: esc(stName(leg.to)), body: [esc(t('jyArrive'))] });
           else if (next.type === 'ride') rows.push({ head: esc(stName(leg.to)), body: [`${esc(t('jyChangeAt'))}, ${fmt(next.change)} ${esc(t('jyMin'))}`] });
           else rows.push({ head: esc(stName(leg.to)), body: [] });

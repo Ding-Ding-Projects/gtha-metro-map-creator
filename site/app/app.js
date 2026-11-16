@@ -10,7 +10,7 @@
   const DIRS = { E: [1, 0], W: [-1, 0], N: [0, -1], S: [0, 1], NE: [1, -1], NW: [-1, -1], SE: [1, 1], SW: [-1, 1] };
   const DIR_ORDER = ['E', 'W', 'N', 'S', 'NE', 'NW', 'SE', 'SW'];
   const DEFAULT_SETTINGS = { lang: 'en', theme: 'system', grid: true, snap: true, fontSize: 13, legend: true, sound: true,
-    layout: 'geographic', background: 'osm', bgOpacity: 0.9, showFreq: true, liveStops: true, overpassUrl: '', mapStyle: 'material' };
+    layout: 'geographic', background: 'osm', bgOpacity: 0.9, showFreq: true, liveStops: true, overpassUrl: '', mapStyle: 'material', showTimes: true, exportTimes: false, vehicleLegend: false };
   const STYLES = ['solid', 'dashed', 'rail', 'brt', 'bus', 'express', 'superExpress'];
   const STYLE_WIDTH = { solid: 8, dashed: 8, rail: 8, brt: 6, bus: 4, express: 8, superExpress: 9 };
   // Geographic layout: Web Mercator at zoom 13, origin at Union Station.
@@ -20,7 +20,7 @@
 
   // Extension hooks. Feature modules (mod-*.js) load before this file and push functions onto
   // window.GMMCX; see docs/features/extensions.md.
-  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [], stationMarker: [], labelStyle: [], exportTheme: [], projectSave: [], projectLoad: [] }, window.GMMCX || {});
+  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [], stationMarker: [], labelStyle: [], exportTheme: [], projectSave: [], projectLoad: [], lineRow: [], legendColumn: [] }, window.GMMCX || {});
   for (const k of Object.keys(X)) if (!Array.isArray(X[k])) X[k] = [];
   window.GMMCX = X;
   const hook = (name, ...args) => { for (const f of X[name]) { try { const r = f(...args); if (r) return r; } catch (err) { console.error('extension ' + name, err); } } return null; };
@@ -445,7 +445,7 @@
       badges.push({ x: pos.x, y: pos.y, w });
       out += `<g transform="translate(${(pos.x - w / 2).toFixed(1)} ${(pos.y - 11).toFixed(1)})"><g class="freq" data-line="${esc(l.id)}"><rect width="${w}" height="22" rx="11" fill="${l.color}" stroke="#FFFFFF" stroke-width="2"/><text x="${w / 2}" y="15" font-size="12" font-weight="700" text-anchor="middle" fill="${inkFor(l.color)}">${esc(txt)}</text></g></g>`;
     }
-    out += hookAll('svgOver', m, { G, geo, opts });
+    out += hookAll('svgOver', m, { G, geo, opts, badges, labels: placed });
     for (const lb of m.labels) {
       out += `<text class="map-label" data-label="${esc(lb.id)}" x="${lb.x * G}" y="${lb.y * G}" font-size="${lb.size}"${opts.exportColors ? ` fill="${th.sub}"` : ''}>${esc(lb.text)}</text>`;
     }
@@ -672,7 +672,7 @@
       const stops = l.path.filter((r) => r[0] !== '@').length;
       const on = activeLineId === l.id, f = freqText(l);
       return `<li class="li${on ? ' sel' : ''}${l.visible ? '' : ' off'}" style="--i:${Math.min(i, 20)}"><button type="button" class="li-main" data-pickline="${esc(l.id)}" aria-pressed="${on}">` +
-        `<span class="swatch s-${l.style}" style="--c:${l.color}"></span><span class="li-text"><span class="li-head">${esc(lineName(l))}</span><span class="li-sub">${esc(styleName(l.style))} · ${stops} ${esc(t('stops'))}</span></span>` +
+        `<span class="swatch s-${l.style}" style="--c:${l.color}"></span><span class="li-text"><span class="li-head">${esc(lineName(l))}</span><span class="li-sub">${esc(styleName(l.style))} · ${stops} ${esc(t('stops'))}</span>${hookAll('lineRow', l)}</span>` +
         (f ? `<span class="chip-sm">${esc(f)}</span>` : '') + `</button>` +
         `<button type="button" class="icon-btn" data-eye="${esc(l.id)}" aria-pressed="${!l.visible}" aria-label="${esc((l.visible ? t('hide') : t('show')) + ' ' + l.name)}" title="${esc(l.visible ? t('hide') : t('show'))}">${ic(l.visible ? 'visibility' : 'visibility_off')}</button></li>`;
     }).join('');
@@ -1056,7 +1056,7 @@
     const b = bounds(D), pad = 120;
     const vis = D.lines.filter((l) => l.visible && l.path.length > 1 && !String(l.id).includes("~b"));
     const legendH = settings.legend ? 40 + vis.length * 24 : 0;
-    const x0 = b.x0 - pad, y0 = b.y0 - pad - 60, w = b.x1 - b.x0 + pad * 2 + 160, h = b.y1 - b.y0 + pad * 2 + 60 + legendH;
+    const x0 = b.x0 - pad, y0 = b.y0 - pad - 60, w = Math.max(b.x1 - b.x0 + pad * 2 + 160, settings.legend && settings.vehicleLegend && vis.some((l) => l.vehicles && l.vehicles.length) ? pad * 2 + 760 : 0), h = b.y1 - b.y0 + pad * 2 + 60 + legendH;
     const tiles = [];
     if (geo && settings.background === 'osm') {
       const z = tileZoom(ek), span = TILE * 2 ** (Z0 - z), n = 2 ** z;
@@ -1080,6 +1080,7 @@
         y += 24;
         legend += `<g transform="translate(${b.x0} ${y - 5})">${linePaths(l, 'M0 0L40 0')}</g>`;
         const f = freqText(l);
+        legend += hookAll('legendColumn', l, { x: b.x0 + 430, y, th });
         legend += `<text x="${b.x0 + 54}" y="${y}" font-size="13" fill="${th.ink}">${esc(lineName(l))} · ${esc(styleName(l.style))}${f ? ' · ' + esc(t('every')) + ' ' + esc(f) : ''}</text>`;
       }
     }
@@ -1172,7 +1173,7 @@ addEventListener('resize',fit);fit();})();
 `;
   }
   function projectJson() {
-    const keep = ['layout', 'background', 'bgOpacity', 'showFreq', 'fontSize', 'legend', 'lang', 'liveStops', 'freqWeight', 'mapStyle'];
+    const keep = ['layout', 'background', 'bgOpacity', 'showFreq', 'fontSize', 'legend', 'lang', 'liveStops', 'freqWeight', 'mapStyle', 'showTimes', 'exportTimes', 'vehicleLegend'];
     const extra = {}; for (const f of X.projectSave) { try { Object.assign(extra, f()); } catch (err) { console.error('extension projectSave', err); } }
     return JSON.stringify({ ...extra, format: PROJECT_FORMAT, version: 1, savedAt: new Date().toISOString(), map, settings: Object.fromEntries(keep.map((k) => [k, settings[k]])), view: { tx: view.tx, ty: view.ty, k: view.k } }, null, 2);
   }
@@ -1203,7 +1204,7 @@ addEventListener('resize',fit);fit();})();
       if (['schematic', 'geographic'].includes(s2.layout)) settings.layout = s2.layout;
       if (['osm', 'none'].includes(s2.background)) settings.background = s2.background;
       if (Number.isFinite(+s2.bgOpacity)) settings.bgOpacity = Math.min(1, Math.max(0.2, +s2.bgOpacity));
-      for (const k of ['showFreq', 'legend', 'liveStops', 'freqWeight']) if (typeof s2[k] === 'boolean') settings[k] = s2[k];
+      for (const k of ['showFreq', 'legend', 'liveStops', 'freqWeight', 'showTimes', 'exportTimes', 'vehicleLegend']) if (typeof s2[k] === 'boolean') settings[k] = s2[k];
       if (Number.isFinite(+s2.fontSize)) settings.fontSize = Math.min(22, Math.max(9, +s2.fontSize));
       if (['en', 'yue', 'both'].includes(s2.lang)) settings.lang = s2.lang;
       if (['material', 'classic', 'frequent', 'night'].includes(s2.mapStyle)) settings.mapStyle = s2.mapStyle;
@@ -1250,6 +1251,7 @@ addEventListener('resize',fit);fit();})();
     $('setLang').value = settings.lang; $('setTheme').value = settings.theme; $('setFont').value = settings.fontSize;
     $('setGrid').checked = settings.grid; $('setSnap').checked = settings.snap; $('setLegend').checked = settings.legend; $('setSound').checked = settings.sound;
     $('setLayout').value = settings.layout; $('setBg').value = settings.background; $('setBgOpacity').value = settings.bgOpacity;
+    $('setTimes').checked = settings.showTimes; $('setTimesExport').checked = settings.exportTimes; $('setVehLegend').checked = settings.vehicleLegend;
     $('setFreq').checked = settings.showFreq; $('setLive').checked = settings.liveStops; $('setOverpass').value = settings.overpassUrl || '';
     $('settingsDialog').showModal();
   }
@@ -1257,7 +1259,8 @@ addEventListener('resize',fit);fit();})();
   $('settingsDialog').addEventListener('input', () => {
     settings.lang = $('setLang').value; settings.theme = $('setTheme').value; settings.fontSize = +$('setFont').value;
     settings.grid = $('setGrid').checked; settings.snap = $('setSnap').checked; settings.legend = $('setLegend').checked; settings.sound = $('setSound').checked;
-    settings.background = $('setBg').value; settings.bgOpacity = +$('setBgOpacity').value; settings.showFreq = $('setFreq').checked; settings.liveStops = $('setLive').checked; settings.overpassUrl = $('setOverpass').value.trim().slice(0, 300);
+    settings.background = $('setBg').value; settings.bgOpacity = +$('setBgOpacity').value; settings.showTimes = $('setTimes').checked; settings.exportTimes = $('setTimesExport').checked; settings.vehicleLegend = $('setVehLegend').checked;
+    settings.showFreq = $('setFreq').checked; settings.liveStops = $('setLive').checked; settings.overpassUrl = $('setOverpass').value.trim().slice(0, 300);
     const lay = $('setLayout').value; saveSettings(); applyTheme(); applyI18n(); if (lay !== settings.layout) setLayout(lay);
   });
   $('tidyBtn').addEventListener('click', () => { checkpoint(); for (const s of Object.values(map.stations)) s.label = 'auto'; changed(); });
@@ -1336,6 +1339,7 @@ addEventListener('resize',fit);fit();})();
     G, t, esc, checkpoint, changed, render, renderPanels, renderInspector, toast, beep, fit, saveSettings, applyI18n, viewMap,
     getSelection: () => selection, setSelection: (s) => { selection = s; }, getTool: () => tool, setTool: (x) => { tool = x; renderTools(); render(); },
     getActiveLine: () => activeLineId, setActiveLine: (id) => { activeLineId = id; }, lineById, servingLines, isInterchangeIn, lineName, freqText, linePaths,
+    renderLines, saveMap: () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => store.set(STORE_MAP, map), 400); },
     isGeo, stGeo, geoGrid, gridToLatLon, fits, worldFromEvent, addStation, snapPt, uid, svgEl: () => svgEl, replaceMap, loadText, download, exportScene };
   for (const f of X.ready) { try { f(window.GMMC); } catch (err) { console.error('extension ready', err); } }
 })();

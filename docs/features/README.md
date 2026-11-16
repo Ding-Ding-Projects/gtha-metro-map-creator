@@ -22,7 +22,8 @@
 | Facilities | [facilities.md](facilities.md) | Station facility icons, scale bar, north arrow |
 | Timeline | [timeline.md](timeline.md) | Opening and closing years, year slider, Play |
 | GTFS import | [gtfs-import.md](gtfs-import.md) | Import routes, stops and headways from a GTFS feed |
-| Journey | [journey.md](journey.md) | Trip planner and travel-time map |
+| Journey | [journey.md](journey.md) | Trip planner, travel-time map, travel times between stops |
+| Vehicles | [vehicles.md](vehicles.md) | Vehicle types per route |
 | Live vehicles | [realtime.md](realtime.md) | GTFS-Realtime vehicle positions in the desktop app |
 | Extensions | [extensions.md](extensions.md) | Hook API used by the feature modules |
 

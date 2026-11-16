@@ -34,3 +34,4 @@
 .jy-lg i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
 .jy-lg-title { font-weight: 500; }
 .jy-close { width: 32px; height: 32px; }
+.jy-veh { display: inline-flex; align-items: center; gap: 4px; color: var(--md-on-surface-variant); }

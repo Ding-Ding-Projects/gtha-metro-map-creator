@@ -1,0 +1,38 @@
+/* mod-times.css: travel-time pills on the map, their editor and the inspector list. */
+.tv-pill { cursor: pointer; }
+.tv-pill .tv-bg { stroke-width: 2; }
+.tv-pill .tv-tx { font-size: 11px; font-weight: 600; letter-spacing: .2px; pointer-events: none; }
+.tv-pill.set .tv-bg { fill: var(--c); stroke: var(--md-surface, #fff); }
+.tv-pill.set .tv-tx { fill: var(--ink); font-weight: 700; }
+.tv-pill.est .tv-bg { fill: color-mix(in srgb, var(--md-surface-container-lowest, #fff) 92%, transparent); stroke: var(--c); stroke-dasharray: 3 2; }
+.tv-pill.est .tv-tx { fill: var(--md-on-surface-variant); font-style: italic; font-weight: 500; }
+.tv-pill:hover .tv-bg { stroke-width: 3; }
+
+.tv-pop { position: absolute; z-index: 12; width: 248px; max-width: calc(100% - 16px); padding: 12px 16px 8px; border-radius: 16px; background: var(--md-surface-container-high); color: var(--md-on-surface); box-shadow: var(--elev-3); animation: scale-in var(--d-med) var(--ease-emph-dec) both; transform-origin: top center; }
+.tv-pop-title { margin: 0 0 8px; font-weight: 500; font-size: 13px; line-height: 18px; overflow-wrap: anywhere; }
+.tv-pop .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.tv-pop-err[hidden] { display: none; }
+
+.tv-section { margin-top: 8px; }
+.tv-section .title-sm { flex-wrap: wrap; }
+.tv-count { margin-left: auto; }
+.tv-list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; overscroll-behavior: contain; }
+.tv-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 8px; padding: 6px 0 8px; border-bottom: 1px solid var(--md-outline-variant); }
+.tv-names { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; min-width: 0; font-size: 13px; line-height: 18px; overflow-wrap: anywhere; }
+.tv-arrow { color: var(--md-on-surface-variant); }
+.tv-est { grid-column: 1 / -1; margin: 0; font-style: italic; }
+.tv-reset { grid-column: 2; grid-row: 2; }
+.tv-reset:disabled { opacity: .35; }
+.tv-pop .tv-est { margin-top: 4px; }
+/* Material number stepper: minus, field with unit, plus */
+.m3-stepper { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--md-outline); border-radius: 20px; padding: 0 2px; background: transparent; max-width: 100%; }
+.m3-stepper:focus-within { outline: 2px solid var(--md-primary); border-color: transparent; }
+.m3-stepper .m3-step { width: 40px; height: 40px; flex: none; }
+.m3-stepper .m3-step:focus-visible { outline: 3px solid var(--md-primary); outline-offset: -3px; }
+.m3-num { width: 56px; min-width: 0; height: 36px; border: 0; background: transparent; color: var(--md-on-surface); font: inherit; text-align: center; -moz-appearance: textfield; appearance: textfield; }
+.m3-num::-webkit-outer-spin-button, .m3-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.m3-num::placeholder { color: var(--md-on-surface-variant); opacity: .8; font-style: italic; }
+.m3-num:focus { outline: none; }
+.m3-unit { font-size: 12px; color: var(--md-on-surface-variant); margin-right: 2px; }
+@media (max-width: 420px) { .m3-num { width: 44px; } .m3-stepper .m3-step { width: 44px; height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .tv-pop { animation: none; } .tv-pill * { transition: none !important; } }

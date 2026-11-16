@@ -1,0 +1,41 @@
+/* mod-vehicles.css: vehicle types per route, in the inspector and the route list. */
+.vh-section { margin-top: 8px; }
+.vh-count { margin-left: auto; }
+.vh-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.vh-card { padding: 4px 8px 8px; border: 1px solid var(--md-outline-variant); border-radius: 12px; background: var(--md-surface-container-low); display: flex; flex-direction: column; gap: 8px; position: relative; transition: border-color var(--d-short, .15s), box-shadow var(--d-short, .15s); }
+.vh-card.open { border-color: var(--md-primary); }
+.vh-card.dragging { opacity: .5; }
+.vh-card.drop { box-shadow: 0 -3px 0 0 var(--md-primary); }
+.vh-head { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.vh-ic { color: var(--md-primary); display: inline-flex; flex: none; margin: 0 6px 0 2px; }
+.vh-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vh-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vh-sub { font-size: 12px; line-height: 16px; color: var(--md-on-surface-variant); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vh-btn, .vh-drag { width: 40px; height: 40px; flex: none; color: var(--md-on-surface-variant); }
+.vh-drag { cursor: grab; touch-action: none; width: 32px; }
+.vh-btn[aria-expanded="true"] { color: var(--md-primary); background: var(--md-secondary-container); }
+.vh-btn:focus-visible, .vh-drag:focus-visible { outline: 3px solid var(--md-primary); outline-offset: -3px; }
+.vh-body { display: flex; flex-direction: column; gap: 8px; padding: 0 4px; }
+.vh-body[hidden] { display: none; }
+.vh-two { display: flex; flex-direction: column; gap: 8px; }
+.vh-ac, .vh-kind { position: relative; display: flex; flex-direction: column; }
+.vh-ac .tf-label { position: static; }
+.vh-ac input { width: 100%; box-sizing: border-box; }
+.m3-menu-btn { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 8px 0 12px; border: 0; border-bottom: 1px solid var(--md-outline); border-radius: 4px 4px 0 0; background: var(--md-surface-container-highest); color: var(--md-on-surface); font: inherit; text-align: left; cursor: pointer; }
+.m3-menu-btn > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m3-menu-btn:focus-visible { outline: 3px solid var(--md-primary); outline-offset: -3px; }
+.m3-menu-btn[aria-expanded="true"] { border-bottom-color: var(--md-primary); }
+.m3-menu { position: absolute; z-index: 20; left: 0; right: 0; top: 100%; margin: 2px 0 0; padding: 8px 0; list-style: none; max-height: 240px; overflow-y: auto; border-radius: 4px; background: var(--md-surface-container); color: var(--md-on-surface); box-shadow: var(--elev-2, 0 2px 6px 2px rgba(0,0,0,.15)); }
+.m3-menu[hidden] { display: none; }
+.vh-kinds { min-width: 200px; }
+.m3-menu [role="option"] { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 16px; cursor: pointer; }
+.m3-menu [role="option"] .ic { color: var(--md-on-surface-variant); flex: none; }
+.m3-menu [role="option"]:hover, .m3-menu [role="option"].active { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
+.m3-menu [role="option"]:focus-visible { outline: 3px solid var(--md-primary); outline-offset: -3px; background: color-mix(in srgb, var(--md-on-surface) 12%, transparent); }
+.m3-menu [role="option"][aria-selected="true"] { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+.vh-count-f { display: flex; flex-direction: column; }
+.li-veh { display: flex; align-items: center; gap: 4px; }
+.li-veh .ic { flex: none; }
+.li-veh span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 420px) { .vh-btn, .vh-drag { width: 44px; height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .vh-card { transition: none; } }

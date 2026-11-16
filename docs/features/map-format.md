@@ -24,6 +24,8 @@
 - `freq.peak`, `freq.midday`, `freq.evening`, `freq.weekend`: minutes between vehicles, 1 to 240, or `null`. Files with the older `freq.offpeak` still open; it is read as `midday`. `showFreq`: show the badge, which reads `peak/midday` when both are set.
 - `skip` (optional): station IDs on the line's path that this route passes without stopping. IDs not on the path are dropped.
 - `branches` (optional): extra paths that share the line's name, colour, style and frequency. Each is an array of at least two station IDs (no bend points). See [patterns.md](patterns.md).
+- `times` (optional): minutes between two consecutive stops of the line, as `{ "<fromId>><toId>": minutes }`. Either key order matches. Values are numbers from 0.1 to 600; other values, unknown stations and repeated stations are dropped. A stop with no entry uses the estimate (distance, speed for the style, dwell). See [journey.md](journey.md).
+- `vehicles` (optional): up to 20 entries `{ "maker": "", "model": "", "kind": "bus", "count": 3, "note": "" }`. `kind` is `bus`, `articulated`, `doubleDecker`, `lrv`, `subway`, `regional` or `other` (anything else becomes `other`). `maker` and `model` are free text up to 60 characters, and an entry needs at least one of them. `count` (1 to 9999) and `note` (up to 120 characters) are optional. See [vehicles.md](vehicles.md).
 - `transfers`: walking links between two stations.
 - `opens`, `closes`: optional years (integers, 1800 to 2100) on a line or a station, used by the network timeline. Absent means unknown or always open. See [timeline.md](timeline.md).
 - `width`: 3 to 16.
@@ -44,4 +46,4 @@ or line has no Chinese name.
 
 `Save project` writes `{ "format": "gtha-metro-map-creator-project", "version": 1, "savedAt",
 "map", "settings": { layout, background, bgOpacity, showFreq, fontSize, legend, lang,
-liveStops, freqWeight }, "view" }`. Opening it restores the map and those settings. A plain map file opens too.
+liveStops, freqWeight, showTimes, exportTimes, vehicleLegend }, "view" }`. Opening it restores the map and those settings. A plain map file opens too.

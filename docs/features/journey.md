@@ -35,11 +35,36 @@ and 60 minutes, and over 60. A legend appears at the bottom left of the map; its
 clears the colouring. The colouring is drawn through the `svgOver` hook, so SVG and PNG exports
 include it, with a legend line under the map.
 
+## Travel times between stops
+
+When the map is zoomed in, a small pill at the middle of each segment of each route shows the time
+between its two stops, for example `~3 min`. Geographic layout shows pills from about 120% zoom and
+schematic layout from about 90%. A pill is skipped when it would not fit on a short segment or would
+cover a station marker, a station label, a frequency badge or another pill. Track shared by a route
+and its branches gets one pill, and when two routes share a segment only one pill is drawn.
+
+- **Estimated** times are lighter, have a dashed outline and start with `~`. They are the planner's own
+  estimate: distance divided by the speed for the line style, plus the dwell at the stop.
+- **Times you set** look solid and have no `~`. They are stored as `line.times`
+  (see [map-format.md](map-format.md)) and are direction-agnostic.
+- **Set a time** in the inspector, under **Travel times** for the selected route: one row per pair of
+  stops with a stepper (minus, minutes, plus), the estimate as supporting text and a reset button.
+  Or click a pill in the Select tool to open a small popover with the same stepper. Empty means
+  "use the estimate". Values must be 0.1 to 600 minutes. Every change is one undo step.
+- **Consumers**: the planner's ride times, the simulation's vehicle positions and the GTFS export's
+  `stop_times.txt` all read the same value through `GMMCJourney.segmentMinutes(line, a, b)`. A set time
+  includes the dwell at the first stop.
+- **Settings**: **Show travel times when zoomed in** (on by default) and **Include travel times in image
+  exports** (off by default). Exports cover PNG, SVG, PDF and the single-file web page, all built from the
+  same SVG. Both settings are saved with the project.
+
 ## Test API
 
 `window.GMMCJourney.plan(fromId, toId, band)` returns `{ ok, total, changes, legs }` where each leg
 is a ride (`lineId`, `from`, `to`, `stops`, `minutes`, `wait`, `change`, `dirTo`) or a walk.
 `window.GMMCJourney.times(fromId, band)` returns minutes by station id.
+`segmentMinutes(line, a, b)` returns the minutes between two stops of a line (the set value or the estimate),
+`segmentOverride(line, a, b)` returns only the set value or `null`, and `estimateMinutes(line, a, b)` only the estimate.
 
 ## Verification
 
