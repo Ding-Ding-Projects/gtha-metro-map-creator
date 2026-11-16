@@ -13,9 +13,20 @@ GTFS feed and imports chosen routes as lines and stations. Code: `site/app/mod-g
 2. Small tables (`routes`, `trips`, `stops`, `calendar`, `calendar_dates`, `agency`, `feed_info`)
    are read whole. `stop_times.txt` is streamed line by line, holding only the current trip, so
    large feeds do not exhaust memory. Quoted fields, a byte order mark and CRLF are handled.
-3. The dialog lists routes with search, type chips, checkboxes, stop count and peak/midday
-   headway, a progress bar while parsing, and an "N selected" summary. Everything is keyboard
-   reachable. Strings are English and Cantonese through `I18N.add`.
+3. The dialog is a wide two-pane layout (about 920 px; the panes stack below 720 px, preview
+   first). The left pane has a feed card (file name, route count, stop count, service dates,
+   **Change file**), a search field, type chips with icons and a check on the selected one, and the
+   route list. Each 64 px row is a checkbox with a badge in the route's `route_color` (text colour
+   chosen for contrast; a fallback colour by type when the feed has none), name, type and stop count,
+   and the peak / midday headway. The right pane draws the selected routes' stop sequences in their
+   colours, fitted to the box and redrawn as the selection changes, and an **Adds to your map** card
+   with routes, new stops and merged stops. The merged count and the import use the same 150 m
+   matching code (`resolver` in `mod-gtfs-import.js`), so the preview matches what is created.
+   Space toggles the focused row, Enter imports, Escape closes. Dialog entry, row tint and the
+   preview line draw-in are animated and switched off under `prefers-reduced-motion`. Strings are
+   English and Cantonese through `I18N.add`; colours come from the Material Design 3 tokens, so light
+   and dark themes both work. The feed card's stop count is the number of distinct stops used by the
+   listed routes, not every row of `stops.txt`.
 4. **Import** adds one undo step. It creates stations, then a line per selected route, then fits
    the map and shows a toast.
 
@@ -82,3 +93,12 @@ the feed to `site/test-feed.zip` (never commit it), then
 `node scripts/verify/edge-drive.mjs http://localhost:8781/app/ scripts/verify/gtfs-import.steps.json <out dir>`.
 It checks the route list, Viva Blue headways (11 and 15 minutes), selection, import, merging on
 a second import, and takes dialog and result screenshots.
+
+## Verification
+
+`scripts/verify/gtfs-import-ui.steps.json` drives the dialog in headless Edge with
+`scripts/verify/edge-drive.mjs` (run it at 1440x900 and 390x844): it exports the GTHA template as a
+GTFS feed in the page, opens it in the dialog, checks the route list, badges, preview path count and
+the "Adds to your map" numbers as routes are selected, search and chips, tab order, Cantonese strings,
+dark theme, Enter-to-import and no horizontal overflow, then imports every route into a blank map and
+compares stop counts and headways against the source lines.

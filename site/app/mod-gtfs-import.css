@@ -1,26 +1,118 @@
 /* mod-gtfs-import.css: the Import from GTFS dialog. Uses the app's Material Design 3 tokens. */
-#gtfsDialog { max-width: min(648px, calc(100vw - 32px)); }
-.gtfs-body { gap: 12px; }
-.gtfs-body .headline { margin-bottom: 0; }
-.gtfs-sub { margin: 0; font-size: 14px; line-height: 20px; letter-spacing: .25px; }
-.gtfs-prog { height: 4px; border-radius: 2px; overflow: hidden; background: var(--md-primary-container); }
+#gtfsDialog { width: min(920px, calc(100vw - 32px)); max-width: none; height: min(820px, calc(100dvh - 32px)); overflow: hidden; }
+#gtfsDialog[open] { animation: gtfs-in var(--d-long) var(--ease-emph-dec); }
+@keyframes gtfs-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+
+.gtfs-body { box-sizing: border-box; height: 100%; padding: 24px; display: grid; gap: 0 24px; margin: 0;
+  grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: repeat(4, auto) minmax(0, 1fr) auto auto;
+  grid-template-areas: "head preview" "feed preview" "search preview" "filters preview" "list preview" "list adds" "list actions"; }
+.gtfs-head { grid-area: head; display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.gtfs-feed { grid-area: feed; margin-bottom: 12px; }
+.gtfs-search { grid-area: search; margin-bottom: 12px; }
+.gtfs-filters { grid-area: filters; margin-bottom: 8px; }
+.gtfs-list { grid-area: list; }
+.gtfs-preview { grid-area: preview; }
+.gtfs-adds { grid-area: adds; }
+.gtfs-actions { grid-area: actions; }
+
+.gtfs-tile { flex: none; width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center; background: var(--md-tertiary-container); color: var(--md-on-tertiary-container); }
+.gtfs-headtxt { flex: 1; min-width: 0; }
+.gtfs-head h2 { margin: 0; font-size: 22px; line-height: 28px; font-weight: 400; }
+.gtfs-sub { margin: 0; font-size: 14px; line-height: 20px; letter-spacing: .25px; color: var(--md-on-surface-variant); }
+
+.gtfs-feed { position: relative; display: flex; align-items: center; gap: 4px 16px; padding: 12px 8px 12px 16px; border-radius: 20px; background: var(--md-surface-container-lowest); overflow: hidden; }
+.gtfs-fname { flex: 1 1 auto; min-width: 0; font-weight: 500; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gtfs-stat { flex: none; display: flex; flex-direction: column; align-items: center; line-height: 16px; }
+.gtfs-stat b { font-weight: 500; font-size: 14px; font-variant-numeric: tabular-nums; }
+.gtfs-stat small { font-size: 11px; color: var(--md-on-surface-variant); }
+.gtfs-prog { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--md-primary-container); }
 .gtfs-prog[hidden] { display: none; }
 .gtfs-prog > div { height: 100%; width: 0; background: var(--md-primary); border-radius: 2px; transition: width var(--d-med) var(--ease-std); }
-.gtfs-search { height: 48px; }
+
 .gtfs-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.gtfs-chip { height: 32px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--md-outline); background: transparent; color: var(--md-on-surface); font: inherit; font-weight: 500; cursor: pointer; transition: background-color var(--d-short) var(--ease-std); }
+.gtfs-chip { height: 32px; padding: 0 14px 0 10px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; border: 1px solid var(--md-outline); background: transparent; color: var(--md-on-surface); font: inherit; font-weight: 500; cursor: pointer; transition: background-color var(--d-short) var(--ease-std); }
+.gtfs-chip:not(:has(svg)) { padding-left: 14px; }
 .gtfs-chip:hover { background: color-mix(in srgb, transparent, var(--md-on-surface) 8%); }
 .gtfs-chip.on { background: var(--md-secondary-container); color: var(--md-on-secondary-container); border-color: transparent; }
-.gtfs-list { overflow-y: auto; min-height: 160px; max-height: 40vh; display: flex; flex-direction: column; margin: 0 -8px; }
-.gtfs-row { display: flex; align-items: center; gap: 16px; padding: 8px; border-radius: 12px; cursor: pointer; content-visibility: auto; contain-intrinsic-size: auto 56px; transition: background-color var(--d-short) var(--ease-std); }
+.gtfs-status:empty { display: none; }
+
+.gtfs-list { overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 4px; margin: 0 -8px; padding: 0 8px 4px; }
+.gtfs-row { flex: none; box-sizing: border-box; height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 16px 0 14px; border-radius: 20px; cursor: pointer; content-visibility: auto; contain-intrinsic-size: auto 64px; transition: background-color var(--d-med) var(--ease-emph); }
 .gtfs-row:hover { background: color-mix(in srgb, transparent, var(--md-on-surface) 8%); }
+.gtfs-row:has(input:checked) { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+.gtfs-row:has(input:checked):hover { background: color-mix(in srgb, var(--md-secondary-container), var(--md-on-secondary-container) 8%); }
 .gtfs-row:has(input:focus-visible) { outline: 2px solid var(--md-primary); outline-offset: -2px; }
-.gtfs-num { flex: none; width: 48px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.gtfs-txt { display: flex; flex-direction: column; min-width: 0; }
-.gtfs-name { font-size: 16px; line-height: 24px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gtfs-meta { font-size: 12px; line-height: 16px; color: var(--md-on-surface-variant); }
+.gtfs-row input[type=checkbox] { appearance: none; flex: none; width: 24px; height: 24px; margin: 0; border-radius: 6px; border: 2px solid var(--md-on-surface-variant); background: transparent; display: grid; place-items: center; cursor: pointer; transition: background-color var(--d-short) var(--ease-std), border-color var(--d-short); }
+.gtfs-row input[type=checkbox]::after { content: ""; width: 6px; height: 11px; margin-top: -2px; border: solid var(--md-on-primary); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) scale(0); transition: transform var(--d-short) var(--ease-emph); }
+.gtfs-row input[type=checkbox]:checked { background: var(--md-primary); border-color: var(--md-primary); }
+.gtfs-row input[type=checkbox]:checked::after { transform: rotate(45deg) scale(1); }
+.gtfs-num { flex: none; width: 60px; box-sizing: border-box; height: 32px; padding: 0 8px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gtfs-txt { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.gtfs-name { font-size: 16px; line-height: 22px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gtfs-meta { font-size: 12px; line-height: 16px; color: var(--md-on-surface-variant); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gtfs-row:has(input:checked) .gtfs-meta, .gtfs-row:has(input:checked) .gtfs-hw small { color: inherit; opacity: .8; }
+.gtfs-hw { flex: none; display: flex; flex-direction: column; align-items: flex-end; line-height: 16px; }
+.gtfs-hw b { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gtfs-hw small { font-size: 11px; color: var(--md-on-surface-variant); white-space: nowrap; }
 .gtfs-empty { padding: 16px 8px; }
-.gtfs-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
-.gtfs-actions { display: inline-flex; gap: 8px; margin-left: auto; }
+
+.gtfs-preview { position: relative; border-radius: 24px; background: var(--md-surface-container-low); border: 1px solid var(--md-outline-variant); overflow: hidden; min-height: 120px; margin-bottom: 12px; }
+.gtfs-pvlabel { position: absolute; left: 12px; top: 12px; z-index: 1; padding: 4px 10px; border-radius: 12px; background: var(--md-surface-container-high); font-size: 12px; font-weight: 500; line-height: 16px; }
+.gtfs-preview svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.gtfs-pvempty { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--md-on-surface-variant); }
+.gtfs-pvempty[hidden] { display: none; }
+.gtfs-pr path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.gtfs-pr .halo { stroke: var(--md-surface-container-low); stroke-width: 8; }
+.gtfs-pr .ln { stroke-width: 4; }
+.gtfs-pr .sd { stroke-width: 8; }
+.gtfs-pr .sdi { stroke: var(--md-surface-container-low); stroke-width: 3.5; }
+.gtfs-pr.draw .halo, .gtfs-pr.draw .ln { stroke-dasharray: 1; stroke-dashoffset: 1; animation: gtfs-draw 800ms var(--ease-emph) forwards; animation-delay: calc(var(--i, 0) * 70ms); }
+.gtfs-pr.draw .sd, .gtfs-pr.draw .sdi { opacity: 0; animation: gtfs-dots 400ms linear forwards; animation-delay: calc(500ms + var(--i, 0) * 70ms); }
+@keyframes gtfs-draw { to { stroke-dashoffset: 0; } }
+@keyframes gtfs-dots { to { opacity: 1; } }
+
+.gtfs-adds { padding: 14px 20px 16px; border-radius: 24px; background: var(--md-surface-container-low); margin-bottom: 16px; }
+.gtfs-adds h3 { margin: 0 0 6px; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .5px; color: var(--md-on-surface-variant); }
+.gtfs-addrow { display: flex; gap: 28px; }
+.gtfs-addrow span { display: flex; flex-direction: column; }
+.gtfs-addrow b { font-size: 28px; line-height: 36px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.gtfs-addrow small { font-size: 12px; color: var(--md-on-surface-variant); }
+.gtfs-addnote { margin: 8px 0 0; font-size: 12px; line-height: 16px; color: var(--md-on-surface-variant); }
+.gtfs-actions { display: flex; gap: 12px; }
+.gtfs-actions .btn { height: 48px; border-radius: 24px; }
+.gtfs-actions .outlined { flex: 0 0 112px; padding: 0; }
+.gtfs-actions .filled { flex: 1; }
 .btn:disabled { opacity: .38; pointer-events: none; }
-@media (max-width: 520px) { .gtfs-num { width: 36px; } .gtfs-actions { width: 100%; justify-content: flex-end; } }
+
+/* Narrow: the preview moves above the route list and gets smaller. */
+@media (max-width: 720px) {
+  #gtfsDialog { width: calc(100vw - 16px); height: calc(100dvh - 16px); }
+  .gtfs-body { display: flex; flex-direction: column; padding: 16px; }
+  .gtfs-head { order: 1; margin-bottom: 12px; }
+  .gtfs-preview { order: 2; flex: none; height: 112px; min-height: 0; margin-bottom: 8px; }
+  .gtfs-feed { order: 3; flex-wrap: wrap; padding: 8px 8px 10px 16px; margin-bottom: 8px; }
+  .gtfs-fname { flex: 1 1 100%; }
+  .gtfs-stat { flex-direction: row; gap: 4px; align-items: baseline; }
+  .gtfs-feed .btn { margin-left: auto; min-height: 32px; }
+  .gtfs-search { order: 4; height: 48px; margin-bottom: 8px; }
+  .gtfs-filters { order: 5; margin-bottom: 4px; }
+  .gtfs-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .gtfs-chip { flex: none; }
+  .gtfs-status { margin: 2px 0; }
+  .gtfs-list { order: 6; flex: 1; min-height: 120px; }
+  .gtfs-adds { order: 7; flex: none; padding: 10px 16px; margin: 8px 0; }
+  .gtfs-adds h3 { display: inline; margin-right: 12px; }
+  .gtfs-addrow { display: inline-flex; gap: 16px; }
+  .gtfs-addrow span { flex-direction: row; align-items: baseline; gap: 4px; }
+  .gtfs-addrow b { font-size: 18px; line-height: 24px; }
+  .gtfs-addnote { display: none; }
+  .gtfs-actions { order: 8; flex: none; }
+  .gtfs-row { gap: 10px; padding: 0 12px 0 10px; }
+  .gtfs-hw small { font-size: 10px; }
+  .gtfs-pvlabel { top: 8px; left: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #gtfsDialog[open] { animation: none; }
+  .gtfs-pr.draw * { animation: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; opacity: 1 !important; }
+  .gtfs-row, .gtfs-row input[type=checkbox], .gtfs-row input[type=checkbox]::after { transition: none; }
+}
