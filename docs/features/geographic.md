@@ -27,7 +27,7 @@ written into exports. Tiles need a network connection.
 At tile zoom 15 or more, `fetchLiveStops()` asks Overpass for `highway=bus_stop`,
 `public_transport=platform` and railway stations in the view (at most 400), debounced by 700 ms
 and cached by bounding box. It tries `settings.overpassUrl` (https, or http on localhost) and then
-three public servers, with a 25-second timeout each. Clicking a stop with the Route tool adds a
+three public servers, with a 60-second timeout each (busy public servers often take 30 to 40 seconds). Clicking a stop with the Route tool adds a
 station of type `stop` with the OSM name, position and node ID (`osm`) to the active route.
 
 Failure modes: public servers at capacity (HTTP 502/504) or rejecting the request (406); a
@@ -37,6 +37,5 @@ snackbar offers Retry. Only the bounding box of the current view is sent.
 
 - Headless Edge at 1440 x 900 and 390 x 844: fit, Viva selection, street-level view, schematic,
   dark Cantonese, export menu, settings; no horizontal overflow.
-- Drawing onto real stops: verified with OpenStreetMap platform data captured from Overpass the
-  same day and replayed by a local server, because every public Overpass server was at capacity
-  during testing.
+- Drawing onto real stops: verified against the public Overpass server with default settings
+  (112 stops around Finch, two added to a route), and earlier with the same data replayed locally.

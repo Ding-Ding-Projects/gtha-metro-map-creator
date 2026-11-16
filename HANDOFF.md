@@ -22,6 +22,13 @@ website export, project files, and a Material Design 3 interface with motion.
 - Schematic layout, dark theme with Cantonese, export menu, settings dialog; no horizontal
   overflow at 1440 or 390 px; no errors from the app.
 
+### Live stops against the public server (verified after 1.2.0)
+
+- The public Overpass server answered in about 37 seconds, past the 25-second timeout, so the
+  timeout was raised to 60 seconds. With default settings the editor then loaded 112 real stops
+  around Finch, and clicking two added "Finch" (OSM 56922363) and "Drewry Avenue at Norwin St"
+  (OSM 474968519) to a new route.
+
 ### 1.2.0 release (verified)
 
 - Release, Container image (x2) and Deploy site workflows succeeded for `28972a0`. `v1.2.0` is a
@@ -37,8 +44,6 @@ website export, project files, and a Material Design 3 interface with motion.
 
 ### Not verified for 1.2.0
 
-- Live stops against a public Overpass server: still at capacity when retried from the live site
-  (no stops after 60 seconds). The code path was verified with replayed OpenStreetMap data.
 - Wiki first page, Discussion pins and a GitHub Project: need a signed-in GitHub web page.
 
 ### 1.1.x release record

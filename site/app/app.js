@@ -528,7 +528,7 @@
       let j = null, lastErr = null;
       for (const ep of custom.concat(OVERPASS)) {
         try {
-          const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 25000);
+          const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 60000);
           const res = await fetch(ep, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctl.signal });
           clearTimeout(timer);
           if (!res.ok) throw new Error('HTTP ' + res.status);

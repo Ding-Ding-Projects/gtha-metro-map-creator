@@ -19,7 +19,9 @@ Captured from version 1.2.0 in headless Microsoft Edge at 1440 x 900, 15 Novembe
 
 ![Geographic layout over OpenStreetMap with VIVA frequency badges and the route inspector](docs/screenshots/editor-geographic.png)
 
-![Street level: real stops from OpenStreetMap as grey dots, a new route drawn onto two of them](docs/screenshots/editor-real-stops.png)
+![Street level near Finch: 112 real stops from the public OpenStreetMap Overpass server as grey dots, and a new route drawn onto two of them](docs/screenshots/editor-real-stops.png)
+
+Earlier captures are listed in [docs/screenshots/ARCHIVE.md](docs/screenshots/ARCHIVE.md).
 
 ![Dark theme with English and Cantonese names](docs/screenshots/editor-dark-bilingual.png)
 
