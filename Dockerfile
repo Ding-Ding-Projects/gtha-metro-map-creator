@@ -6,6 +6,14 @@ COPY scripts ./scripts
 COPY site ./site
 RUN node scripts/build.mjs
 
+# The optional sign-in service: standard library only, no third-party modules.
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS auth
+ARG TARGETOS
+ARG TARGETARCH
+WORKDIR /src
+COPY docker/auth ./
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /gmmc-auth .
+
 FROM nginxinc/nginx-unprivileged:1.27-alpine
 ARG VERSION=dev
 ARG REVISION=unknown
@@ -16,6 +24,9 @@ LABEL org.opencontainers.image.title="GTHA Metro Map Creator" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${REVISION}"
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/auth-conf/ /etc/gmmc/
+COPY --from=auth /gmmc-auth /usr/local/bin/gmmc-auth
+COPY --chmod=755 docker/entrypoint-auth.sh /docker-entrypoint.d/45-gmmc-auth.sh
 COPY --from=build /src/dist/site /usr/share/nginx/html
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
