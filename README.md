@@ -15,15 +15,27 @@ or a website. It runs in the browser with no dependencies and stores your work l
 
 ## Screenshots
 
-Captured from version 1.2.0 in headless Microsoft Edge at 1440 x 900, 15 November 2026.
+Captured from the 1.6.0 build on 16 November 2026: the editor and GTFS viewer in headless Microsoft Edge at 1440 x 900, the deploy app from its packaged Windows executable at 1120 x 820. Earlier captures are listed in [docs/screenshots/ARCHIVE.md](docs/screenshots/ARCHIVE.md).
 
-![Geographic layout over OpenStreetMap with VIVA frequency badges and the route inspector](docs/screenshots/editor-geographic.png)
+![Trip planner: Finch to Unionville over OpenStreetMap, with the itinerary in the side panel](docs/screenshots/editor-trip.webp)
 
-![Street level near Finch: 112 real stops from the public OpenStreetMap Overpass server as grey dots, and a new route drawn onto two of them](docs/screenshots/editor-real-stops.png)
+![Travel time between stops shown when zoomed in, as estimates marked with a tilde](docs/screenshots/editor-travel-times.webp)
 
-Earlier captures are listed in [docs/screenshots/ARCHIVE.md](docs/screenshots/ARCHIVE.md).
+![Scenario compare: Today and the 2031 plan with a swipe handle and the change list](docs/screenshots/editor-scenarios.webp)
 
-![Dark theme with English and Cantonese names](docs/screenshots/editor-dark-bilingual.png)
+![Coverage: 800 m walksheds around downtown stations with population totals](docs/screenshots/editor-coverage.webp)
+
+![Dark theme with travel times and the route's editable time list](docs/screenshots/editor-dark-travel-times.webp)
+
+![GTFS import dialog with coloured route badges and a preview of the selected routes](docs/screenshots/gtfs-import.webp)
+
+![GTFS viewer timetable grid for a route and date](docs/screenshots/gtfs-viewer-timetable.webp)
+
+![GTFS viewer vehicle blocks as a timeline, with an overlap flagged](docs/screenshots/gtfs-viewer-blocks.webp)
+
+![Deploy app with nine hosting targets (the signed-in GitHub account name is hidden in this capture)](docs/screenshots/deploy-targets.webp)
+
+![Deploy app instance manager with two Docker instances and their health](docs/screenshots/deploy-instances.webp)
 
 ## Features
 

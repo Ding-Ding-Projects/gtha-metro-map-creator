@@ -1,5 +1,22 @@
 # Handoff
 
+## 1.6.0 (2026-11-16)
+
+New in this release: scenarios with compare and share links, live simulation, GTFS export, coverage
+(Statistics Canada 2021) and an illustrative ridership estimate, live TTC and YRT vehicles (desktop),
+travel times between stops, vehicle types per route, a redesigned GTFS import dialog, a full GTFS
+viewer (`site/gtfs/`), the one-click deploy app with nine targets and an instance manager, a hosting
+bundle and appliance images in every release, real coordinates for maps saved before 1.2, and a
+rebuilt home page.
+
+Verified: every `scripts/verify/*.steps.json` that ships with the editor and viewer on merged main;
+the x86_64 appliance boot test in CI (app answered in 15 s); the deploy app's instance manager against
+real Docker; VirtualBox and VMware import and removal with a stand-in appliance; drive writing against
+a file target. Not verified: a real USB or SD write, a real Raspberry Pi boot, the appliance booting
+in VirtualBox or VMware, SSH and GitHub Pages deployment with real credentials. `scripts/verify/edge-drive.mjs`
+now starts Edge in private mode with sync, sign-in and extensions off, after a run captured the
+browser's account sync page.
+
 ## Deploy targets, drive images and the instance manager (branch ai/feature/20261116-deploy-targets)
 
 Not yet merged or pushed. What exists: nine deploy targets (adds VirtualBox, VMware, USB drive and Raspberry

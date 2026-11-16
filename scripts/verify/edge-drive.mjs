@@ -10,7 +10,7 @@ fs.mkdirSync(outDir, { recursive: true });
 const prof = path.join(outDir, 'profile');
 const port = 9400 + Math.floor(Math.random() * 300);
 const edge = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
-const child = spawn(edge, ['--headless=new', '--disable-gpu', '--no-first-run', '--hide-scrollbars', `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`, `--window-size=${W},${H}`, url], { stdio: 'ignore' });
+const child = spawn(edge, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-sync', '--disable-features=msImplicitSignin,msEdgeSignInPromo,msSyncConsentPromo', '--inprivate', '--hide-scrollbars', `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`, `--window-size=${W},${H}`, url], { stdio: 'ignore' });
 const kill = () => { try { execFileSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' }); } catch {} };
 const killer = setTimeout(() => { kill(); console.log('HARD TIMEOUT'); process.exit(3); }, 240000);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

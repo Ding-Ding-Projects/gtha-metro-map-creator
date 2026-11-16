@@ -92,7 +92,14 @@
 - [ ] The appliance booting in real VirtualBox and VMware from the deploy app: needs a released appliance image (it cannot be built on Windows); only import, conversion, ownership and removal are verified
 - [ ] Raspberry Pi appliance image: image built locally under arm64 emulation with a real arm64 container image, its boot partition inspected, and the QEMU virt-twin boot test passed locally (healthz, app and console banner); unticked until a tagged CI run passes the boot test and someone boots a real Pi 4 or Pi 5
 - [ ] Raw x86_64 USB image: built by the release job; legacy BIOS only, UEFI boot not provided and never tried on hardware
-- [ ] Redesigned GTFS import dialog with route preview: in progress
+- [x] Redesigned GTFS import dialog with route preview
+- [x] Travel times between stops when zoomed in, editable, used by the planner, simulation and GTFS export
+- [x] Vehicle types per route (several per route), with suggestions and a route-list summary
+- [x] Full GTFS viewer: routes with previews, timetables, blocks, stops and stations, calendar, shapes, transfers and pathways, fares v1 and v2, flex, translations, validation, realtime file
+- [x] Hosting bundle (pinned Compose file, host.bat, guide) in every release
+- [x] x86_64 appliance image boot-tested in CI under QEMU (main-branch check passed: app answered in 15 s)
+- [x] Rebuilt home page with real captures, English and Cantonese, light and dark
+- [x] Real coordinates restored for maps saved before 1.2
 
 ## Phase 8: next
 
@@ -100,7 +107,7 @@
 - [ ] Vector PDF with Chinese labels (needs an embedded font)
 - [ ] Crossing reduction in auto-schematic
 - [ ] Employment data for coverage, when an open small-area source exists
-- [ ] Appliance OS image for the hosted server: workflow, build scripts and docs written; unticked until a tagged CI run passes the QEMU boot test and the images are attached to a release (see docs/features/appliance.md)
+- [ ] Appliance images attached to a tagged release: x86_64 boot test passed on main; ticked once the v1.6.0 release carries them
 - [ ] Chinese names for bus stops
 - [ ] ~~Automated browser tests in CI~~ Not doing: CI deliberately runs no tests here; browser checks run locally with `scripts/verify/`
 - [ ] Search across the documentation articles with the same regex builder
