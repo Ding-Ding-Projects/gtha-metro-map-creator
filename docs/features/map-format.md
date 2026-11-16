@@ -9,7 +9,8 @@
                           "kind": "station", "label": "auto", "interchange": "auto" } },
   "lines": [{ "id": "l1", "name": "Line 1", "nameZh": "", "color": "#F8C300", "width": 10,
               "style": "solid", "visible": true, "path": ["union", "@2,2", "king"], "bends": { "0": "late" },
-              "freq": { "peak": 4, "offpeak": 5 }, "showFreq": true, "note": "" }],
+              "freq": { "peak": 4, "midday": 5, "evening": 6, "weekend": 8 }, "showFreq": true, "note": "",
+              "skip": ["king"], "branches": [["union", "osgoode"]] }],
   "transfers": [{ "a": "union", "b": "union_go" }],
   "labels": [{ "id": "note1", "x": 0, "y": 10, "text": "Note", "size": 12 }]
 }
@@ -19,7 +20,9 @@
 - `interchange`: `auto`, `yes` or `no`.
 - `style`: `solid` (subway or metro), `dashed` (planned), `rail` (regional rail), `brt` (rapid bus), `bus`, `express` or `superExpress`.
 - `kind`: `station` or `stop` (bus stop). `lat`, `lon`: optional real position. `osm`: optional OpenStreetMap node ID.
-- `freq.peak`, `freq.offpeak`: minutes between vehicles, 1 to 240, or `null`. `showFreq`: show the badge.
+- `freq.peak`, `freq.midday`, `freq.evening`, `freq.weekend`: minutes between vehicles, 1 to 240, or `null`. Files with the older `freq.offpeak` still open; it is read as `midday`. `showFreq`: show the badge, which reads `peak/midday` when both are set.
+- `skip` (optional): station IDs on the line's path that this route passes without stopping. IDs not on the path are dropped.
+- `branches` (optional): extra paths that share the line's name, colour, style and frequency. Each is an array of at least two station IDs (no bend points). See [patterns.md](patterns.md).
 - `transfers`: walking links between two stations.
 - `width`: 3 to 16.
 
@@ -39,4 +42,4 @@ or line has no Chinese name.
 
 `Save project` writes `{ "format": "gtha-metro-map-creator-project", "version": 1, "savedAt",
 "map", "settings": { layout, background, bgOpacity, showFreq, fontSize, legend, lang,
-liveStops }, "view" }`. Opening it restores the map and those settings. A plain map file opens too.
+liveStops, freqWeight }, "view" }`. Opening it restores the map and those settings. A plain map file opens too.
