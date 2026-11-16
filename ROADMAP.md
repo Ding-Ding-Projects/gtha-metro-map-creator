@@ -55,10 +55,14 @@
 - [x] Network timeline with opening and closing years
 - [x] Extension hooks so features live in their own modules
 
-## Phase 5: next
+## Phase 5: release 1.4.0
+
+- [x] GTFS import in a worker with route picker, stop merging and time-band frequencies
+- [x] Journey planner with transfers and waits, and a travel-time map
+
+## Phase 6: next
 
 - [ ] Shared bend setting across all lines on a bundled segment
-- [ ] Import any GTFS feed's routes and frequencies
 - [ ] Vector PDF export (the PDF is currently a high-resolution image)
 - [ ] Chinese names for bus stops
 - [ ] Touch gestures for pinch zoom

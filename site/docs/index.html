@@ -29,6 +29,8 @@
       <li><a href="#patterns">Express, branches, frequencies</a></li>
       <li><a href="#facilities">Facilities and scale</a></li>
       <li><a href="#timeline">Network timeline</a></li>
+      <li><a href="#gtfs">Import from GTFS</a></li>
+      <li><a href="#journey">Trips and travel times</a></li>
       <li><a href="#geographic">Geographic layout</a></li>
       <li><a href="#routes">Routes and frequencies</a></li>
       <li><a href="#stops">Stops and transfers</a></li>
@@ -129,6 +131,11 @@
       <p>Select a station and toggle facilities: accessible, parking, bike, airport, ferry and bus terminal. Their icons appear beside the station name on the map and in exports. In the geographic layout a scale bar and north arrow show on screen and in exports.</p></section>
     <section id="timeline"><h2>Network timeline</h2>
       <p>Give routes and stations an <strong>Opens</strong> year (and optionally <strong>Closes</strong>) in the inspector. Press <kbd>Y</kbd> or turn on the timeline in Settings, then drag the year slider or press Play to watch the network grow. Routes without a year are always shown. Exports show the chosen year. The template includes years only where certain: Line 1 1954, Line 2 1966, Line 4 2002 and UP Express 2015.</p></section>
+    <section id="gtfs"><h2>Import from GTFS</h2>
+      <p>Open <strong>Export</strong>, then <strong>Import GTFS</strong>, or drop a GTFS <code>.zip</code> on the editor. The feed is read on your computer and never uploaded. Pick routes by searching or by type, then import them: stops within 150 m of an existing station are merged, and each route gets its weekday peak and midday frequency from the timetable (evening and Saturday frequencies are noted on the route). Large feeds are read in the background. Feeds that only describe service with <code>frequencies.txt</code> import without frequencies.</p></section>
+    <section id="journey"><h2>Plan a trip and see travel times</h2>
+      <p>Open <strong>Plan a trip</strong> at the top of the right panel. Choose From and To stations and a time of day. The planner finds the fastest trip on your map using each route's speed by service type, half the wait between vehicles to board, 3 minutes to change inside a station, and walking transfers. It lists every leg and highlights the trip on the map.</p>
+      <p><strong>Show travel times</strong> colours every station by minutes from your starting station: within 15, 30, 45, 60, or more. These are estimates from your map, not timetables.</p></section>
     <section id="geographic"><h2>Geographic layout and OpenStreetMap</h2>
       <p>The editor has two layouts, switched with the <strong>Schematic / Geographic</strong> buttons in the top bar. Every station keeps a position in each.</p>
       <ul>

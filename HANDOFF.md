@@ -1,5 +1,14 @@
 # Handoff
 
+## 1.4.0 (2026-11-16)
+
+GTFS import (`mod-gtfs-import.js`, `gtfs-worker.js`) and the journey planner (`mod-journey.js`).
+Verified on merged main: the real York Region Transit feed parsed in about 0.4 s, 125 routes,
+Viva Blue 11/15 min; importing two routes then re-importing added no duplicate stations. Journey:
+Finch to the Unionville Viva stop via Viva Blue and Viva Purple at Langstaff; travel times reach
+235 of 238 stations. Limits: no URL import in the browser, `shapes.txt` and `frequencies.txt`
+not read by the importer, travel times are estimates.
+
 ## 1.3.0 (2026-11-16)
 
 Editing power, service patterns, station facilities and the network timeline, each in its own
