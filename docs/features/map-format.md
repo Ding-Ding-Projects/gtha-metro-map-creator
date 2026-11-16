@@ -21,6 +21,7 @@
 - `kind`: `station` or `stop` (bus stop). `lat`, `lon`: optional real position. `osm`: optional OpenStreetMap node ID.
 - `freq.peak`, `freq.offpeak`: minutes between vehicles, 1 to 240, or `null`. `showFreq`: show the badge.
 - `transfers`: walking links between two stations.
+- `opens`, `closes`: optional years (integers, 1800 to 2100) on a line or a station, used by the network timeline. Absent means unknown or always open. See [timeline.md](timeline.md).
 - `width`: 3 to 16.
 
 ## Import validation
