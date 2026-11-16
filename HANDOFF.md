@@ -22,10 +22,24 @@ website export, project files, and a Material Design 3 interface with motion.
 - Schematic layout, dark theme with Cantonese, export menu, settings dialog; no horizontal
   overflow at 1440 or 390 px; no errors from the app.
 
+### 1.2.0 release (verified)
+
+- Release, Container image (x2) and Deploy site workflows succeeded for `28972a0`. `v1.2.0` is a
+  normal release with `GTHA-Metro-Map-Creator-1.2.0-portable.exe`,
+  `GTHA-Metro-Map-Creator-Server-Setup-1.2.0-portable.exe`, `gtha-metro-map-creator-site.zip` and
+  `SHA256SUMS.txt`.
+- The released desktop executable matched its SHA-256 (`310ea159...`) and, launched hidden, ran
+  the new editor from its bundle: 238 stations, 20 routes, geographic layout, 9 OpenStreetMap
+  tiles, four frequency badges, website and project export functions.
+- The live site serves 1.2.0 (new scripts and documentation articles return 200). The live editor
+  in headless Edge drew all tiles, four badges and the attribution.
+- Announcement: Discussion #2. Repository description and topics updated and read back.
+
 ### Not verified for 1.2.0
 
-- Live stops against a public Overpass server (at capacity during testing).
-- The new interface inside the desktop executable (checked after the release build, see below).
+- Live stops against a public Overpass server: still at capacity when retried from the live site
+  (no stops after 60 seconds). The code path was verified with replayed OpenStreetMap data.
+- Wiki first page, Discussion pins and a GitHub Project: need a signed-in GitHub web page.
 
 ### 1.1.x release record
 

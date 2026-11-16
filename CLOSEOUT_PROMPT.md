@@ -20,9 +20,11 @@ replayed locally because every public Overpass server was at capacity).
 
 Open:
 - Live stops against a public Overpass server (busy during testing).
-- Release workflow, Pages deploy and image for v1.2.0: check the Actions runs for this tag.
 - Wiki first page, Discussion pin and a GitHub Project need a signed-in GitHub web page.
 - Executables are not code signed. PDF is a raster image. Bus stops have no Chinese names.
 
-Next safe steps: confirm the v1.2.0 runs and release assets, then ROADMAP.md Phase 4.
+Release v1.2.0 verified: all workflows green, normal release with both executables, released
+desktop executable hash-checked and run. Discussion #2 announces it.
+
+Next safe steps: the three web-page items, then ROADMAP.md Phase 4.
 ```
