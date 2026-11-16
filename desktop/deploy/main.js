@@ -20,11 +20,11 @@ const SITE_DIR = path.join(CONTENT, 'site');
 const IDS = Object.keys(targets);
 const FLASH = ['usb', 'rpi'];
 const DEFAULT_SETTINGS = {
-  docker: { name: '', port: 8080, tag: 'latest' },
+  docker: { name: '', port: 8080, tag: 'latest', requirePassword: false },
   builtin: { name: '', port: 8090, keepRunning: false },
   virtualbox: { name: '', netMode: 'bridged' },
   vmware: { name: '' },
-  ssh: { name: '', host: '', user: '', sshPort: 22, folder: '~/gtha-map', key: '', port: 8080, tag: 'latest' },
+  ssh: { name: '', host: '', user: '', sshPort: 22, folder: '~/gtha-map', key: '', port: 8080, tag: 'latest', requirePassword: false },
   usb: { disk: -1 },
   rpi: { disk: -1 },
   pages: { name: '', repo: '' },
@@ -34,6 +34,8 @@ const DEFAULT_TICKED = { docker: true, builtin: true, folder: true };
 // Hidden verification only (GMMC_HIDDEN=1): answer dialogs from environment variables.
 const TEST = process.env.GMMC_HIDDEN === '1';
 
+// Passwords typed in the settings live in memory only, per target. They are never saved; the manager hashes them at deploy time.
+const secrets = {};
 let win = null; let tray = null; let quitting = false; let manager = null;
 const flashing = new Map(); // 'usb' or 'rpi' -> AbortController
 const confirmed = new Map(); // 'usb' or 'rpi' -> the disk number the person confirmed
@@ -129,12 +131,13 @@ ipcMain.handle('choose-map', async () => {
   state.mapFile = file; saveState(state);
   return { ok: true, name: path.basename(file) };
 });
+ipcMain.handle('set-secret', (_e, id, value) => { if (IDS.includes(id)) secrets[id] = typeof value === 'string' ? value.slice(0, 200) : ''; return true; });
 ipcMain.handle('clear-map', () => { state.mapFile = ''; saveState(state); return true; });
 ipcMain.handle('deploy', async (_e, id) => {
   if (!IDS.includes(id) || FLASH.includes(id)) return { ok: false, error: 'Unknown target' };
   let map = null;
   try { map = readMap(); } catch (e) { send('status', { id, state: 'failed', pct: 0, msg: '', error: e.message }); return { ok: false, error: e.message }; }
-  return manager.deploy(id, state.settings[id], map);
+  return manager.deploy(id, Object.assign({}, state.settings[id], { password: secrets[id] || '' }), map);
 });
 ipcMain.handle('cancel', (_e, id) => { if (flashing.has(id)) flashing.get(id).abort(); else manager.cancelKind(id); return true; });
 ipcMain.handle('list-disks', async () => { try { return { ok: true, disks: await listDisks() }; } catch (e) { return { ok: false, error: String(e.message || e) }; } });

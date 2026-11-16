@@ -7,6 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { IMAGE, portNum, tagOk, lanAddresses, get, portFree } = require('../shared/common');
+const { hashPasswordAsync, passwordOk } = require('../shared/password');
 let win = null;
 let running = null;
 const dataDir = () => path.join(app.getPath('userData'), 'server');
@@ -24,7 +25,9 @@ function run(cmd, args, opts = {}) {
     child.on('close', (code) => { running = null; resolve({ code, out }); });
   });
 }
-function composeEnv(port, tag) { return { GMMC_PORT: String(port), GMMC_TAG: tag }; }
+// Only the hash of the password is ever handed to Docker Compose, and only through the process environment.
+function composeEnv(port, tag, hash) { return { GMMC_PORT: String(port), GMMC_TAG: tag, GMMC_PASSWORD_HASH: hash || '' }; }
+let passwordHash = '';
 function composeFile() {
   fs.mkdirSync(dataDir(), { recursive: true });
   const dest = path.join(dataDir(), 'compose.yaml');
@@ -44,15 +47,22 @@ ipcMain.handle('existing', async () => {
 });
 ipcMain.handle('pull', async (_e, tag) => {
   if (!tagOk(tag)) return { ok: false, out: 'Invalid image tag' };
-  const r = await run('docker', ['pull', `${IMAGE}:${tag}`], { stream: true });
+  // Hidden verification only: use an image that was built locally instead of downloading one.
+  const noPull = process.env.GMMC_HIDDEN === '1' && process.env.GMMC_TEST_NO_PULL === '1';
+  const r = noPull ? { code: 0, out: '' } : await run('docker', ['pull', `${IMAGE}:${tag}`], { stream: true });
   if (r.code !== 0) return { ok: false, out: r.out.slice(-2000) };
   const d = await run('docker', ['image', 'inspect', '--format', '{{index .RepoDigests 0}}', `${IMAGE}:${tag}`]);
   return { ok: true, digest: d.code === 0 ? d.out.trim() : '' };
 });
-ipcMain.handle('start', async (_e, port, tag) => {
+ipcMain.handle('start', async (_e, port, tag, password) => {
   const n = portNum(port); if (!n || !tagOk(tag)) return { ok: false, out: 'Invalid port or tag' };
+  passwordHash = '';
+  if (password) {
+    if (!passwordOk(password)) return { ok: false, out: 'Invalid password' };
+    passwordHash = await hashPasswordAsync(password);
+  }
   const file = composeFile();
-  const r = await run('docker', ['compose', '-f', file, 'up', '-d'], { stream: true, env: composeEnv(n, tag) });
+  const r = await run('docker', ['compose', '-f', file, 'up', '-d'], { stream: true, env: composeEnv(n, tag, passwordHash) });
   return { ok: r.code === 0, out: r.out.slice(-2000), file };
 });
 ipcMain.handle('health', async (_e, port) => {
@@ -62,13 +72,16 @@ ipcMain.handle('health', async (_e, port) => {
       const lans = lanAddresses();
       const reach = [];
       for (const ip of lans.slice(0, 3)) reach.push({ ip, ok: (await get(`http://${ip}:${n}/healthz`)) === 200 });
-      return { ok: true, seconds: Math.round((Date.now() - t0) / 1000), reach };
+      // With sign-in on, the editor must answer with a redirect to the sign-in page (or 401), never with the page itself.
+      const gate = passwordHash ? await get(`http://127.0.0.1:${n}/app/`) : 0;
+      return { ok: true, seconds: Math.round((Date.now() - t0) / 1000), reach, passwordRequired: [301, 302, 303, 401].includes(gate) };
     }
     await new Promise((r) => setTimeout(r, 1500));
   }
   return { ok: false };
 });
 ipcMain.handle('stop', async (_e, port, tag) => {
+  passwordHash = '';
   const file = composeFile();
   const r = await run('docker', ['compose', '-f', file, 'down'], { stream: true, env: composeEnv(portNum(port) || 8080, tagOk(tag) ? tag : 'latest') });
   return { ok: r.code === 0 };

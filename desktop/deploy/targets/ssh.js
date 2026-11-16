@@ -90,6 +90,12 @@ async function deploy(ctx) {
     if (upM.code !== 0) throw new Error('Could not upload the starting map: ' + explain(upM));
   } else await run('ssh', sshArgs(v, 'rm -f ' + dir + '/default-map.json'), opts());
 
+  // The hash goes to a private .env next to compose.yaml through stdin, never onto a command line.
+  if (inst.passwordHash) {
+    const upE = await run('ssh', sshArgs(v, 'umask 077 && cat > ' + dir + '/.env'), opts({ input: 'GMMC_PASSWORD_HASH=' + inst.passwordHash + '\n' }));
+    if (upE.code !== 0) throw new Error('Could not write the sign-in settings: ' + explain(upE));
+  } else await run('ssh', sshArgs(v, 'rm -f ' + dir + '/.env'), opts());
+
   ctx.emit(35, 'Downloading the image on the server');
   const pull = await run('ssh', sshArgs(v, COMPOSE(inst, dir) + ' pull'), opts({ timeout: 600000 }));
   if (pull.code !== 0) throw new Error('docker compose pull failed: ' + explain(pull));
@@ -97,22 +103,24 @@ async function deploy(ctx) {
   const up = await run('ssh', sshArgs(v, COMPOSE(inst, dir) + ' up -d --force-recreate'), opts({ timeout: 180000 }));
   if (up.code !== 0) throw new Error('docker compose up failed: ' + explain(up));
 
-  const url = await verifyWeb(v, opts, ctx);
+  const url = await verifyWeb(v, opts, ctx, !!inst.passwordHash);
   const ver = await run('ssh', sshArgs(v, 'docker ps --filter ' + label(inst) + ' --format "{{.Image}}"'), opts());
   void ver;
   return { links: [{ label: v.host, url, kind: 'url' }], patch: { url, version: ctx.version, where: v.user + '@' + v.host + ' · ' + folder, run: Object.assign({}, inst.run, { host: v.host, user: v.user, sshPort: v.sshPort, key: v.key, remoteDir: folder }) } };
 }
 
-async function verifyWeb(v, opts, ctx) {
+async function verifyWeb(v, opts, ctx, signin) {
   ctx.emit(85, 'Checking the website');
   const url = 'http://' + v.host + ':' + v.webPort + '/';
   let ok = false;
-  for (let i = 0; i < 20 && !ok; i++) { ok = (await get(url, 4000)) === 200; if (!ok) await new Promise((r) => setTimeout(r, 2000)); }
+  // With sign-in on, /healthz is the open page; the editor must then send visitors to the sign-in page.
+  for (let i = 0; i < 20 && !ok; i++) { ok = (await get(signin ? url + 'healthz' : url, 4000)) === 200; if (!ok) await new Promise((r) => setTimeout(r, 2000)); }
   if (!ok) {
     const inside = await run('ssh', sshArgs(v, 'curl -fsS -o /dev/null http://127.0.0.1:' + v.webPort + '/healthz && echo healthy'), opts({ timeout: 20000 }));
     if (inside.code === 0 && /healthy/.test(inside.out)) throw new Error('The server runs, but ' + url + ' does not answer from this computer. Open port ' + v.webPort + ' in the server\'s firewall.');
     throw new Error('The server was started but the website did not answer at ' + url + '.');
   }
+  if (signin && ![301, 302, 303, 401].includes(await get(url + 'app/', 4000))) throw new Error('The server is running but did not ask for a password.');
   return url;
 }
 
@@ -146,7 +154,7 @@ async function remove(inst) {
   if (c.length) { const r = await remote(v, inst, 'docker rm -f ' + c.map((x) => x.id).join(' '), { timeout: 120000 }); if (r.code !== 0) throw new Error('docker rm failed: ' + explain(r)); }
   const dir = remoteDir(v.folder);
   // Delete only the files this app wrote, then the folder if that leaves it empty.
-  await remote(v, inst, 'rm -f ' + dir + '/compose.yaml ' + dir + '/default-map.json && rmdir ' + dir + ' 2>/dev/null; true');
+  await remote(v, inst, 'rm -f ' + dir + '/compose.yaml ' + dir + '/default-map.json ' + dir + '/.env && rmdir ' + dir + ' 2>/dev/null; true');
   return {};
 }
 async function update(inst, ctx, latest) {
@@ -158,7 +166,7 @@ async function update(inst, ctx, latest) {
   await run('ssh', sshArgs(v, 'cat > ' + dir + '/compose.yaml'), { input: text, timeout: 30000 });
   const pull = await remote(v, inst, COMPOSE(inst, dir) + ' pull', { timeout: 600000 }); if (pull.code !== 0) throw new Error('docker compose pull failed: ' + explain(pull));
   const up = await remote(v, inst, COMPOSE(inst, dir) + ' up -d --force-recreate', { timeout: 180000 }); if (up.code !== 0) throw new Error('docker compose up failed: ' + explain(up));
-  const url = await verifyWeb(v, (e) => Object.assign({ timeout: 30000 }, e), ctx);
+  const url = await verifyWeb(v, (e) => Object.assign({ timeout: 30000 }, e), ctx, !!inst.passwordHash);
   return { links: [{ label: v.host, url, kind: 'url' }], patch: { tag, version: latest, url } };
 }
 

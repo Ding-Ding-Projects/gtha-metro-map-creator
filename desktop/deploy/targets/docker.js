@@ -17,6 +17,8 @@ function composeText(inst, opts) {
     '  web:',
     '    image: ' + IMAGE + ':' + inst.tag,
     '    ports:', '      - "' + inst.port + ':8080"',
+    // The sign-in hash comes from the .env file next to this file (empty means sign-in is off).
+    '    environment:', '      GMMC_PASSWORD_HASH: ${GMMC_PASSWORD_HASH:-}',
     '    restart: unless-stopped', '    read_only: true', '    tmpfs:', '      - /tmp',
     '    labels:', '      ' + INSTANCE_LABEL + ': "' + inst.id + '"'
   ];
@@ -54,11 +56,15 @@ async function up(inst, ctx, label) {
   const dir = ctx.instDir; fs.mkdirSync(dir, { recursive: true });
   const image = IMAGE + ':' + inst.tag;
   ctx.emit(15, 'Downloading the image');
-  const pull = await run('docker', ['pull', image], { timeout: 600000, signal: ctx.signal, onLine: (l) => ctx.log(l) });
+  // Hidden verification only: use an image that was built locally instead of downloading one.
+  const noPull = process.env.GMMC_HIDDEN === '1' && process.env.GMMC_TEST_NO_PULL === '1';
+  const pull = noPull ? { code: 0, out: '' } : await run('docker', ['pull', image], { timeout: 600000, signal: ctx.signal, onLine: (l) => ctx.log(l) });
   if (pull.code !== 0) throw new Error('The image download failed: ' + tailOut(pull));
   const hasMap = !!ctx.mapText;
   if (hasMap) fs.writeFileSync(path.join(dir, 'default-map.json'), ctx.mapText, 'utf8'); else fs.rmSync(path.join(dir, 'default-map.json'), { force: true });
   const file = path.join(dir, 'compose.yaml'); fs.writeFileSync(file, composeText(inst, { map: hasMap }));
+  // Only the hash is written, never the password. The file is private to this user.
+  if (inst.passwordHash) fs.writeFileSync(path.join(dir, '.env'), 'GMMC_PASSWORD_HASH=' + inst.passwordHash + '\n', { mode: 0o600 }); else fs.rmSync(path.join(dir, '.env'), { force: true });
   ctx.emit(60, label || 'Starting the container');
   const upc = await run('docker', ['compose', '-p', 'gmmc-' + inst.slug, '-f', file, 'up', '-d', '--force-recreate'], { timeout: 180000, signal: ctx.signal, onLine: (l) => ctx.log(l) });
   if (upc.code !== 0) throw new Error('Docker Compose could not start the server: ' + tailOut(upc));
@@ -73,11 +79,17 @@ async function verify(inst, ctx) {
     await new Promise((r) => setTimeout(r, 1500));
   }
   if (!healthy) throw new Error('The container started but did not answer its health check within 60 seconds.');
+  if (inst.passwordHash) {
+    // With sign-in on, the editor must send a visitor to the sign-in page (or answer 401), never serve itself.
+    const gate = await get('http://127.0.0.1:' + inst.port + '/app/');
+    if (![301, 302, 303, 401].includes(gate)) throw new Error('The server is running but did not ask for a password.');
+  }
   ctx.emit(92, 'Checking your network address');
   const links = [];
   for (const ip of lanAddresses().slice(0, 4)) {
     const url = 'http://' + ip + ':' + inst.port + '/';
-    if ((await get(url)) === 200) links.push({ label: ip, url, kind: 'url' });
+    // /healthz stays open when sign-in is on, so it is the right page to ask.
+    if ((await get(inst.passwordHash ? url + 'healthz' : url)) === 200) links.push({ label: ip, url, kind: 'url' });
   }
   if (!links.length) throw new Error('The server answers on this computer, but not on a network address. Check Windows Firewall for port ' + inst.port + '.');
   return links;
