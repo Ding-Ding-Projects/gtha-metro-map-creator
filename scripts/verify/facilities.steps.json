@@ -1,0 +1,20 @@
+[
+ {"wait": 2500},
+ {"name": "closeSetup", "js": "(() => { const d = document.getElementById('setupDialog'); if (d && d.close) d.close(); return !!d; })()"},
+ {"name": "select", "js": "(() => { GMMC.setSelection({type:'station',ids:['finch']}); GMMC.renderPanels(); GMMC.render(); GMMC.fit(); return [...document.querySelectorAll('.fac-chip')].map(b => b.textContent.trim()).join(','); })()"},
+ {"name": "toggle", "js": "(() => { for (const k of ['accessible','parking','bike']) document.querySelector('[data-facility=' + k + ']').click(); return [GMMC.getMap().stations.finch.facilities, [...document.querySelectorAll('.fac-chip.on')].length, document.querySelectorAll('[data-st=\"finch\"]').length]; })()"},
+ {"name": "icons", "js": "document.querySelectorAll('.fac-icon').length + ' icons on screen; first label: ' + (document.querySelector('.fac-icon') ? document.querySelector('.fac-icon').closest('svg') !== null : false)"},
+ {"name": "svgSchematic", "js": "(() => { const s = GMMC.standaloneSvg(); return [(s.match(/class=\"fac-icon\"/g) || []).length, s.includes('map-scale')]; })()"},
+ {"name": "geo", "js": "(() => { GMMC.setLayout('geographic'); GMMC.fit(); const b = document.getElementById('facScale'); return [b.hidden, b.textContent.trim(), b.querySelector('.fs-bar').style.width]; })()"},
+ {"wait": 500},
+ {"name": "geo2", "js": "(() => { const b = document.getElementById('facScale'); const a = b.textContent.trim() + ' ' + b.querySelector('.fs-bar').style.width; document.getElementById('zoomInBtn').click(); document.getElementById('zoomInBtn').click(); document.getElementById('zoomInBtn').click(); return new Promise(r => setTimeout(() => r([a, b.textContent.trim() + ' ' + b.querySelector('.fs-bar').style.width, GMMC.getView().k]), 600)); })()"},
+ {"name": "centreFinch", "js": "(() => { GMMC.setSelection({type:'station',ids:['finch']}); const s = GMMC.getMap().stations.finch, g = GMMC.stGeo(s); const v = GMMC.getView(), r = document.getElementById('map').getBoundingClientRect(); v.k = 3; v.tx = r.width/2 - g.x*24*3; v.ty = r.height/2 - g.y*24*3; GMMC.render(); GMMC.renderPanels(); return document.querySelectorAll('.fac-icon').length; })()"},
+ {"wait": 800},
+ {"shot": "geo-facilities.png"},
+ {"name": "svgGeo", "js": "(() => { const s = GMMC.standaloneSvg(); const a = s.indexOf('class=\"map-scale\"'); const seg = a < 0 ? '' : s.slice(a, a + 3000); const e = seg.indexOf('</text>'); const txt = e < 0 ? null : seg.slice(0, e).split('>').pop(); return [(s.match(/class=\"fac-icon\"/g) || []).length, a >= 0, txt, s.length]; })()"},
+ {"name": "persist", "js": "(() => { const j = GMMC.projectJson(); const ok = GMMC.loadJson(j); return [ok, GMMC.getMap().stations.finch.facilities]; })()"},
+ {"name": "sanitize", "js": "(() => { const o = JSON.parse(GMMC.projectJson()); o.map.stations.finch.facilities = ['bike','bike','nope','ferry',5]; GMMC.loadJson(JSON.stringify(o)); return GMMC.getMap().stations.finch.facilities; })()"},
+ {"name": "schematicShot", "js": "(() => { GMMC.setLayout('schematic'); GMMC.fit(); GMMC.setSelection({type:'station',ids:['finch']}); GMMC.renderPanels(); GMMC.render(); return document.getElementById('facScale').hidden; })()"},
+ {"wait": 500},
+ {"shot": "schematic-facilities.png"}
+]

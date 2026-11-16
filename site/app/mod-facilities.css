@@ -1,1 +1,13 @@
 /* mod-facilities.css */
+.fac-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.fac-chip { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px 0 8px; border-radius: 8px; border: 1px solid var(--md-outline); background: transparent; color: var(--md-on-surface-variant); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: background-color 200ms, border-color 200ms; }
+.fac-chip:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
+.fac-chip:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+.fac-chip.on { background: var(--md-secondary-container); color: var(--md-on-secondary-container); border-color: transparent; }
+.fac-chip .ic { flex: none; }
+.fac-scale { position: absolute; left: 8px; bottom: 36px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 4px 8px 6px; border-radius: 8px; background: color-mix(in srgb, var(--md-surface-container-lowest) 88%, transparent); color: var(--md-on-surface-variant); font-size: 11px; line-height: 16px; pointer-events: none; }
+.fac-scale[hidden] { display: none; }
+.fac-scale .fs-north { display: flex; color: var(--md-on-surface); }
+.fac-scale .fs-bar { display: block; height: 6px; border: 2px solid var(--md-on-surface); border-top: 0; box-sizing: border-box; min-width: 8px; }
+.fac-scale .fs-text { font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .fac-chip { transition: none; } }
