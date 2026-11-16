@@ -14,12 +14,14 @@ const { addressFromSerialLog, addressFromNeighbours, waitForAppliance, sleep, ta
 const NEED = 'VMware Workstation (or Workstation Player) was not found. Install it, or install VMware OVF Tool, and try again.';
 
 function tools() {
-  if (process.env.GMMC_HIDDEN === '1' && process.env.GMMC_VMRUN) { try { const a = JSON.parse(process.env.GMMC_VMRUN); return { vmrun: a, ovftool: null, vdisk: null, product: 'ws' }; } catch { /* plain */ } }
-  const roots = [process.env['ProgramFiles(x86)'], process.env.ProgramFiles, 'C:\\Program Files (x86)', 'C:\\Program Files'].filter(Boolean);
+  const roots = [process.env['ProgramFiles(x86)'], process.env.ProgramFiles, 'C:/Program Files (x86)', 'C:/Program Files'].filter(Boolean);
   const first = (rel) => { for (const r of roots) { const p = path.join(r, rel); if (fs.existsSync(p)) return p; } return null; };
-  const ws = first('VMware\\VMware Workstation\\vmrun.exe'); const pl = first('VMware\\VMware Player\\vmrun.exe');
+  const ws = first('VMware/VMware Workstation/vmrun.exe'); const pl = first('VMware/VMware Player/vmrun.exe');
   const vmrun = ws || pl;
-  return { vmrun: vmrun ? [vmrun] : null, product: ws ? 'ws' : 'player', ovftool: first('VMware\\VMware Workstation\\OVFTool\\ovftool.exe') || first('VMware\\VMware OVF Tool\\ovftool.exe'), vdisk: first('VMware\\VMware Workstation\\vmware-vdiskmanager.exe') || first('VMware\\VMware Player\\vmware-vdiskmanager.exe') };
+  const t = { vmrun: vmrun ? [vmrun] : null, product: ws ? 'ws' : 'player', ovftool: first('VMware/VMware Workstation/OVFTool/ovftool.exe') || first('VMware/VMware OVF Tool/ovftool.exe'), vdisk: first('VMware/VMware Workstation/vmware-vdiskmanager.exe') || first('VMware/VMware Player/vmware-vdiskmanager.exe') };
+  // In hidden test runs GMMC_VMRUN may be a JSON array [program, ...leading arguments] standing in for vmrun.
+  if (process.env.GMMC_HIDDEN === '1' && process.env.GMMC_VMRUN) { try { const a = JSON.parse(process.env.GMMC_VMRUN); if (Array.isArray(a) && a.length) t.vmrun = a; } catch { /* keep the real vmrun */ } }
+  return t;
 }
 const vm = (t, args, opts) => run(t.vmrun[0], t.vmrun.slice(1).concat(['-T', t.product]).concat(args), opts || { timeout: 120000 });
 
@@ -43,7 +45,7 @@ function ownedDir(inst, ctx) {
   let id = ''; try { id = JSON.parse(fs.readFileSync(marker, 'utf8')).id; } catch { /* no marker */ }
   if (id !== inst.id) throw new Error('The machine folder is not marked as created by this app, so it was left alone.');
   const vmx = inst.run.vmx;
-  if (!vmx || path.dirname(path.resolve(vmx)).toLowerCase() !== path.resolve(dir).toLowerCase()) throw new Error('The recorded machine file is not inside this instance\'s folder.');
+  if (!vmx || !path.resolve(vmx).toLowerCase().startsWith(path.resolve(dir).toLowerCase() + path.sep)) throw new Error('The recorded machine file is not inside this instance\'s folder.');
   if (!fs.existsSync(vmx)) throw new Error('The machine file no longer exists.');
   return { dir, vmx };
 }

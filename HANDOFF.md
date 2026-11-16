@@ -1,5 +1,27 @@
 # Handoff
 
+## Deploy targets, drive images and the instance manager (branch ai/feature/20261116-deploy-targets)
+
+Not yet merged or pushed. What exists: nine deploy targets (adds VirtualBox, VMware, USB drive and Raspberry
+Pi), a raw x86_64 `.img.xz` and an arm64 Raspberry Pi image in the appliance build, a multi-architecture
+container image, release and check jobs for both, and an instance manager (Instances tab, registry,
+health, start, stop, restart, logs, update, duplicate, remove). Details: docs/features/deploy.md and
+docs/features/appliance.md.
+
+Verified for real on this Windows computer (scripts in scripts/verify/): the manager against real Docker
+(two instances, stop, restart, update 1.4.0 to 1.5.0, logs, duplicate, remove, a foreign nginx container
+never touched); the desktop window driven end to end (hidden Electron); real VirtualBox 7.2 and VMware
+Workstation tools (import, conversion, ownership marks, removal, refusal of machines not created by the app)
+with a stand-in appliance and a wrapper that refuses to start any machine; the write-and-read-back path
+against a file standing in for a drive, including cancelled and failed permission prompts; the real drive
+list, which offers no Windows disk. The Raspberry Pi image was built locally under arm64 emulation and its
+boot partition inspected (firmware, kernel, device trees, built-in ext4, SD and USB drivers).
+
+Not verified: any real write to a USB drive or SD card (no write to a physical disk and no permission
+prompt was triggered here), the appliance actually booting in VirtualBox or VMware, a Raspberry Pi booting
+from the image (CI only boots a QEMU virt twin of the same root file system), the CI jobs themselves
+(workflow YAML passes actionlint; they have not run), SSH and GitHub Pages with real credentials.
+
 ## 1.5.0 (2026-11-16)
 
 Auto-schematic (`mod-schematic.js`, `schematic-worker.js`), style presets (`mod-styles.js`) and the

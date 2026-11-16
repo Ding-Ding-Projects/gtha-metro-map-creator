@@ -302,6 +302,7 @@
 
   // ---------------------------------------------------------------- the interface
   function mount(root, backend, opts) {
+    root.innerHTML = ''; // the dialogs below are added to root, so clear it first
     opts = opts || {};
     const st = { ticked: {}, settings: {}, status: {}, useMap: true, version: '', mapName: '', mapError: '', logOpen: false, gh: { stored: false, cli: false, login: '' }, logLines: [], filter: 'all', disks: [], disksFor: {}, diskError: '', tab: 'deploy' };
     const refs = {};
@@ -546,7 +547,6 @@
     async function refreshGh(login) { st.gh = await backend.gh.status(); if (login) st.gh.login = login; else if (backend.gh.web && st.gh.stored) st.gh.login = backend.gh.login || st.gh.login; renderAll(); }
 
     // ---- layout ----
-    root.innerHTML = '';
     const app = el('div', 'dp');
     const top = el('div', 'dp-top'); top.innerHTML = '<span class="dp-logo" aria-hidden="true"></span><span class="dp-barTitle"></span><span class="grow"></span>';
     refs.tabs = el('div', 'dp-tabs'); refs.tabs.setAttribute('role', 'tablist');

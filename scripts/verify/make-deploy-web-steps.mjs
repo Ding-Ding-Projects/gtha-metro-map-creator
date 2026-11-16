@@ -5,10 +5,15 @@
 import fs from 'node:fs';
 const S = [];
 const js = (name, f) => S.push({ name, js: `(${f.toString()})()` });
-S.push({ wait: 2000 });
-js('open', async () => { await window.GMMCDeploy.open(); await new Promise((r) => setTimeout(r, 700)); const d = document.getElementById('deployDialog'); return { open: d.open, title: d.querySelector('.dp-title').textContent, cards: d.querySelectorAll('.dp-card').length }; });
+S.push({ wait: 2500 });
+// A first visit shows the set-up wizard; skip it so the dialog can be tested.
+js('skip set-up', () => { const b = Array.from(document.querySelectorAll('button')).find((x) => x.textContent.trim() === 'Skip'); if (b) b.click(); return !!b; });
+S.push({ wait: 600 });
+js('open', async () => { await window.GMMCDeploy.open(); await new Promise((r) => setTimeout(r, 700)); const d = document.getElementById('deployDialog'); return { open: d.open, title: d.querySelector('.dp-title').textContent, cards: d.querySelectorAll('.dp-card').length, chips: d.querySelectorAll('.dp-groups .dp-fchip').length, tabs: d.querySelectorAll('[role=tab]').length }; });
 S.push({ shot: 'deploy-open.png' });
-js('disabled targets', () => { const d = document.getElementById('deployDialog'); return ['docker', 'builtin', 'ssh', 'pages', 'folder'].map((id) => { const c = d.querySelector('[data-target=' + id + ']'); const w = c.querySelector('.dp-why'); return { id, disabled: c.querySelector('input[type=checkbox]').disabled, chip: c.querySelector('.dp-chip').textContent, why: w.hidden ? '' : w.textContent, link: w.hidden ? '' : c.querySelector('.dp-why-link').href }; }); });
+js('disabled targets', () => { const d = document.getElementById('deployDialog'); return ['docker', 'builtin', 'virtualbox', 'vmware', 'ssh', 'usb', 'rpi', 'pages', 'folder'].map((id) => { const c = d.querySelector('[data-target=' + id + ']'); const w = c.querySelector('.dp-why'); return { id, disabled: c.querySelector('input[type=checkbox]').disabled, chip: c.querySelector('.dp-chip').textContent, why: w.hidden ? '' : w.textContent, link: w.hidden ? '' : c.querySelector('.dp-why-link').href }; }); });
+js('filter chips', () => { const d = document.getElementById('deployDialog'); const chip = (n) => Array.from(d.querySelectorAll('.dp-groups .dp-fchip')).find((b) => b.textContent.trim().startsWith(n)); const shown = () => Array.from(d.querySelectorAll('.dp-card')).filter((c) => !c.hidden).map((c) => c.dataset.target); const out = {}; for (const n of ['Virtual machines', 'Flash a drive', 'On this computer', 'Online', 'All']) { chip(n).click(); out[n] = shown(); } return out; });
+S.push({ shot: 'deploy-chips.png' });
 js('zip deploy', async () => {
   window.__zip = null; const orig = HTMLAnchorElement.prototype.click;
   HTMLAnchorElement.prototype.click = function () { if (this.download) { const n = this.download; fetch(this.href).then((r) => r.arrayBuffer()).then((b) => { window.__zip = { name: n, bytes: new Uint8Array(b) }; }); return; } return orig.call(this); };
@@ -27,6 +32,10 @@ js('zip contents', async () => {
   const idx = await read('index.html'); const app = await read('app/index.html'); const map = JSON.parse(await read('app/default-map.json')); const names = Object.keys(ent);
   return { files: n, hasIndex: /<html/i.test(idx), appIsEditor: /GTHA Metro Map Creator/.test(app), hasDeployModule: names.includes('app/mod-deploy.js'), noManifest: !names.includes('site-manifest.json'), mapFormat: map.format || ('version ' + map.version), mapTitle: (map.map || map).title, editorTitle: window.GMMC.getMap().title };
 });
+js('instances tab', async () => { const d = document.getElementById('deployDialog'); document.getElementById('dp-tab-instances').click(); await new Promise((r) => setTimeout(r, 1000)); const rows = Array.from(d.querySelectorAll('.dp-irow')).map((r) => ({ name: r.querySelector('.dp-iname span').textContent, where: r.querySelector('.dp-iwhere').textContent, health: r.querySelector('.dp-ihealth').textContent, disabledStart: !r.querySelector('.dp-ib[title=Start]') })); const mb = d.querySelector('.dp-irow .dp-ib[aria-haspopup]'); mb.click(); await new Promise((r) => setTimeout(r, 200)); const menu = Array.from(d.querySelectorAll('.dp-menu-i')).map((b) => b.textContent + (b.disabled ? ' (disabled: ' + b.title + ')' : '')); mb.click(); return { tab: document.getElementById('dp-tab-instances').textContent, rows, menu, empty: !!d.querySelector('.dp-empty') }; });
+S.push({ shot: 'deploy-instances.png' });
+js('remove asks first', async () => { const d = document.getElementById('deployDialog'); const mb = d.querySelector('.dp-irow .dp-ib[aria-haspopup]'); mb.click(); await new Promise((r) => setTimeout(r, 200)); Array.from(d.querySelectorAll('.dp-menu-i')).find((b) => /^Remove/.test(b.textContent)).click(); await new Promise((r) => setTimeout(r, 300)); const dlg = d.querySelector('.dp-modal[open]'); const text = dlg ? dlg.textContent : ''; Array.from(dlg.querySelectorAll('.dp-btn')).find((b) => b.textContent === 'Remove').click(); await new Promise((r) => setTimeout(r, 400)); return { dialog: text.slice(0, 200), rowsAfter: d.querySelectorAll('.dp-irow').length, stored: localStorage.getItem('gmmc.deploy.instances.v1') }; });
+js('back to deploy', () => { document.getElementById('dp-tab-deploy').click(); return true; });
 js('pages validation', async () => {
   const d = document.getElementById('deployDialog'); const set = (id, on) => { const c = d.querySelector('#dp-tick-' + id); if (c.checked !== on) c.click(); };
   set('folder', false); set('pages', true);
@@ -44,5 +53,5 @@ js('repo validation', () => { const { parseRepo } = window.GMMCDeployCore; const
 S.push({ shot: 'deploy-pages-form.png' });
 js('cantonese', async () => { window.I18N.setLang('yue'); await window.GMMCDeploy.open(); const d = document.getElementById('deployDialog'); await new Promise((r) => setTimeout(r, 300)); return { title: d.querySelector('.dp-title').textContent, docker: d.querySelector('[data-target=docker] .dp-why').textContent, btn: d.querySelector('.dp-deployAll').textContent, chip: d.querySelector('[data-target=docker] .dp-chip').textContent }; });
 S.push({ shot: 'deploy-yue.png' });
-js('overflow', () => { const d = document.getElementById('deployDialog'); const dr = d.getBoundingClientRect(); const main = d.querySelector('.dp-main'); const wide = []; for (const e of d.querySelectorAll('*')) { const r = e.getBoundingClientRect(); if (r.width && (r.right > dr.right + 1 || r.left < dr.left - 1)) wide.push(e.className || e.tagName); } return { vw: innerWidth, dialogW: Math.round(dr.width), mainScrollW: main.scrollWidth, mainClientW: main.clientWidth, docScrollW: document.documentElement.scrollWidth, escaping: wide.slice(0, 8) }; });
+js('overflow', () => { const d = document.getElementById('deployDialog'); const dr = d.getBoundingClientRect(); const main = d.querySelector('.dp-pane'); const wide = []; for (const e of d.querySelectorAll('*')) { const r = e.getBoundingClientRect(); if (r.width && (r.right > dr.right + 1 || r.left < dr.left - 1)) wide.push(e.className || e.tagName); } return { vw: innerWidth, dialogW: Math.round(dr.width), mainScrollW: main.scrollWidth, mainClientW: main.clientWidth, docScrollW: document.documentElement.scrollWidth, escaping: wide.slice(0, 8) }; });
 fs.writeFileSync(new URL('./deploy-web.steps.json', import.meta.url), JSON.stringify(S, null, 1));

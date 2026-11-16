@@ -50,6 +50,7 @@
 
   // opts: { backend (instance backend), open(url), copy(text), onNew(), setBadge(n) }
   function mount(root, B, opts) {
+    root.innerHTML = ''; // the dialogs below are added to root, so clear it first
     const st = { list: [], q: '', filter: 'all', sel: new Set(), status: {}, error: '', checking: false };
     const refs = {};
     const kindName = (k) => window.I18N.t(KIND_TITLE[k] || 'dp_t_folder');
@@ -210,7 +211,6 @@
     }
     async function runMany(items, act) { for (const i of items) await run(i, act); }
 
-    root.innerHTML = '';
     const pane = el('div', 'dp-pane');
     const head = el('div', 'dp-head'); const text = el('div', 'dp-head-text'); const h = el('h1', 'dp-title dpi-title'); h.tabIndex = -1; text.append(h, el('p', 'dp-sub dpi-sub'));
     const acts = el('div', 'dp-head-actions'); refs.checkBtn = button('', '', checkAll, 'refresh'); refs.newBtn = button('', 'primary', () => opts.onNew(), 'add'); acts.append(refs.checkBtn, refs.newBtn); head.append(text, acts);

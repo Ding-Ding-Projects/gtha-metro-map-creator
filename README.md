@@ -93,8 +93,15 @@ status and log view; `host.bat --stop` stops it. Or run the server setup wizard 
 See [docs/features/hosting.md](docs/features/hosting.md).
 
 Each release also attaches a hosting bundle (`compose.yaml` and `host.bat` pinned to that version) and
-appliance virtual machine images for Hyper-V, VirtualBox, VMware, Proxmox and QEMU that boot straight into
-the server and show its address on the console. See [docs/features/appliance.md](docs/features/appliance.md).
+appliance images that boot straight into the server and show its address on the console: virtual machine
+disks for Hyper-V, VirtualBox, VMware, Proxmox and QEMU, a raw image for a USB drive in a spare PC (legacy
+BIOS only), and an arm64 image for a Raspberry Pi 4 or 5 (not yet booted on real hardware). See
+[docs/features/appliance.md](docs/features/appliance.md).
+
+The portable **deploy app** puts the editor on nine kinds of target in one click (Docker, a built-in
+server, VirtualBox, VMware, SSH, a USB drive, a Raspberry Pi card, GitHub Pages, a folder or ZIP), shows a
+verified link for each, and has an **Instances** tab to start, stop, update, duplicate and remove everything
+it deployed. See [docs/features/deploy.md](docs/features/deploy.md).
 
 ## Build
 

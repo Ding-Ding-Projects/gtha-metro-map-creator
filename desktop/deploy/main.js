@@ -14,6 +14,7 @@ const targets = {
   ssh: require('./targets/ssh'), usb: usb.usb, rpi: usb.rpi, pages: require('./targets/pages'), folder: require('./targets/folder')
 };
 
+const APP_VERSION = require('../package.json').version; // not app.getVersion(): an unpackaged run would report Electron's own version
 const CONTENT = path.join(__dirname, '..', 'content');
 const SITE_DIR = path.join(CONTENT, 'site');
 const IDS = Object.keys(targets);
@@ -77,7 +78,7 @@ function readMap() {
 }
 
 function makeManager() {
-  manager = new Manager({ userData: path.join(app.getPath('userData'), 'deploy'), siteDir: SITE_DIR, appVersion: app.getVersion(), targets, send, getToken });
+  manager = new Manager({ userData: path.join(app.getPath('userData'), 'deploy'), siteDir: SITE_DIR, appVersion: APP_VERSION, targets, send, getToken });
   // The registry lives in the same folder tree as every instance's files.
   return manager;
 }
@@ -90,7 +91,7 @@ async function runFlash(id, number) {
   status({ state: 'running', pct: 2, msg: 'Starting', links: [], error: '', note: '' });
   try {
     const ctx = {
-      settings: { disk: number }, confirmedDisk: confirmed.get(id), userData: path.join(app.getPath('userData'), 'deploy'), version: app.getVersion(), signal: ctl.signal,
+      settings: { disk: number }, confirmedDisk: confirmed.get(id), userData: path.join(app.getPath('userData'), 'deploy'), version: APP_VERSION, signal: ctl.signal,
       emit: (pct, msg) => status({ state: 'running', pct, msg }), log: (line) => send('log', { id, line: String(line).slice(0, 400) })
     };
     fs.mkdirSync(ctx.userData, { recursive: true });
@@ -110,7 +111,7 @@ ipcMain.handle('init', async () => {
   state = state || loadState();
   let mapName = ''; let mapError = '';
   if (state.mapFile) { try { site.readMapFile(state.mapFile); mapName = path.basename(state.mapFile); } catch (e) { mapError = e.message; } }
-  return { state, version: app.getVersion(), mapName, mapError, siteReady: fs.existsSync(path.join(SITE_DIR, 'app', 'index.html')), builtinRunning: targets.builtin.isRunning(), encryption: safeStorage.isEncryptionAvailable(), instances: manager.list() };
+  return { state, version: APP_VERSION, mapName, mapError, siteReady: fs.existsSync(path.join(SITE_DIR, 'app', 'index.html')), builtinRunning: targets.builtin.isRunning(), encryption: safeStorage.isEncryptionAvailable(), instances: manager.list() };
 });
 ipcMain.handle('save-state', (_e, s) => {
   state = state || loadState();
@@ -203,7 +204,7 @@ app.whenReady().then(() => {
   win = new BrowserWindow({
     width: 1120, height: 820, minWidth: 380, minHeight: 560, show: false, backgroundColor: '#FEFBFF', title: 'GTHA Metro Map Creator Deploy',
     icon: path.join(__dirname, '..', 'build', 'icon.png'),
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true, nodeIntegration: false }
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: !TEST, offscreen: TEST }
   });
   // GMMC_HIDDEN=1 keeps the window off screen for automated verification.
   win.once('ready-to-show', () => { if (!TEST) win.show(); });
