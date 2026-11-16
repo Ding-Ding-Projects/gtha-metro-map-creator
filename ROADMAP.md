@@ -108,7 +108,8 @@
 - [x] Crossing reduction in auto-schematic (GTHA template: 19 geographic, 10 after snapping, 4 after reduction, about 70 ms)
 - [x] Documentation search with the regex builder, bounded so slow patterns are cut short
 - [x] Optional password sign-in for the hosted server (off by default; host.bat, setup wizard and deploy app)
-- [ ] Sign-in on the appliance image: documented manual console route only, not built in and not tested on a booted appliance
+- [x] Sign-in on the appliance image, in the source on branch ai/feature/20261116-appliance-signin: the appliance reads a password hash from a `GMMCCONF` disk (FAT or ISO) or a boot-partition file, with the logic tested against real loop devices and a fake docker, the deploy app's VirtualBox, VMware and Raspberry Pi options, and CI boot tests with a configuration disk
+- [ ] Sign-in on the appliance image, proof still owed: the new CI boot tests (FAT disk, ISO disk, invalid disk, Pi virt twin) have not run yet; no image containing `gmmc-signin` has booted, and a VMware machine with the configuration CD-ROM has not been started here (VMware refused to start any machine on this computer, with or without a password)
 - [ ] Sign-in through the deploy app's SSH target: written, not run against a real server
 
 ## Phase 9: next

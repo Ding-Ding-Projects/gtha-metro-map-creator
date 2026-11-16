@@ -1,5 +1,26 @@
 # Handoff
 
+## Appliance password sign-in (branch ai/feature/20261116-appliance-signin, not released)
+
+The appliance reads an optional password hash at boot (`appliance/skel/usr/local/sbin/gmmc-signin`, called by the
+`gmmc-app` service) from a read-only disk labelled `GMMCCONF` (FAT or ISO 9660, file `password-hash`) or a
+`gmmc-password-hash` file on the boot partition (`/boot`, or a FAT partition labelled `GMMCBOOT`). Valid: the container
+gets `GMMC_PASSWORD_HASH` through a root-only `--env-file`, the banner adds "Password required". Absent: sign-in stays off.
+Invalid: the app is not started and the banner says so. The container is replaced when the hash changes (label
+`gmmc.signin`). The deploy app has the switch for VirtualBox and VMware (a small ISO from the pure Node writer
+`desktop/deploy/lib/config-disk.js`, attached as a CD-ROM) and Raspberry Pi (`desktop/deploy/lib/fat32.js` adds the file to the
+unpacked image before the write is verified). The x86 USB image has no FAT partition: documented second-stick route only.
+
+Verified here: `appliance/test-signin.sh` (18 cases against real loop devices, FAT and the Node-made ISO, in a privileged
+Alpine container) and `appliance/test-service.sh` (service logic with a fake docker, banner) pass; `scripts/verify/check-fat32.sh`
+(fsck.vfat and mtools read-back, directories ending inside and across clusters) passes; the boot-test helper functions ran
+against the real 1.7.2 container image started with an env file; `vbox-signin-real.cjs` ran the real VirtualBox target with the
+released 1.7.2 appliance (configuration CD attached holding only the hash, machine booted, deployment reported as failed with
+"did not ask for a password" because 1.7.2 predates this feature, machine removed); `vmware-real.cjs` checks the `ide1:0` lines.
+Not verified: any image containing `gmmc-signin` booting (that is what the new CI boot tests do), a VMware machine started with the
+CD-ROM (VMware could not start any machine on this computer, password or not), a real Raspberry Pi, a real SD card write.
+Actionlint and shellcheck are clean on the changed files.
+
 ## 1.7.2 (2026-11-16)
 
 Fix: the appliance `.ova` declared the qcow2 file size (about 378 MB) as its disk capacity instead of the
