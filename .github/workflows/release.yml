@@ -31,10 +31,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
-          $files = @('dist/gtha-metro-map-creator-site.zip') + (Get-ChildItem dist/desktop-app/*.exe, dist/desktop-wizard/*.exe | ForEach-Object FullName)
+          $files = @('dist/gtha-metro-map-creator-site.zip') + (Get-ChildItem dist/desktop-app/*.exe, dist/desktop-wizard/*.exe, dist/desktop-deploy/*.exe | ForEach-Object FullName)
           $hashes = $files | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_ -Algorithm SHA256).Hash.ToLower(), (Split-Path $_ -Leaf) }
           $hashes | Set-Content dist/SHA256SUMS.txt
           $files += 'dist/SHA256SUMS.txt'
-          $notes = "Desktop app, server setup wizard and offline site for $env:TAG. The executables are portable and not code signed. Container image: ghcr.io/ding-ding-projects/gtha-metro-map-creator:$($env:TAG.TrimStart('v'))"
+          $notes = "Desktop app, server setup wizard, deploy app and offline site for $env:TAG. The executables are portable and not code signed. Container image: ghcr.io/ding-ding-projects/gtha-metro-map-creator:$($env:TAG.TrimStart('v'))"
           gh release view $env:TAG *> $null
           if ($LASTEXITCODE -eq 0) { gh release upload $env:TAG @files --clobber } else { gh release create $env:TAG @files --title "GTHA Metro Map Creator $env:TAG" --notes $notes --verify-tag }

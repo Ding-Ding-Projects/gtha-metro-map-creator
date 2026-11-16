@@ -1,7 +1,7 @@
 // Validates the static site and copies it to dist/site.
 // Checks: JavaScript syntax, template integrity (every path ref resolves), and local links.
-import { readFile, readdir, rm, cp, mkdir } from 'node:fs/promises';
-import { join, extname, dirname, resolve } from 'node:path';
+import { readFile, readdir, rm, cp, mkdir, writeFile } from 'node:fs/promises';
+import { join, extname, dirname, resolve, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import vm from 'node:vm';
 
@@ -53,4 +53,7 @@ if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
 await rm(join('dist', 'site'), { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
 await cp(root, join('dist', 'site'), { recursive: true });
+// The deploy dialog publishes the site by listing it from this manifest (it is not part of the source tree).
+const distFiles = (await walk(join('dist', 'site'))).map((f) => f.slice(join('dist', 'site').length + 1).split(sep).join('/')).filter((f) => f !== 'site-manifest.json').sort();
+await writeFile(join('dist', 'site', 'site-manifest.json'), JSON.stringify({ files: distFiles }) + '\n');
 console.log(`OK: ${files.length} files, ${ids.size} template stations, ${m.lines.length} template lines. Output: dist/site`);

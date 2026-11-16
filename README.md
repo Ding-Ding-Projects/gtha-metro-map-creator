@@ -89,7 +89,7 @@ See [docs/features/hosting.md](docs/features/hosting.md).
 
 - `build.bat` validates JavaScript syntax, template integrity and local links, then writes `dist/site`.
 - `build-installer.bat` runs the build, packages `dist/gtha-metro-map-creator-site.zip`, and builds both
-  portable executables into `dist/desktop-app/` and `dist/desktop-wizard/`.
+  portable executables into `dist/desktop-app/`, `dist/desktop-wizard/` and `dist/desktop-deploy/`.
 - On other platforms: `node scripts/build.mjs`.
 
 GitHub Actions deploys `dist/site` to GitHub Pages and publishes the container image on every push
@@ -100,7 +100,7 @@ to `main`. Pushing a `v*` tag builds the executables and publishes a release.
 | Path | Contents |
 | --- | --- |
 | `site/app/` | The editor: `app.js` (engine), `regex-builder.js`, `gtha-template.js`, `i18n.js`, `app.css` |
-| `desktop/` | Desktop app (`app/`) and server setup wizard (`wizard/`) |
+| `desktop/` | Desktop app (`app/`), server setup wizard (`wizard/`) and deploy app (`deploy/`) |
 | `Dockerfile`, `docker/`, `compose.yaml`, `host.bat` | Container hosting |
 | `site/index.html`, `site/docs/` | Project site and documentation |
 | `design/` | Design canvas source for the editor, project site, desktop app and wizard |
