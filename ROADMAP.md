@@ -109,7 +109,8 @@
 - [x] Documentation search with the regex builder, bounded so slow patterns are cut short
 - [x] Optional password sign-in for the hosted server (off by default; host.bat, setup wizard and deploy app)
 - [ ] Sign-in on the appliance image: documented manual console route only, not built in and not tested on a booted appliance
-- [ ] Sign-in through the deploy app's SSH target: written, not run against a real server
+- [x] Sign-in through the deploy app's SSH target, run end to end against an OpenSSH container
+- [x] Firefox and WebKit (Safari's engine) checks of the live site, with no page errors
 
 ## Phase 9: next
 

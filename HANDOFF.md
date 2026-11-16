@@ -1,5 +1,18 @@
 # Handoff
 
+## Checks after 1.7.2 (2026-11-16)
+
+- Firefox 159 and WebKit 27.2 (Playwright 1.65.1, `scripts/verify/cross-browser.cjs`) against the live
+  site: home page with its eight feature tabs, editor with 238 stations and 20 lines, documentation search
+  (17 highlighted matches for "frequen"), GTFS viewer; no page errors and no horizontal overflow in either.
+  Firefox ran in the `mcr.microsoft.com/playwright:v1.65.1-noble` container because the Windows Firefox
+  build would not start on this computer ("side-by-side configuration is incorrect").
+- Released 1.7.2 `.ova` imported unmodified into VMware Workstation and answered `/healthz` and `/app/`
+  15 s after start.
+- Deploy app SSH target with sign-in, run through the real `desktop/deploy/targets/ssh.js` against a
+  throwaway OpenSSH container driving this computer's Docker: link returned, `/healthz` 200, `/app/`
+  redirected to sign-in, wrong password refused, right password signed in, instance removed.
+
 ## 1.7.2 (2026-11-16)
 
 Fix: the appliance `.ova` declared the qcow2 file size (about 378 MB) as its disk capacity instead of the
