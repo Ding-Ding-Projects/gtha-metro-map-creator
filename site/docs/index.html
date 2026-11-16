@@ -47,6 +47,7 @@
       <li><a href="#desktop">Desktop app</a></li>
       <li><a href="#server">Host it on your network</a></li>
       <li><a href="#appliance">Appliance virtual machine</a></li>
+      <li><a href="#deploy">Deploy app and instances</a></li>
       <li><a href="#format">Map file format</a></li>
     </ul>
   </nav>
@@ -131,8 +132,20 @@
         <li><strong>Hyper-V:</strong> <code>.vhdx.zip</code>. Unzip it and create a Generation 1 machine that uses the disk.</li>
         <li><strong>VirtualBox or VMware:</strong> <code>.ova.zip</code>. Unzip it and import the <code>.ova</code>.</li>
         <li><strong>Proxmox, QEMU or KVM:</strong> <code>.qcow2.xz</code>. Unpack it and attach the <code>.qcow2</code>; use legacy BIOS.</li>
+        <li><strong>A spare PC:</strong> the x86_64 <code>.img.xz</code>. Unpack it and write the <code>.img</code> to a USB drive (this erases the drive); the PC must boot in legacy BIOS mode.</li>
+        <li><strong>Raspberry Pi 4 or 5:</strong> the <code>arm64-rpi</code> <code>.img.xz</code>. Write it to an SD card or USB drive, plug in Ethernet and read the address on the screen or in your router. It has not been booted on real Pi hardware yet.</li>
       </ul>
       <p>Connect it to your network, start it, and read the address from the console, for example <code>http://192.168.1.50:8080/</code>. It needs no internet connection and 1 GB of memory is enough. Other devices on the same network can then open the editor. There is no password and no sign-in, so use it only on a network you trust. To update, start the new release's image and delete the old machine; your maps are stored in each visitor's browser, not on the server. Details are in <code>docs/features/appliance.md</code> in the project.</p></section>
+    <section id="deploy"><h2>Deploy app and instances</h2>
+      <p>The portable deploy app (<code>GTHA-Metro-Map-Creator-Deploy-&lt;version&gt;-portable.exe</code> on the releases page) puts the editor on any of nine targets and shows a link that was checked for each one. The same dialog is in the editor's Export menu, where a browser can only make a ZIP, write a folder or publish to GitHub Pages.</p>
+      <ul>
+        <li><strong>On this computer:</strong> Docker, or a built-in server that needs no Docker.</li>
+        <li><strong>Virtual machines:</strong> VirtualBox or VMware. The app downloads the appliance image of its own version, checks it against the release's checksums, imports it, starts it without a window and waits for the editor to answer.</li>
+        <li><strong>Flash a drive:</strong> a USB drive for a spare PC, or an SD card or USB drive for a Raspberry Pi 4 or 5. Only removable drives are listed, nothing is chosen for you, you confirm the exact drive, Windows asks for permission, and every byte is read back after writing.</li>
+        <li><strong>Online:</strong> a server over SSH, GitHub Pages, or a folder or ZIP for any web host.</li>
+      </ul>
+      <h3>Several copies at once</h3>
+      <p>Deploy as many instances as you like, each with its own name, port and starting map. If a port is taken the next free one is used. The <strong>Instances</strong> tab lists every instance with its version, live health and link, and can start, stop, restart, show logs, update to a newer release, duplicate and remove each one. Removing asks first and lists exactly what will be deleted. The app only manages instances it created: it finds containers by a label it set and never stops or removes anything else on your computer.</p></section>
     <section id="editing"><h2>Faster editing</h2>
       <ul>
         <li><strong>Box select:</strong> with Select, hold Shift and drag across empty map to select every station inside.</li>

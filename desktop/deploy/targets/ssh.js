@@ -1,14 +1,18 @@
-// Target 3: a remote server over SSH. Uses the system OpenSSH client with key or agent login only.
+// Target: a remote server over SSH. Uses the system OpenSSH client with key or agent login only.
+// Each instance lives in its own folder (<base folder>/<name>) as its own Compose project, with a
+// label that names the instance. Remote containers are found by that label, so containers on the
+// server that this app did not create are never touched.
 'use strict';
 const fs = require('node:fs');
-const { portNum, tagOk, get } = require('../../shared/common');
+const { portNum, tagOk, get, INSTANCE_LABEL } = require('../../shared/common');
 const { run } = require('../lib/proc');
+const { composeText } = require('./docker');
 
 const HOST_RE = /^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$/;
 const USER_RE = /^[A-Za-z_][A-Za-z0-9_.-]{0,31}$/;
 const FOLDER_RE = /^(?!-)(?:~\/)?[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*$/;
 
-// Returns { host, user, sshPort, folder, key } with every value checked, or throws an Error with a plain reason.
+// Returns { host, user, sshPort, folder, key, webPort, tag } with every value checked, or throws an Error with a plain reason.
 // Only these checked values are ever placed in the remote command.
 function validate(s) {
   const host = String(s.host || '').trim(); const user = String(s.user || '').trim();
@@ -48,9 +52,22 @@ function explain(r) {
   return t.split(/\r?\n/).slice(-2).join(' ').slice(0, 300) || 'The remote command failed with code ' + r.code + '.';
 }
 
+// The connection details of an instance, from its record. The remote instance folder is <base>/<slug>.
+function connOf(inst) {
+  const r = inst.run;
+  const v = validate({ host: r.host, user: r.user, sshPort: r.sshPort, folder: r.remoteDir, key: r.key, port: inst.port, tag: inst.tag || 'latest' });
+  return v;
+}
+const label = (inst) => 'label=' + INSTANCE_LABEL + '=' + inst.id;
+const remote = (v, inst, command, opts) => run('ssh', sshArgs(v, command), Object.assign({ timeout: 60000 }, opts || {}));
+const COMPOSE = (inst, dir) => 'docker compose -p gmmc-' + inst.slug + ' -f ' + dir + '/compose.yaml';
+
 async function deploy(ctx) {
-  const v = validate(ctx.settings);
-  const dir = remoteDir(v.folder);
+  const inst = ctx.inst; const s = ctx.settings;
+  const base = validate(Object.assign({}, s, { port: inst.port, tag: inst.tag }));
+  const folder = base.folder.replace(/\/+$/, '') + '/' + inst.slug;
+  const v = Object.assign({}, base, { folder });
+  const dir = remoteDir(folder);
   const opts = (extra) => Object.assign({ timeout: 30000, signal: ctx.signal, onLine: (l) => ctx.log(l) }, extra);
   ctx.emit(8, 'Connecting to ' + v.host);
   const probe = await run('ssh', sshArgs(v, 'docker compose version --short'), opts());
@@ -59,26 +76,34 @@ async function deploy(ctx) {
     throw new Error(explain(probe));
   }
   ctx.log('Remote Docker Compose ' + probe.out.trim().split(/\r?\n/).pop());
+  if (!ctx.known) {
+    // A new instance must not take a port another container on the server already publishes.
+    const used = await run('ssh', sshArgs(v, 'docker ps --format "{{.Ports}}"'), opts());
+    if (used.code === 0 && new RegExp(':' + v.webPort + '->').test(used.out)) throw new Error('Port ' + v.webPort + ' is already published by a container on the server. Choose another website port.');
+  }
 
   ctx.emit(20, 'Uploading compose.yaml');
-  const compose = fs.readFileSync(ctx.composeSrc, 'utf8');
-  const upC = await run('ssh', sshArgs(v, 'mkdir -p ' + dir + ' && cat > ' + dir + '/compose.yaml'), opts({ input: ctx.mapText ? require('./docker').composeWithMap(compose) : compose }));
+  const upC = await run('ssh', sshArgs(v, 'mkdir -p ' + dir + ' && cat > ' + dir + '/compose.yaml'), opts({ input: composeText(Object.assign({}, inst, { port: v.webPort, tag: v.tag }), { map: !!ctx.mapText }) }));
   if (upC.code !== 0) throw new Error('Could not write to the remote folder: ' + explain(upC));
   if (ctx.mapText) {
     const upM = await run('ssh', sshArgs(v, 'cat > ' + dir + '/default-map.json'), opts({ input: ctx.mapText }));
     if (upM.code !== 0) throw new Error('Could not upload the starting map: ' + explain(upM));
-  } else {
-    await run('ssh', sshArgs(v, 'rm -f ' + dir + '/default-map.json'), opts());
-  }
+  } else await run('ssh', sshArgs(v, 'rm -f ' + dir + '/default-map.json'), opts());
 
   ctx.emit(35, 'Downloading the image on the server');
-  const env = 'GMMC_PORT=' + v.webPort + ' GMMC_TAG=' + v.tag;
-  const pull = await run('ssh', sshArgs(v, 'cd ' + dir + ' && ' + env + ' docker compose pull'), opts({ timeout: 600000 }));
+  const pull = await run('ssh', sshArgs(v, COMPOSE(inst, dir) + ' pull'), opts({ timeout: 600000 }));
   if (pull.code !== 0) throw new Error('docker compose pull failed: ' + explain(pull));
   ctx.emit(65, 'Starting the server');
-  const up = await run('ssh', sshArgs(v, 'cd ' + dir + ' && ' + env + ' docker compose up -d --force-recreate'), opts({ timeout: 180000 }));
+  const up = await run('ssh', sshArgs(v, COMPOSE(inst, dir) + ' up -d --force-recreate'), opts({ timeout: 180000 }));
   if (up.code !== 0) throw new Error('docker compose up failed: ' + explain(up));
 
+  const url = await verifyWeb(v, opts, ctx);
+  const ver = await run('ssh', sshArgs(v, 'docker ps --filter ' + label(inst) + ' --format "{{.Image}}"'), opts());
+  void ver;
+  return { links: [{ label: v.host, url, kind: 'url' }], patch: { url, version: ctx.version, where: v.user + '@' + v.host + ' · ' + folder, run: Object.assign({}, inst.run, { host: v.host, user: v.user, sshPort: v.sshPort, key: v.key, remoteDir: folder }) } };
+}
+
+async function verifyWeb(v, opts, ctx) {
   ctx.emit(85, 'Checking the website');
   const url = 'http://' + v.host + ':' + v.webPort + '/';
   let ok = false;
@@ -88,7 +113,53 @@ async function deploy(ctx) {
     if (inside.code === 0 && /healthy/.test(inside.out)) throw new Error('The server runs, but ' + url + ' does not answer from this computer. Open port ' + v.webPort + ' in the server\'s firewall.');
     throw new Error('The server was started but the website did not answer at ' + url + '.');
   }
-  return { links: [{ label: v.host, url, kind: 'url' }] };
+  return url;
 }
 
-module.exports = { deploy, validate, remoteDir, sshArgs };
+// Remote container ids of this instance, found by label.
+async function ids(v, inst) {
+  const r = await remote(v, inst, 'docker ps -a --filter ' + label(inst) + ' --format "{{.ID}}|{{.State}}"');
+  if (r.code !== 0) throw new Error(explain(r));
+  return r.out.split(/\r?\n/).filter(Boolean).map((l) => { const [id, state] = l.split('|'); return { id, state }; }).filter((x) => /^[0-9a-f]{6,64}$/.test(x.id));
+}
+async function state(inst) {
+  try { const c = await ids(connOf(inst), inst); return { exists: c.length > 0, running: c.some((x) => x.state === 'running'), reason: c.length ? '' : 'The container no longer exists on the server.' }; } catch (e) { return { exists: false, running: false, reason: e.message, unknown: true }; }
+}
+async function act(verb, inst) {
+  const v = connOf(inst); const c = await ids(v, inst);
+  if (!c.length) throw new Error('The container for this instance no longer exists on the server.');
+  const r = await remote(v, inst, 'docker ' + verb + ' ' + c.map((x) => x.id).join(' '), { timeout: 120000 });
+  if (r.code !== 0) throw new Error('docker ' + verb + ' failed: ' + explain(r));
+  return {};
+}
+const start = (inst) => act('start', inst);
+const stop = (inst) => act('stop', inst);
+const restart = (inst) => act('restart', inst);
+async function logs(inst) {
+  const v = connOf(inst); const c = await ids(v, inst);
+  if (!c.length) return '(The container no longer exists on the server.)';
+  const r = await remote(v, inst, 'docker logs --tail 200 ' + c[0].id);
+  return r.code === 0 ? r.out.trim() || '(No output yet.)' : explain(r);
+}
+async function remove(inst) {
+  const v = connOf(inst); const c = await ids(v, inst);
+  if (c.length) { const r = await remote(v, inst, 'docker rm -f ' + c.map((x) => x.id).join(' '), { timeout: 120000 }); if (r.code !== 0) throw new Error('docker rm failed: ' + explain(r)); }
+  const dir = remoteDir(v.folder);
+  // Delete only the files this app wrote, then the folder if that leaves it empty.
+  await remote(v, inst, 'rm -f ' + dir + '/compose.yaml ' + dir + '/default-map.json && rmdir ' + dir + ' 2>/dev/null; true');
+  return {};
+}
+async function update(inst, ctx, latest) {
+  const v = connOf(inst); const dir = remoteDir(v.folder);
+  const tag = inst.tag === 'latest' ? 'latest' : latest;
+  const cur = await remote(v, inst, 'cat ' + dir + '/compose.yaml');
+  if (cur.code !== 0) throw new Error('The compose file is missing on the server.');
+  const text = cur.out.replace(/(gtha-metro-map-creator:)[A-Za-z0-9_.-]+/, '$1' + tag);
+  await run('ssh', sshArgs(v, 'cat > ' + dir + '/compose.yaml'), { input: text, timeout: 30000 });
+  const pull = await remote(v, inst, COMPOSE(inst, dir) + ' pull', { timeout: 600000 }); if (pull.code !== 0) throw new Error('docker compose pull failed: ' + explain(pull));
+  const up = await remote(v, inst, COMPOSE(inst, dir) + ' up -d --force-recreate', { timeout: 180000 }); if (up.code !== 0) throw new Error('docker compose up failed: ' + explain(up));
+  const url = await verifyWeb(v, (e) => Object.assign({ timeout: 30000 }, e), ctx);
+  return { links: [{ label: v.host, url, kind: 'url' }], patch: { tag, version: latest, url } };
+}
+
+module.exports = { deploy, state, start, stop, restart, logs, remove, update, validate, remoteDir, sshArgs, connOf };

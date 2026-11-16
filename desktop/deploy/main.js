@@ -1,38 +1,51 @@
-// Deploy app: publishes the map editor (a static website) to every kind of host in one click
-// and shows the links. Targets: Docker here, a built-in server here, SSH, GitHub Pages, a folder or ZIP.
+// Deploy app: publishes the map editor (a static website) to every kind of host in one click, shows
+// the links, and manages the instances it created. Targets: Docker here, a built-in server here, a
+// VirtualBox or VMware machine, SSH, a USB drive or a Raspberry Pi card, GitHub Pages, a folder or ZIP.
 'use strict';
 const { app, BrowserWindow, ipcMain, shell, clipboard, Menu, dialog, safeStorage, Tray, nativeImage } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const site = require('./lib/site');
-const targets = { docker: require('./targets/docker'), builtin: require('./targets/builtin'), ssh: require('./targets/ssh'), pages: require('./targets/pages'), folder: require('./targets/folder') };
+const { Manager } = require('./lib/manager');
+const { listDisks } = require('./lib/flash');
+const usb = require('./targets/usb');
+const targets = {
+  docker: require('./targets/docker'), builtin: require('./targets/builtin'), virtualbox: require('./targets/virtualbox'), vmware: require('./targets/vmware'),
+  ssh: require('./targets/ssh'), usb: usb.usb, rpi: usb.rpi, pages: require('./targets/pages'), folder: require('./targets/folder')
+};
 
+const APP_VERSION = require('../package.json').version; // not app.getVersion(): an unpackaged run would report Electron's own version
 const CONTENT = path.join(__dirname, '..', 'content');
 const SITE_DIR = path.join(CONTENT, 'site');
-const COMPOSE = path.join(CONTENT, 'compose.yaml');
 const IDS = Object.keys(targets);
+const FLASH = ['usb', 'rpi'];
 const DEFAULT_SETTINGS = {
-  docker: { port: 8080, tag: 'latest' },
-  builtin: { port: 8090, keepRunning: false },
-  ssh: { host: '', user: '', sshPort: 22, folder: '~/gtha-map', key: '', port: 8080, tag: 'latest' },
-  pages: { repo: '' },
-  folder: { mode: 'folder', path: '' }
+  docker: { name: '', port: 8080, tag: 'latest' },
+  builtin: { name: '', port: 8090, keepRunning: false },
+  virtualbox: { name: '', netMode: 'bridged' },
+  vmware: { name: '' },
+  ssh: { name: '', host: '', user: '', sshPort: 22, folder: '~/gtha-map', key: '', port: 8080, tag: 'latest' },
+  usb: { disk: -1 },
+  rpi: { disk: -1 },
+  pages: { name: '', repo: '' },
+  folder: { name: '', mode: 'folder', path: '' }
 };
+const DEFAULT_TICKED = { docker: true, builtin: true, folder: true };
 // Hidden verification only (GMMC_HIDDEN=1): answer dialogs from environment variables.
 const TEST = process.env.GMMC_HIDDEN === '1';
 
-let win = null; let tray = null; let quitting = false;
-const running = new Map(); // target id -> AbortController
+let win = null; let tray = null; let quitting = false; let manager = null;
+const flashing = new Map(); // 'usb' or 'rpi' -> AbortController
+const confirmed = new Map(); // 'usb' or 'rpi' -> the disk number the person confirmed
 const stateFile = () => path.join(app.getPath('userData'), 'deploy-state.json');
 const tokenFile = () => path.join(app.getPath('userData'), 'github-token.bin');
 
 function loadState() {
   let s = {};
   try { s = JSON.parse(fs.readFileSync(stateFile(), 'utf8')); } catch { s = {}; }
-  const settings = {};
-  for (const id of IDS) settings[id] = Object.assign({}, DEFAULT_SETTINGS[id], (s.settings && s.settings[id]) || {});
+  const settings = cleanSettings(s.settings);
   const ticked = {};
-  for (const id of IDS) ticked[id] = s.ticked && id in s.ticked ? !!s.ticked[id] : id !== 'pages' && id !== 'ssh';
+  for (const id of IDS) ticked[id] = s.ticked && id in s.ticked ? !!s.ticked[id] : !!DEFAULT_TICKED[id];
   return { lang: ['en', 'yue', 'both'].includes(s.lang) ? s.lang : 'en', mapFile: typeof s.mapFile === 'string' ? s.mapFile : '', ticked, settings };
 }
 function saveState(s) {
@@ -46,7 +59,7 @@ function cleanSettings(incoming) {
     out[id] = {};
     for (const [k, def] of Object.entries(DEFAULT_SETTINGS[id])) {
       const v = incoming && incoming[id] ? incoming[id][k] : undefined;
-      out[id][k] = typeof def === 'number' ? (Number.isFinite(Number(v)) && v !== '' && v !== null ? Number(v) : def) : typeof def === 'boolean' ? (typeof v === 'boolean' ? v : def) : (typeof v === 'string' ? v.slice(0, 300) : def);
+      out[id][k] = typeof def === 'number' ? (Number.isFinite(Number(v)) && v !== '' && v !== null && v !== undefined ? Number(v) : def) : typeof def === 'boolean' ? (typeof v === 'boolean' ? v : def) : (typeof v === 'string' ? v.slice(0, 300) : def);
     }
   }
   return out;
@@ -56,47 +69,49 @@ function cleanSettings(incoming) {
 function storedToken() {
   try { if (!safeStorage.isEncryptionAvailable()) return null; return safeStorage.decryptString(fs.readFileSync(tokenFile())); } catch { return null; }
 }
-async function getToken() {
-  const pages = targets.pages;
-  return storedToken() || (await pages.cliToken());
-}
+async function getToken() { return storedToken() || (await targets.pages.cliToken()); }
 
 function send(channel, payload) { if (win && !win.isDestroyed()) win.webContents.send(channel, payload); }
 function readMap() {
   if (!state.mapFile) return null;
-  try { return site.readMapFile(state.mapFile); } catch (e) { throw new Error(e.message + ' (' + path.basename(state.mapFile) + ')'); }
+  try { return { name: path.basename(state.mapFile), text: site.readMapFile(state.mapFile) }; } catch (e) { throw new Error(e.message + ' (' + path.basename(state.mapFile) + ')'); }
 }
 
-async function runTarget(id) {
-  if (!IDS.includes(id)) return { ok: false, error: 'Unknown target' };
-  if (running.has(id)) return { ok: false, error: 'Already running' };
-  const ctl = new AbortController(); running.set(id, ctl);
+function makeManager() {
+  manager = new Manager({ userData: path.join(app.getPath('userData'), 'deploy'), siteDir: SITE_DIR, appVersion: APP_VERSION, targets, send, getToken });
+  // The registry lives in the same folder tree as every instance's files.
+  return manager;
+}
+
+// Drive targets (USB, Raspberry Pi) are not instances: they write once and report the result.
+async function runFlash(id, number) {
+  if (flashing.has(id)) return { ok: false, error: 'Already running' };
+  const ctl = new AbortController(); flashing.set(id, ctl);
   const status = (patch) => send('status', Object.assign({ id }, patch));
   status({ state: 'running', pct: 2, msg: 'Starting', links: [], error: '', note: '' });
   try {
-    const mapText = readMap();
     const ctx = {
-      settings: state.settings[id], siteDir: SITE_DIR, composeSrc: COMPOSE, userData: path.join(app.getPath('userData'), 'deploy'), mapText, signal: ctl.signal, getToken,
-      emit: (pct, msg) => status({ state: 'running', pct, msg }),
-      log: (line) => send('log', { id, line: String(line).slice(0, 400) })
+      settings: { disk: number }, confirmedDisk: confirmed.get(id), userData: path.join(app.getPath('userData'), 'deploy'), version: APP_VERSION, signal: ctl.signal,
+      emit: (pct, msg) => status({ state: 'running', pct, msg }), log: (line) => send('log', { id, line: String(line).slice(0, 400) })
     };
+    fs.mkdirSync(ctx.userData, { recursive: true });
     const res = await targets[id].deploy(ctx);
     if (ctl.signal.aborted) throw new Error('Cancelled.');
-    status({ state: 'live', pct: 100, msg: 'Live', links: res.links, note: res.note || '' });
+    status({ state: 'live', pct: 100, msg: 'Verified', links: res.links, note: res.note || '' });
     return { ok: true };
   } catch (e) {
     const msg = ctl.signal.aborted ? 'Cancelled.' : String((e && e.message) || e).slice(0, 600);
     send('log', { id, line: 'Failed: ' + msg });
     status({ state: 'failed', pct: 0, msg: '', error: msg });
     return { ok: false, error: msg };
-  } finally { running.delete(id); }
+  } finally { flashing.delete(id); confirmed.delete(id); }
 }
 
 ipcMain.handle('init', async () => {
   state = state || loadState();
   let mapName = ''; let mapError = '';
   if (state.mapFile) { try { site.readMapFile(state.mapFile); mapName = path.basename(state.mapFile); } catch (e) { mapError = e.message; } }
-  return { state, version: app.getVersion(), mapName, mapError, siteReady: fs.existsSync(path.join(SITE_DIR, 'app', 'index.html')), builtinRunning: targets.builtin.isRunning(), encryption: safeStorage.isEncryptionAvailable() };
+  return { state, version: APP_VERSION, mapName, mapError, siteReady: fs.existsSync(path.join(SITE_DIR, 'app', 'index.html')), builtinRunning: targets.builtin.isRunning(), encryption: safeStorage.isEncryptionAvailable(), instances: manager.list() };
 });
 ipcMain.handle('save-state', (_e, s) => {
   state = state || loadState();
@@ -115,8 +130,24 @@ ipcMain.handle('choose-map', async () => {
   return { ok: true, name: path.basename(file) };
 });
 ipcMain.handle('clear-map', () => { state.mapFile = ''; saveState(state); return true; });
-ipcMain.handle('deploy', (_e, id) => runTarget(id));
-ipcMain.handle('cancel', (_e, id) => { const c = running.get(id); if (c) c.abort(); return true; });
+ipcMain.handle('deploy', async (_e, id) => {
+  if (!IDS.includes(id) || FLASH.includes(id)) return { ok: false, error: 'Unknown target' };
+  let map = null;
+  try { map = readMap(); } catch (e) { send('status', { id, state: 'failed', pct: 0, msg: '', error: e.message }); return { ok: false, error: e.message }; }
+  return manager.deploy(id, state.settings[id], map);
+});
+ipcMain.handle('cancel', (_e, id) => { if (flashing.has(id)) flashing.get(id).abort(); else manager.cancelKind(id); return true; });
+ipcMain.handle('list-disks', async () => { try { return { ok: true, disks: await listDisks() }; } catch (e) { return { ok: false, error: String(e.message || e) }; } });
+// The person confirmed the exact drive in the erase-and-write dialog; the write itself starts here.
+ipcMain.handle('flash', async (_e, id, number) => {
+  if (!FLASH.includes(id) || !Number.isInteger(number) || number < 0) return { ok: false, error: 'Bad request' };
+  confirmed.set(id, number);
+  return runFlash(id, number);
+});
+ipcMain.handle('instances-list', () => manager.list());
+ipcMain.handle('instances-check', async () => { await manager.checkAll(); return manager.list(); });
+ipcMain.handle('instances-action', (_e, id, action) => manager.action(String(id), String(action)));
+ipcMain.handle('instances-duplicate', (_e, id, name) => manager.duplicate(String(id), name, null));
 ipcMain.handle('pick-path', async (_e, mode) => {
   if (TEST && process.env.GMMC_TEST_FOLDER) return { path: process.env.GMMC_TEST_FOLDER };
   if (mode === 'zip') {
@@ -148,7 +179,7 @@ ipcMain.handle('gh-save-token', async (_e, token) => {
   try { const login = await targets.pages.whoami(t); fs.mkdirSync(path.dirname(tokenFile()), { recursive: true }); fs.writeFileSync(tokenFile(), safeStorage.encryptString(t)); return { ok: true, login }; } catch (e) { return { ok: false, error: String(e.message) }; }
 });
 ipcMain.handle('gh-sign-out', () => { try { fs.rmSync(tokenFile(), { force: true }); } catch { /* gone */ } return true; });
-ipcMain.handle('builtin-stop', async () => { await targets.builtin.stop(); send('status', { id: 'builtin', state: 'idle', pct: 0, msg: '', links: [], error: '', note: '' }); return true; });
+ipcMain.handle('builtin-stop', async () => { await targets.builtin.stopAll(); send('status', { id: 'builtin', state: 'idle', pct: 0, msg: '', links: [], error: '', note: '' }); manager.changed(); return true; });
 ipcMain.handle('quit', () => { quitting = true; app.quit(); });
 
 function showWindow() { if (!win) return; win.show(); if (win.isMinimized()) win.restore(); win.focus(); }
@@ -169,10 +200,11 @@ if (TEST && process.env.GMMC_TEST_USERDATA) app.setPath('userData', process.env.
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   state = loadState();
+  makeManager();
   win = new BrowserWindow({
-    width: 960, height: 760, minWidth: 720, minHeight: 560, show: false, backgroundColor: '#FEFBFF', title: 'GTHA Metro Map Creator Deploy',
+    width: 1120, height: 820, minWidth: 380, minHeight: 560, show: false, backgroundColor: '#FEFBFF', title: 'GTHA Metro Map Creator Deploy',
     icon: path.join(__dirname, '..', 'build', 'icon.png'),
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true, nodeIntegration: false }
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: !TEST, offscreen: TEST }
   });
   // GMMC_HIDDEN=1 keeps the window off screen for automated verification.
   win.once('ready-to-show', () => { if (!TEST) win.show(); });
@@ -180,10 +212,10 @@ app.whenReady().then(() => {
   win.webContents.on('will-navigate', (e) => e.preventDefault());
   win.on('close', (e) => {
     if (quitting) return;
-    // "Keep running after closing" is honest: the window hides and a tray icon keeps the built-in server alive.
+    // "Keep running after closing" is honest: the window hides and a tray icon keeps the built-in servers alive.
     if (targets.builtin.isRunning() && state.settings.builtin.keepRunning) { e.preventDefault(); makeTray(); win.hide(); return; }
   });
   win.loadFile(path.join(__dirname, 'index.html'));
 });
-app.on('before-quit', () => { quitting = true; for (const c of running.values()) c.abort(); targets.builtin.stop(); });
+app.on('before-quit', () => { quitting = true; for (const c of flashing.values()) c.abort(); targets.builtin.stopAll(); });
 app.on('window-all-closed', () => app.quit());

@@ -1,5 +1,6 @@
 # Build the static site, then serve it with an unprivileged nginx on port 8080.
-FROM node:22-alpine AS build
+# The build stage runs on the build machine's own architecture: it only produces static files.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 WORKDIR /src
 COPY scripts ./scripts
 COPY site ./site

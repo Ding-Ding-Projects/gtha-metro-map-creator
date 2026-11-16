@@ -85,7 +85,13 @@
 - [x] Coverage from Statistics Canada 2021 population, walksheds, per-line totals
 - [x] Illustrative ridership estimate with line widths
 - [x] Live TTC and YRT vehicles in the desktop app
-- [ ] One-click deploy app (desktop and website) for every hosting type: in progress
+- [x] One-click deploy app (desktop and website): Docker, built-in server, SSH, GitHub Pages, folder or ZIP, with verified links (SSH and GitHub Pages not run end to end with real credentials)
+- [x] Deploy targets VirtualBox and VMware (real VBoxManage and OVF Tool verified with a stand-in appliance that is never started), USB drive and Raspberry Pi card (file-target write and read-back verified; see the unticked items below)
+- [x] Multiple instances and an instance manager (registry, live health, start, stop, restart, logs, update, duplicate, remove; verified against real Docker with a foreign container left untouched)
+- [ ] A real write of the appliance image to a USB drive or SD card from the deploy app: helper script written and its file-target path verified; the physical-drive path (clearing, offline, unbuffered I/O) has never run on hardware
+- [ ] The appliance booting in real VirtualBox and VMware from the deploy app: needs a released appliance image (it cannot be built on Windows); only import, conversion, ownership and removal are verified
+- [ ] Raspberry Pi appliance image: image built locally under arm64 emulation with a real arm64 container image, its boot partition inspected, and the QEMU virt-twin boot test passed locally (healthz, app and console banner); unticked until a tagged CI run passes the boot test and someone boots a real Pi 4 or Pi 5
+- [ ] Raw x86_64 USB image: built by the release job; legacy BIOS only, UEFI boot not provided and never tried on hardware
 - [ ] Redesigned GTFS import dialog with route preview: in progress
 
 ## Phase 8: next
