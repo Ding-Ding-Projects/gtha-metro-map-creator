@@ -20,9 +20,9 @@
 
   /** A map with a zoom slider, +/- and fit buttons. */
   GV.map = (host, label) => {
-    const m = new window.GMap(host, { label, dark: GA.isDark, onView: (mm) => { if (zs) zs.set(mm.z); } });
+    let zs = null; const m = new window.GMap(host, { label, dark: GA.isDark, onView: (mm) => { if (zs) zs.set(mm.z); } });
     GA.mapRedraw = () => m.redraw();
-    const zs = U.slider({ min: 2, max: 19, step: 0.5, value: m.z, label: t('zoom'), format: (v) => 'z' + v, cls: 'sl-v', onInput: (v) => m.zoomTo(v) });
+    zs = U.slider({ min: 2, max: 19, step: 0.5, value: m.z, label: t('zoom'), format: (v) => 'z' + v, cls: 'sl-v', onInput: (v) => m.zoomTo(v) });
     const ui = h('div.gmap-ui', null, U.iconBtn('add', t('zoomIn'), () => m.zoomBy(1)), zs.el, U.iconBtn('remove', t('zoomOut'), () => m.zoomBy(-1)), U.iconBtn('fit', t('fitMap'), () => m.fit(m.home)));
     host.append(ui); m.home = null; m.setHome = (b) => { m.home = b; m.fit(b); };
     return m;

@@ -43,9 +43,9 @@
     const m = /^([a-z0-9]+)((?:[.#][\w-]+)*)$/i.exec(tag); const e = document.createElement(m ? m[1] : tag);
     if (m && m[2]) for (const x of m[2].match(/[.#][\w-]+/g)) if (x[0] === '.') e.classList.add(x.slice(1)); else e.id = x.slice(1);
     if (props) for (const k in props) {
-      const v = props[k]; if (v === undefined || v === null || v === false) continue;
+      const v = props[k]; if (v === undefined || v === null || (v === false && !k.startsWith('aria-'))) continue; if (v === false) { e.setAttribute(k, 'false'); continue; }
       if (k === 'text') e.textContent = v; else if (k === 'html') e.innerHTML = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
-      else if (k === 'class') v.split(' ').forEach((c) => c && e.classList.add(c)); else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v); else e.setAttribute(k, v === true ? '' : v);
+      else if (k === 'class') v.split(' ').forEach((c) => c && e.classList.add(c)); else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v); else e.setAttribute(k, v === true ? (k.startsWith('aria-') ? 'true' : '') : v);
     }
     for (const k of kids.flat(2)) if (k !== null && k !== undefined && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k)));
     return e;
@@ -116,14 +116,15 @@
     let v = o.value; const min = o.min, max = o.max, step = o.step || 1; const fmt = o.format || ((x) => String(x));
     const thumb = h('span.sl-thumb', null, h('span.sl-val')), fill = h('span.sl-fill'), track = h('span.sl-track', null, fill);
     const el = h('div.sl', { role: 'slider', tabindex: 0, 'aria-label': o.label, 'aria-valuemin': min, 'aria-valuemax': max }, track, thumb); if (o.cls) el.classList.add(o.cls);
-    const draw = () => { const p = (v - min) / (max - min) * 100; fill.style.width = p + '%'; thumb.style.left = p + '%'; thumb.firstChild.textContent = fmt(v); el.setAttribute('aria-valuenow', v); el.setAttribute('aria-valuetext', fmt(v)); };
+    const cap = o.caption ? h('span.sl-cap', null, o.label + ' ', h('b', { text: fmt(v) })) : null;
+    const draw = () => { const p = (v - min) / (max - min) * 100; if (cap) cap.lastChild.textContent = fmt(v); fill.style.width = p + '%'; thumb.style.left = p + '%'; thumb.firstChild.textContent = fmt(v); el.setAttribute('aria-valuenow', v); el.setAttribute('aria-valuetext', fmt(v)); };
     const set = (x, fire) => { x = Math.max(min, Math.min(max, Math.round(x / step) * step)); x = +x.toFixed(6); if (x === v && fire !== 'force') return; v = x; draw(); if (fire && o.onInput) o.onInput(v); };
     const fromPtr = (e) => { const r = track.getBoundingClientRect(); set(min + (e.clientX - r.left) / r.width * (max - min), true); };
     el.addEventListener('pointerdown', (e) => { el.setPointerCapture(e.pointerId); el.classList.add('drag'); fromPtr(e); el.focus(); });
     el.addEventListener('pointermove', (e) => { if (el.hasPointerCapture(e.pointerId)) fromPtr(e); });
     el.addEventListener('pointerup', (e) => { el.classList.remove('drag'); if (o.onChange) o.onChange(v); });
     el.addEventListener('keydown', (e) => { const k = e.key; let d = 0; if (k === 'ArrowRight' || k === 'ArrowUp') d = step; else if (k === 'ArrowLeft' || k === 'ArrowDown') d = -step; else if (k === 'PageUp') d = step * 10; else if (k === 'PageDown') d = -step * 10; else if (k === 'Home') { set(min, true); if (o.onChange) o.onChange(v); e.preventDefault(); return; } else if (k === 'End') { set(max, true); if (o.onChange) o.onChange(v); e.preventDefault(); return; } else return; e.preventDefault(); set(v + d, true); if (o.onChange) o.onChange(v); });
-    draw(); return { el, set: (x) => set(x, false), get: () => v, setRange(a, b) { /* ranges are fixed at creation */ } };
+    draw(); const wrap = cap ? h('div.slf', null, cap, el) : el; return { el: wrap, set: (x) => set(x, false), get: () => v, setRange(a, b) { /* ranges are fixed at creation */ } };
   };
 
   // ---------- menus ----------

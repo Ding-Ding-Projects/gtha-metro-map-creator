@@ -143,7 +143,7 @@ const expected = {
   routes: 6, stops: stops.length, trips: trips.length, stopTimes: st.length, shapes: 4, services: 4,
   tripsOn_20261116: tripsOn('20261116'), tripsOn_20261111: tripsOn('20261111'), tripsOn_20261120: tripsOn('20261120'), tripsOn_20261225: tripsOn('20261225'), tripsOn_20261121: tripsOn('20261121'),
   blocks_20261116: 4, overlapBlocks: 1, deadheadBlocks: 2, frequencyRunsT7: 30,
-  validation: { errors: ['dup_id stops', 'ref_missing route', 'ref_missing stop', 'ref_missing trip(stop_times)', 'time_decrease T14', 'dist_decrease T9', 'dist_decrease SH4', 'coord_range BAD1', 'ref_missing service NOSVC', 'ref_missing shape SH_MISSING'], warnings: ['unused stops 3', 'unused route R5', 'unused shape SH3', 'unused service UNUSED_SVC', 'color_contrast R4 R6', 'speed T9', 'trip_no_times T16'] }
+  validation: { errors: ['dup_id stops', 'ref_missing route', 'ref_missing stop', 'ref_missing trip(stop_times)', 'time_decrease T14', 'dist_decrease T9', 'dist_decrease SH4', 'coord_range BAD1', 'ref_missing service NOSVC', 'ref_missing shape SH_MISSING'], warnings: ['unused stops 2', 'unused route R5', 'unused shape SH3', 'unused service UNUSED_SVC', 'color_contrast R4 R6', 'speed T9, T14', 'trip_no_times T16'] }
 };
 fs.writeFileSync(path.join(out, 'viewer-feed.expected.json'), JSON.stringify(expected, null, 1) + '\n');
 console.log('wrote viewer-feed.zip,', Object.keys(F).length, 'files;', JSON.stringify({ stopTimes: st.length, tripsOn_20261116: expected.tripsOn_20261116 }));

@@ -62,12 +62,12 @@
    "ref_missing shape SH_MISSING"
   ],
   "warnings": [
-   "unused stops 3",
+   "unused stops 2",
    "unused route R5",
    "unused shape SH3",
    "unused service UNUSED_SVC",
    "color_contrast R4 R6",
-   "speed T9",
+   "speed T9, T14",
    "trip_no_times T16"
   ]
  }

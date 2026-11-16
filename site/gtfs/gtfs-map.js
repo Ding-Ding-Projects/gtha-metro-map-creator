@@ -16,7 +16,7 @@
       this.bind();
     }
     get w() { return this.host.clientWidth; } get h() { return this.host.clientHeight; }
-    resize() { const d = window.devicePixelRatio || 1, w = this.w, h = this.h; if (!w || !h) return; this.cv.width = Math.round(w * d); this.cv.height = Math.round(h * d); this.cv.style.width = w + 'px'; this.cv.style.height = h + 'px'; this.redraw(); }
+    resize() { const d = window.devicePixelRatio || 1, w = this.w, h = this.h; if (!w || !h) return; if (this.wantFit) { const [b, p] = this.wantFit; this.wantFit = null; this.fit(b, p); return; } this.cv.width = Math.round(w * d); this.cv.height = Math.round(h * d); this.cv.style.width = w + 'px'; this.cv.style.height = h + 'px'; this.redraw(); }
     world(lat, lon, z) { const s = TILE * 2 ** (z === undefined ? this.z : z), r = lat * Math.PI / 180; return [(lon + 180) / 360 * s, (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * s]; }
     unworld(x, y, z) { const s = TILE * 2 ** (z === undefined ? this.z : z), n = Math.PI - 2 * Math.PI * y / s; return [180 / Math.PI * Math.atan(Math.sinh(n)), x / s * 360 - 180]; }
     /** screen position of a coordinate */
@@ -24,7 +24,7 @@
     center() { return this.unworld(this.cx, this.cy); }
     setView(lat, lon, z) { this.z = clamp(z, 2, 19); [this.cx, this.cy] = this.world(lat, lon); this.changed(); }
     fit(b, pad) {
-      if (!b) return; pad = pad === undefined ? 24 : pad; const w = Math.max(40, this.w - pad * 2), h = Math.max(40, this.h - pad * 2);
+      if (!b) return; pad = pad === undefined ? 24 : pad; if (!this.w || !this.h) { this.wantFit = [b, pad]; return; } const w = Math.max(40, this.w - pad * 2), h = Math.max(40, this.h - pad * 2);
       let z = 19; for (; z > 2; z -= 0.25) { const a = this.world(b[2], b[1], z), c = this.world(b[0], b[3], z); if (Math.abs(c[0] - a[0]) <= w && Math.abs(c[1] - a[1]) <= h) break; }
       this.setView((b[0] + b[2]) / 2, (b[1] + b[3]) / 2, Math.min(z, 17));
     }

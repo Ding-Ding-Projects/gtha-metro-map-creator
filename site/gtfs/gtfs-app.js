@@ -92,7 +92,7 @@
     const result = await new Promise((resolve, reject) => {
       w.onmessage = (ev) => {
         const m = ev.data;
-        if (m.type === 'plan') for (const f of m.files) if (/\.(txt|geojson)$/.test(f.name)) mk(f.name, f.bytes);
+        if (m.type === 'plan') { for (const f of m.files) if (/\.(txt|geojson)$/.test(f.name)) mk(f.name, f.bytes); }
         else if (m.type === 'progress') { const b = mk(m.file); b.p.set(m.percent); }
         else if (m.type === 'file') { const b = mk(m.file); b.p.set(100); b.row.classList.add('done'); b.row.querySelector('.load-c').textContent = GA.n(m.rows) + ' ' + t('rowsLc'); }
         else if (m.type === 'done') resolve(m.result); else if (m.type === 'error') reject(new Error(m.message));

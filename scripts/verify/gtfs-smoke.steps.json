@@ -1,0 +1,6 @@
+[
+ {"wait": 1200},
+ {"name": "open", "js": "Promise.race([(async () => { const b = await (await fetch('/scripts/verify/fixtures/viewer-feed.zip')).blob(); const ok = await window.GA.openBlob(b, 'viewer-feed.zip'); const f = window.GA.feed; return { ok, routes: f && f.routes.length, stops: f && f.stops.length, trips: f && f.trips.length, st: f && f.st.n, shapes: f && f.shapes && f.shapes.ids.length, services: f && f.serviceIds.length, date: window.GA.date }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"},
+ {"wait": 2500},
+ {"shot": "overview.png"}
+]

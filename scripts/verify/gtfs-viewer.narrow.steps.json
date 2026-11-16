@@ -1,0 +1,184 @@
+[
+ {
+  "wait": 1200
+ },
+ {
+  "name": "setup",
+  "js": "Promise.race([(async () => { \n  window.W = (ms) => new Promise((r) => setTimeout(r, ms));\n  window.go = async (h, ms) => { location.hash = h; await W(ms || 900); };\n  window.seg = async (label) => { const b = [...document.querySelectorAll('.seg-b')].find((x) => x.textContent.trim().startsWith(label)); if (b) { b.click(); await W(500); } return !!b; };\n  window.txt = () => document.getElementById('main').innerText;\n   \n  const b = await (await fetch('/scripts/verify/fixtures/viewer-feed.zip')).blob(); const ok = await GA.openBlob(b, 'viewer-feed.zip'); await W(1500);\n  return { ok, lang: document.documentElement.lang, theme: document.documentElement.getAttribute('data-theme') }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "name": "overview",
+  "js": "Promise.race([(async () => { await go(\"#overview\", 1800);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-overview.png"
+ },
+ {
+  "name": "routes",
+  "js": "Promise.race([(async () => { await go(\"#routes\", 900);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-routes.png"
+ },
+ {
+  "name": "route-map",
+  "js": "Promise.race([(async () => { await go(\"#route/R1\", 1500);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-route-map.png"
+ },
+ {
+  "name": "route-timetable",
+  "js": "Promise.race([(async () => { await go(\"#route/R1\", 900); await seg(window.GA.t('vTimetable')); await W(600); return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-route-timetable.png"
+ },
+ {
+  "name": "route-service",
+  "js": "Promise.race([(async () => { await go(\"#route/R2\", 900); await seg(window.GA.t('vService')); return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-route-service.png"
+ },
+ {
+  "name": "route-info",
+  "js": "Promise.race([(async () => { await go(\"#route/R2\", 900); await seg(window.GA.t('vInfo')); return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-route-info.png"
+ },
+ {
+  "name": "stops",
+  "js": "Promise.race([(async () => { await go(\"#stops\", 1500);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-stops.png"
+ },
+ {
+  "name": "stop-station",
+  "js": "Promise.race([(async () => { await go(\"#stop/S1\", 1500);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-stop-station.png"
+ },
+ {
+  "name": "stop-board",
+  "js": "Promise.race([(async () => { await go(\"#stop/ST2\", 1500);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-stop-board.png"
+ },
+ {
+  "name": "trips",
+  "js": "Promise.race([(async () => { await go(\"#trips\", 900);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-trips.png"
+ },
+ {
+  "name": "trip",
+  "js": "Promise.race([(async () => { await go(\"#trip/T1\", 1500);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-trip.png"
+ },
+ {
+  "name": "blocks",
+  "js": "Promise.race([(async () => { await go(\"#blocks\", 1500);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-blocks.png"
+ },
+ {
+  "name": "block-overlap",
+  "js": "Promise.race([(async () => { await go(\"#block/20261116/B2\", 1500);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-block-overlap.png"
+ },
+ {
+  "name": "calendar",
+  "js": "Promise.race([(async () => { await go(\"#calendar\", 900);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-calendar.png"
+ },
+ {
+  "name": "service",
+  "js": "Promise.race([(async () => { await go(\"#service/WK\", 900);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-service.png"
+ },
+ {
+  "name": "shapes",
+  "js": "Promise.race([(async () => { await go(\"#shapes\", 1200);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-shapes.png"
+ },
+ {
+  "name": "shape",
+  "js": "Promise.race([(async () => { await go(\"#shape/SH1\", 1500);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-shape.png"
+ },
+ {
+  "name": "transfers",
+  "js": "Promise.race([(async () => { await go(\"#transfers\", 900);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-transfers.png"
+ },
+ {
+  "name": "pathways",
+  "js": "Promise.race([(async () => { await go(\"#transfers/pathways/S1\", 1200);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-pathways.png"
+ },
+ {
+  "name": "fares",
+  "js": "Promise.race([(async () => { await go(\"#fares\", 900);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-fares.png"
+ },
+ {
+  "name": "fares-v2",
+  "js": "Promise.race([(async () => { await go(\"#fares\", 900); await seg(window.GA.t('faresV2')); return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-fares-v2.png"
+ },
+ {
+  "name": "flex",
+  "js": "Promise.race([(async () => { await go(\"#flex\", 1500);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-flex.png"
+ },
+ {
+  "name": "validation",
+  "js": "Promise.race([(async () => { await go(\"#validation\", 900);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-validation.png"
+ },
+ {
+  "name": "realtime",
+  "js": "Promise.race([(async () => { await go(\"#realtime\", 1000); [...document.querySelectorAll('button')].find((b) => b.textContent.includes(GA.t('rtSample'))).click(); await W(900); return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-realtime.png"
+ },
+ {
+  "name": "data",
+  "js": "Promise.race([(async () => { await go(\"#data/stop_times.txt\", 1200);  return { len: txt().length, vl: document.querySelectorAll('.vl-w > *').length, vt: document.querySelectorAll('.vt-r').length, canvas: document.querySelectorAll('canvas').length, overflowX: document.documentElement.scrollWidth > innerWidth, mainOverflowX: document.getElementById('main').scrollWidth > document.getElementById('main').clientWidth + 1 }; })(), new Promise((r) => setTimeout(() => r('TIMEOUT'), 20000))])"
+ },
+ {
+  "shot": "narrow-data.png"
+ }
+]

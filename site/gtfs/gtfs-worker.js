@@ -232,7 +232,7 @@ async function parse(file) {
     break;
   }
   for (const name of txt) files[name].rows = (out[name.replace(/\.txt$/, '')] || []).length;
-  if (stopTimes) files['stop_times.txt'].rows = stopTimes.n;
+  if (stopTimes) files['stop_times.txt'].rows = stopTimes.n + stopTimes.orphanTrips;
   if (shapes) files['shapes.txt'].rows = shapes.lat.length;
   return { result: { tables: out, cols, files, stopTimes, shapes, geo, geoName, skipped, ms: Date.now() - t0 }, buffers };
 }
