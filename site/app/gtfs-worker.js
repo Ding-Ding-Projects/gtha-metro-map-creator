@@ -116,6 +116,13 @@ function headway(times, band) {
   return n >= 2 ? Math.round((b - a) / n) : null;
 }
 
+/** Headway of a band from frequencies.txt windows: the window that overlaps the band most (the first on a tie), or null. */
+function windowHeadway(windows, band) {
+  const [a, b] = BANDS[band]; let best = null, bo = 0;
+  for (const w of windows) { const o = Math.min(b, w.b) - Math.max(a, w.a); if (o > bo) { bo = o; best = w; } }
+  return best ? Math.round(best.h) : null;
+}
+
 const post = (percent, phase) => self.postMessage({ type: 'progress', percent: Math.round(percent), phase });
 
 async function parse(file) {
@@ -130,6 +137,13 @@ async function parse(file) {
   const calendar = await readTable(file, entries, 'calendar.txt');
   const exceptions = await readTable(file, entries, 'calendar_dates.txt');
   const feedInfo = (await readTable(file, entries, 'feed_info.txt'))[0] || {};
+  // frequencies.txt: a trip with frequency rows runs at each start time of every window, instead of once.
+  const tripFreqs = new Map();
+  for (const f of await readTable(file, entries, 'frequencies.txt')) {
+    const a = timeToMin(f.start_time || ''), b = timeToMin(f.end_time || ''), h = (+f.headway_secs || 0) / 60;
+    if (a < 0 || b <= a || h <= 0) continue;
+    (tripFreqs.get(f.trip_id) || tripFreqs.set(f.trip_id, []).get(f.trip_id)).push({ a, b, h });
+  }
 
   // Representative days: the Tuesday to Thursday and the Saturday with the most services running, after
   // calendar.txt weekday flags, date ranges and calendar_dates.txt additions and removals are applied.
@@ -196,9 +210,15 @@ async function parse(file) {
       const ids = order.map((i) => cur.ids[i]);
       const key = cur.info.dir + '|' + ids.join(',');
       let pat = r.patterns.get(key);
-      if (!pat) { pat = { dir: cur.info.dir, ids, wk: [], sat: [] }; r.patterns.set(key, pat); }
-      const first = cur.deps[order[0]];
-      if (first >= 0) { if (cur.info.wk) pat.wk.push(first); if (cur.info.sat) pat.sat.push(first); }
+      if (!pat) { pat = { dir: cur.info.dir, ids, wk: [], sat: [], fwk: [], fsat: [] }; r.patterns.set(key, pat); }
+      const fr = tripFreqs.get(curId);
+      if (fr) {
+        for (const w of fr) { if (cur.info.wk) pat.fwk.push(w); if (cur.info.sat) pat.fsat.push(w); }
+        for (const w of fr) for (let k = 0, t = w.a; t < w.b - 1e-9 && k < 5000; k++, t = w.a + k * w.h) { if (cur.info.wk) pat.wk.push(t); if (cur.info.sat) pat.sat.push(t); }
+      } else {
+        const first = cur.deps[order[0]];
+        if (first >= 0) { if (cur.info.wk) pat.wk.push(first); if (cur.info.sat) pat.sat.push(first); }
+      }
     }
     flushed.add(curId); cur = null;
   };
@@ -230,13 +250,16 @@ async function parse(file) {
     if (!best) continue;
     const dirTimes = (day) => { const all = []; for (const pat of r.patterns.values()) if (pat.dir === best.dir) all.push(...pat[day]); return all; };
     const wkT = dirTimes('wk'), satT = dirTimes('sat');
+    const dirWin = (day) => { const all = []; for (const pat of r.patterns.values()) if (pat.dir === best.dir) all.push(...pat[day]); return all; };
+    const wkW = dirWin('fwk'), satW = dirWin('fsat');
+    const hw = (times, wins, band) => (wins.length ? windowHeadway(wins, band) : null) ?? headway(times, band);
     const pts = best.ids.map((id) => stops.get(id)).filter(Boolean);
     if (pts.length < 2) continue;
     const name = r.long || r.short || r.id;
     out.push({
       id: r.id, agency: r.agency, short: r.short || '', long: r.long || '', routeType: r.routeType, type: typeClass(r.routeType), color: r.color,
       stops: pts, stopCount: pts.length, trips: wkT.length,
-      peak: headway(wkT, 'peak'), midday: headway(wkT, 'midday'), evening: headway(wkT, 'evening'), weekend: hasSaturday ? headway(satT, 'weekend') : null,
+      peak: hw(wkT, wkW, 'peak'), midday: hw(wkT, wkW, 'midday'), evening: hw(wkT, wkW, 'evening'), weekend: hasSaturday ? hw(satT, satW, 'weekend') : null,
       label: name
     });
   }

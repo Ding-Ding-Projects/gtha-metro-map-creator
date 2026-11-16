@@ -61,7 +61,7 @@
         <button type="button" class="btn text" id="gtfsCancel"></button><button type="button" class="btn filled" id="gtfsGo"></button></span></div>
     </form>`;
     document.body.appendChild(dlg);
-    dlg.addEventListener('close', stopWorker);
+    dlg.addEventListener('close', () => { if (!dlg.open) stopWorker(); });
     $('gtfsCancel').addEventListener('click', () => dlg.close());
     $('gtfsGo').addEventListener('click', doImport);
     $('gtfsQuery').addEventListener('input', (e) => { state.query = e.target.value; renderList(); });

@@ -1170,7 +1170,7 @@ addEventListener('resize',fit);fit();})();
       if (Number.isFinite(+s2.fontSize)) settings.fontSize = Math.min(22, Math.max(9, +s2.fontSize));
       if (['en', 'yue', 'both'].includes(s2.lang)) settings.lang = s2.lang;
       if (['material', 'classic', 'frequent', 'night'].includes(s2.mapStyle)) settings.mapStyle = s2.mapStyle;
-            saveSettings(); applyI18n(); replaceMap(m);
+      saveSettings(); applyI18n(); replaceMap(m);
       for (const f of X.projectLoad) { try { f(obj, m); } catch (err) { console.error('extension projectLoad', err); } }
       return true;
     }

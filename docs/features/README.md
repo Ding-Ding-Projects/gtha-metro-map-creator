@@ -13,5 +13,6 @@
 | Share | [share.md](share.md) | Share link in the URL fragment |
 | Hosting | [hosting.md](hosting.md) | Container image, Compose, host.bat |
 | Simulation | [simulate.md](simulate.md) | Live service simulation, vehicle model, clip recording |
+| GTFS export | [gtfs-export.md](gtfs-export.md) | Export a GTFS feed from the map, round trip with the importer |
 
 There is no HTTP API, so no Postman collection applies.
