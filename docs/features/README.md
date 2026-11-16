@@ -7,5 +7,6 @@
 | Geographic | [geographic.md](geographic.md) | Layouts, OpenStreetMap background, drawing onto real stops |
 | Desktop | [desktop.md](desktop.md) | Portable desktop app and server setup wizard |
 | Hosting | [hosting.md](hosting.md) | Container image, Compose, host.bat |
+| Simulation | [simulate.md](simulate.md) | Live service simulation, vehicle model, clip recording |
 
 There is no HTTP API, so no Postman collection applies.
