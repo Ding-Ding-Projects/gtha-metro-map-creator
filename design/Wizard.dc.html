@@ -10,9 +10,10 @@
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<style>body{margin:0}</style>
+<style>body{margin:0}[data-motion="off"] *, [data-motion="off"] *::before, [data-motion="off"] *::after { animation: none !important; transition: none !important; }
+</style>
 </helmet>
-<div style="font-family: Inter, 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: #16181D; background: #FFFFFF; width: 760px; height: 560px; display: flex; flex-direction: column">
+<div data-motion="{{motionAttr}}" style="--primary: {{accent}}; font-family: Inter, 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: #16181D; background: #FFFFFF; width: 760px; height: 560px; display: flex; flex-direction: column">
 <div style="height: 36px; display: flex; align-items: center; border-bottom: 1px solid #DDDAD2">
 <div style="padding: 0 12px; font-weight: 600">GTHA Metro Map Creator server setup</div>
 <div style="flex: 1 1 auto"></div>
@@ -67,21 +68,25 @@
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0B6E4F","#16181D"]},"$preview":{"width":760,"height":560}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#185BBB","options":["#185BBB","#0B6E4F","#9461A8","#16181D"]},"motion":{"editor":"boolean","default":true},"$preview":{"width":760,"height":560}}'>
 class Component extends DCLogic {
-  renderVals() {
+  _baseVals() {
     const done = { bg: 'transparent', dot: '#0B6E4F', dotInk: '#FFFFFF', mark: '✓', weight: 500 };
     return {
-      accent: this.props.accent ?? '#1F5FBF',
+      accent: this.props.accent ?? '#185BBB',
       steps: [
         Object.assign({ title: 'Check Docker' }, done),
         Object.assign({ title: 'Choose a port' }, done),
         Object.assign({ title: 'Download the image' }, done),
         Object.assign({ title: 'Start the server' }, done),
-        { title: 'Open on your network', bg: '#EEF3FB', dot: '#1F5FBF', dotInk: '#FFFFFF', mark: '5', weight: 700 }
+        { title: 'Open on your network', bg: '#EEF3FB', dot: '#185BBB', dotInk: '#FFFFFF', mark: '5', weight: 700 }
       ],
       checks: ['Docker Engine and Compose found', 'Image downloaded and verified', 'Health check passed in 3 seconds', 'Answers on your network: 192.168.1.20']
     };
+  }
+  renderVals() {
+    const base = this._baseVals() || {};
+    return Object.assign({}, base, { accent: this.props.accent ?? '#185BBB', motionAttr: (this.props.motion ?? true) ? 'on' : 'off' });
   }
 }
 </script>

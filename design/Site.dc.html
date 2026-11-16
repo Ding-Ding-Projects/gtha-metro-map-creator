@@ -13,9 +13,10 @@
 <style>
 body{margin:0}
 a{color:#1F5FBF}a:hover{color:#163F80}
+[data-motion="off"] *, [data-motion="off"] *::before, [data-motion="off"] *::after { animation: none !important; transition: none !important; }
 </style>
 </helmet>
-<div style="font-family: Inter, system-ui, sans-serif; color: #16181D; background: #F6F5F1">
+<div data-motion="{{motionAttr}}" style="--primary: {{accent}}; font-family: Inter, system-ui, sans-serif; color: #16181D; background: #F6F5F1">
 <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; max-width: 1120px; margin: 0 auto; padding: 20px 24px">
 <strong style="font-size: 17px">GTHA Metro Map Creator</strong>
 <div style="flex: 1 1 auto"></div>
@@ -68,11 +69,11 @@ a{color:#1F5FBF}a:hover{color:#163F80}
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0B6E4F","#16181D"]},"$preview":{"width":1280,"height":1400}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#185BBB","options":["#185BBB","#0B6E4F","#9461A8","#16181D"]},"motion":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":1400}}'>
 class Component extends DCLogic {
-  renderVals() {
+  _baseVals() {
     return {
-      accent: this.props.accent ?? '#1F5FBF',
+      accent: this.props.accent ?? '#185BBB',
       tasks: [
         { title: 'Load the GTHA template', body: 'Open the editor and pick the GTHA template to start from TTC, GO, UP Express and LRT lines.' },
         { title: 'Add a station', body: 'Choose the Station tool, click the grid, then name it in the inspector.' },
@@ -80,6 +81,10 @@ class Component extends DCLogic {
         { title: 'Share your map', body: 'Export SVG for print, PNG for posts, or JSON to keep editing later.' }
       ]
     };
+  }
+  renderVals() {
+    const base = this._baseVals() || {};
+    return Object.assign({}, base, { accent: this.props.accent ?? '#185BBB', motionAttr: (this.props.motion ?? true) ? 'on' : 'off' });
   }
 }
 </script>

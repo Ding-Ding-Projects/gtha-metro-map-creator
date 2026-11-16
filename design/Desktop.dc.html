@@ -10,9 +10,10 @@
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<style>body{margin:0}</style>
+<style>body{margin:0}[data-motion="off"] *, [data-motion="off"] *::before, [data-motion="off"] *::after { animation: none !important; transition: none !important; }
+</style>
 </helmet>
-<div style="font-family: Inter, 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: #16181D; background: #FBFAF7; width: 1280px; height: 800px; display: flex; flex-direction: column; position: relative; overflow: hidden">
+<div data-motion="{{motionAttr}}" style="--primary: {{accent}}; font-family: Inter, 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: #16181D; background: #FBFAF7; width: 1280px; height: 800px; display: flex; flex-direction: column; position: relative; overflow: hidden">
 <div style="height: 32px; flex: none; display: flex; align-items: center; background: #FFFFFF">
 <div style="padding: 0 12px; font-size: 12px">GTHA Metro Map Creator - union-loop.json</div>
 <div style="flex: 1 1 auto"></div>
@@ -60,10 +61,10 @@
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0B6E4F","#16181D"]},"$preview":{"width":1280,"height":800}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#185BBB","options":["#185BBB","#0B6E4F","#9461A8","#16181D"]},"motion":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
-  renderVals() {
-    const accent = this.props.accent ?? '#1F5FBF';
+  _baseVals() {
+    const accent = this.props.accent ?? '#185BBB';
     const plain = { border: '#8E8B80', bg: '#FFFFFF', ink: '#16181D' };
     return {
       accent,
@@ -86,6 +87,10 @@ class Component extends DCLogic {
         { name: 'gtha-2031.json', dir: 'Desktop', bg: 'transparent' }
       ]
     };
+  }
+  renderVals() {
+    const base = this._baseVals() || {};
+    return Object.assign({}, base, { accent: this.props.accent ?? '#185BBB', motionAttr: (this.props.motion ?? true) ? 'on' : 'off' });
   }
 }
 </script>

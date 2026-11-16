@@ -13,12 +13,13 @@
 <style>
 body{margin:0}
 a{color:#1F5FBF}a:hover{color:#163F80}
+[data-motion="off"] *, [data-motion="off"] *::before, [data-motion="off"] *::after { animation: none !important; transition: none !important; }
 </style>
 </helmet>
-<div style="font-family: Inter, system-ui, sans-serif; color: #16181D; background: #F6F5F1; min-height: 56rem; display: flex; flex-direction: column">
+<div data-motion="{{motionAttr}}" style="--primary: {{accent}}; font-family: Inter, system-ui, sans-serif; color: #16181D; background: #F6F5F1; min-height: 56rem; display: flex; flex-direction: column">
 <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 16px; background: #FFFFFF; border-bottom: 1px solid #DCDAD3">
 <div style="display: flex; align-items: center; gap: 10px; margin-right: 12px">
-<svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#16181D" stroke-width="3"></circle><path d="M6 14h16M14 6v16" stroke="#1F5FBF" stroke-width="3" stroke-linecap="round"></path></svg>
+<svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#16181D" stroke-width="3"></circle><path d="M6 14h16M14 6v16" stroke="{{accent}}" stroke-width="3" stroke-linecap="round"></path></svg>
 <strong style="font-size: 16px">GTHA Metro Map Creator</strong>
 </div>
 <nav aria-label="Tools" style="display: flex; flex-wrap: wrap; gap: 6px">
@@ -84,11 +85,11 @@ a{color:#1F5FBF}a:hover{color:#163F80}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0B6E4F","#16181D"]},"$preview":{"width":1440,"height":900}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#185BBB","options":["#185BBB","#0B6E4F","#9461A8","#16181D"]},"motion":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":900}}'>
 class Component extends DCLogic {
   constructor(p){ super(p); this.state = { tool: 'select', line: 'l1' }; }
-  renderVals() {
-    const accent = this.props.accent ?? '#1F5FBF';
+  _baseVals() {
+    const accent = this.props.accent ?? '#185BBB';
     const toolDefs = [['select','Select'],['station','Station'],['line','Draw line'],['label','Label'],['erase','Erase']];
     const tools = toolDefs.map(([id,label]) => {
       const on = this.state.tool === id;
@@ -102,6 +103,10 @@ class Component extends DCLogic {
         rowStyle: 'display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;border-radius:8px;font:inherit;font-size:14px;color:#16181D;border:1px solid ' + (on ? accent : 'transparent') + ';background:' + (on ? '#EEF3FB' : 'transparent') };
     });
     return { accent, tools, lines };
+  }
+  renderVals() {
+    const base = this._baseVals() || {};
+    return Object.assign({}, base, { accent: this.props.accent ?? '#185BBB', motionAttr: (this.props.motion ?? true) ? 'on' : 'off' });
   }
 }
 </script>
