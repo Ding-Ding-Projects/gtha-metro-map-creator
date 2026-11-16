@@ -16,5 +16,13 @@
 | Hosting | [hosting.md](hosting.md) | Container image, Compose, host.bat |
 | Simulation | [simulate.md](simulate.md) | Live service simulation, vehicle model, clip recording |
 | GTFS export | [gtfs-export.md](gtfs-export.md) | Export a GTFS feed from the map, round trip with the importer |
+| Editing | [editing.md](editing.md) | Box select, copy and paste, command palette, touch, colour checks |
+| Service patterns | [patterns.md](patterns.md) | Skip-stop, branches, frequencies by time band |
+| Facilities | [facilities.md](facilities.md) | Station facility icons, scale bar, north arrow |
+| Timeline | [timeline.md](timeline.md) | Opening and closing years, year slider, Play |
+| GTFS import | [gtfs-import.md](gtfs-import.md) | Import routes, stops and headways from a GTFS feed |
+| Journey | [journey.md](journey.md) | Trip planner and travel-time map |
+| Live vehicles | [realtime.md](realtime.md) | GTFS-Realtime vehicle positions in the desktop app |
+| Extensions | [extensions.md](extensions.md) | Hook API used by the feature modules |
 
 There is no HTTP API, so no Postman collection applies.
