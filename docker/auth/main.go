@@ -7,6 +7,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/hmac"
 	"crypto/pbkdf2"
 	"crypto/rand"
@@ -16,6 +17,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -240,7 +242,31 @@ func fatal(msg string) {
 	os.Exit(1)
 }
 
+// hashCommand reads one line (the password) from standard input and prints a hash for GMMC_PASSWORD_HASH.
+// It is a convenience for Linux and macOS: docker run --rm -i <image> gmmc-auth hash
+func hashCommand() {
+	line, err := bufio.NewReader(io.LimitReader(os.Stdin, 4096)).ReadString(10)
+	pw := strings.TrimRight(line, "\r\n")
+	if (err != nil && err != io.EOF) || len(pw) < 8 || len(pw) > 200 {
+		fatal("the password must be 8 to 200 characters")
+	}
+	salt := make([]byte, 16)
+	if _, err := rand.Read(salt); err != nil {
+		fatal("no random source")
+	}
+	key, err := pbkdf2.Key(sha256.New, pw, salt, 600000, hashLen)
+	if err != nil {
+		fatal("could not hash the password")
+	}
+	enc := base64.RawURLEncoding
+	fmt.Printf("pbkdf2-sha256:%d:%s:%s\n", 600000, enc.EncodeToString(salt), enc.EncodeToString(key))
+}
+
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "hash" {
+		hashCommand()
+		return
+	}
 	iter, salt, want, err := parseHash(os.Getenv("GMMC_PASSWORD_HASH"))
 	if err != nil {
 		// The value itself is never printed.

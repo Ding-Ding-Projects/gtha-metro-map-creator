@@ -94,8 +94,15 @@ one only after the new one answers. Keep the old machine until the new one answe
 
 - The root account has no password and SSH is not installed, so the machine cannot be logged into over
   the network. The console shows the address only.
-- The editor has no sign-in. Run the appliance on a network you trust and do not forward its port to the
-  internet.
+- The editor has no sign-in unless you turn it on (below). Run the appliance on a network you trust and do not forward
+  its port to the internet.
+- **Password sign-in is not yet built into the appliance.** The deploy app's password switch does not apply to
+  virtual machines or drive images, and there is no first-boot option or boot-partition file for it yet. The appliance runs the same container image, so you
+  can turn sign-in on by hand from its console (log in as described above): make a hash with
+  `printf 'your password' | docker run --rm -i "$GMMC_IMAGE" gmmc-auth hash` (read `GMMC_IMAGE` from `/opt/gmmc/appliance.env`),
+  then replace the container with `docker rm -f gmmc` and the `docker run` line from `/etc/init.d/gmmc-app` plus
+  `-e GMMC_PASSWORD_HASH=<the hash>`. The init script starts the existing container on later boots, so the setting
+  survives a reboot. This route has not been tested on a booted appliance. See [hosting.md](hosting.md) for what sign-in does.
 - To get a shell for maintenance, open the console, edit the boot entry at the boot menu to add
   `init=/bin/sh`, then set a password with `passwd root`. This is a deliberate local-only step.
 - The images are not signed. Check them against `SHA256SUMS.txt` on the release page. The deploy app

@@ -59,6 +59,16 @@ which stores it unencrypted in this browser's local storage and says so; it is s
 | GitHub Pages | Creates the repository (public) if missing, writes the site to the `gh-pages` branch through the GitHub REST API (blobs, tree, commit, ref), turns Pages on and polls the build for up to 10 minutes. | The Pages build reports `built` and `https://<owner>.github.io/<repo>/app/index.html` answers 200. |
 | Folder or ZIP | Writes the static site to a folder, or a ZIP file written by the app itself. | The copy is read back (`app/index.html` must exist). Open reveals it in Explorer. |
 
+**Require a password.** The Docker and SSH cards have a **Require a password** switch (off by default) and a
+password field (8 to 200 characters). The password is hashed in the app (PBKDF2-SHA256, 600,000 rounds) and only the hash goes on:
+the Docker target writes it to a private `.env` beside the instance's `compose.yaml`, the SSH target uploads that `.env` over stdin (never on
+a command line). The registry keeps only the hash, the typed password is never saved with the settings or
+shown again, and the window never receives the hash. Deploying again with the switch on and the field empty keeps the
+instance's current password. Verification asks `/healthz` (open) and then checks that `/app/` answers with a redirect to
+the sign-in page or 401, and the card then says **Live, password required**. See [hosting.md](hosting.md). The built-in server, VirtualBox,
+VMware, USB drive and Raspberry Pi targets have no password option: the built-in server is not the container image, and the appliance
+disks are covered in [appliance.md](appliance.md).
+
 If VirtualBox or VMware is missing, the card says so with a download link; VMware without OVF Tool and
 without `vmware-vdiskmanager` says exactly that. The virtual machine targets serve the standard map:
 the appliance has no way to seed a map, so a chosen map is used by Docker, SSH, the built-in server, the
