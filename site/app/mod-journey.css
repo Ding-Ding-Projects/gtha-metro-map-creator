@@ -1,1 +1,36 @@
-/* mod-journey.css */
+/* mod-journey.css: trip planner side sheet and travel-time legend. */
+.jy { margin: 0 0 8px; }
+.jy-head { position: relative; width: 100%; min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 8px 0 12px; border: 0; border-radius: 24px; background: var(--md-secondary-container); color: var(--md-on-secondary-container); font-weight: 500; text-align: left; transition: background-color var(--d-med) var(--ease-emph); }
+.jy-head > span:first-of-type { flex: 1; }
+.jy-chev { display: inline-flex; transition: transform var(--d-med) var(--ease-emph); }
+.jy-head[aria-expanded="true"] .jy-chev { transform: rotate(180deg); }
+.jy-body { display: flex; flex-direction: column; gap: 12px; padding: 12px 0 4px; }
+.jy-body[hidden] { display: none; }
+.jy-body > .tf, .jy-seg { animation: fade-up var(--d-med) var(--ease-emph-dec) both; }
+.jy-seg { display: flex; width: 100%; margin: 0; }
+.jy-seg button { flex: 1 1 0; min-width: 0; justify-content: center; padding: 0 4px; font-size: 13px; }
+.jy-msg { margin: 4px 0; color: var(--md-on-surface-variant); font-size: 13px; line-height: 18px; }
+.jy-msg.err { color: var(--md-error); }
+.jy-total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; animation: fade-up var(--d-med) var(--ease-emph-dec) both; }
+.jy-big { font-size: 36px; line-height: 44px; font-weight: 400; color: var(--md-on-surface); }
+.jy-sub { color: var(--md-on-surface-variant); font-size: 13px; }
+.jy-steps { list-style: none; margin: 8px 0 12px; padding: 0; }
+.jy-steps li { position: relative; display: flex; gap: 14px; padding: 0 0 14px 0; animation: fade-up var(--d-med) var(--ease-emph-dec) both; }
+.jy-steps li:last-child { padding-bottom: 0; }
+.jy-steps li::before { content: ""; position: absolute; left: 7px; top: 18px; bottom: -4px; width: 4px; border-radius: 2px; background: var(--md-outline-variant); }
+.jy-steps li.ride::before { background: var(--c); }
+.jy-steps li.walk::before { background: repeating-linear-gradient(var(--md-outline) 0 3px, transparent 3px 8px); width: 3px; left: 7.5px; }
+.jy-steps li:last-child::before { display: none; }
+.jy-node { flex: none; width: 18px; height: 18px; margin-top: 1px; box-sizing: border-box; border-radius: 50%; border: 3px solid var(--c); background: var(--md-surface-container-low); position: relative; z-index: 1; }
+.jy-steps li.walk .jy-node { border-style: dotted; }
+.jy-steps b { font-weight: 500; }
+.jy-line { color: var(--md-on-surface-variant); font-size: 12px; line-height: 18px; }
+.jy-chip { display: inline-block; padding: 0 8px; border-radius: 8px; border-left: 4px solid var(--c); background: var(--md-surface-container-high); color: var(--md-on-surface); font-weight: 500; }
+.jy-times { width: 100%; white-space: normal; text-align: center; padding: 8px 16px; }
+.jy-times[aria-pressed="true"] { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+.jy-legend { position: absolute; left: 16px; bottom: 16px; z-index: 6; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 14px; max-width: calc(100% - 32px); padding: 8px 4px 8px 16px; border-radius: 24px; background: var(--md-surface-container-high); color: var(--md-on-surface); box-shadow: var(--elev-3); animation: scale-in var(--d-med) var(--ease-emph-dec) both; transform-origin: bottom left; }
+.jy-legend[hidden] { display: none; }
+.jy-lg { display: inline-flex; align-items: center; gap: 6px; }
+.jy-lg i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+.jy-lg-title { font-weight: 500; }
+.jy-close { width: 32px; height: 32px; }

@@ -1,0 +1,60 @@
+[
+{
+"wait": 3000
+},
+{
+"name": "reset",
+"js": "localStorage.clear(); 'cleared'"
+},
+{
+"wait": 300
+},
+{
+"name": "closeSetup",
+"js": "(() => { const d = document.getElementById('setupDialog'); if (d && d.open) d.close(); return 'ok'; })()"
+},
+{
+"name": "union->langstaff",
+"js": "(() => { const r = GMMCJourney.plan('union','langstaff','peak'); return JSON.stringify({ok:r.ok,total:r.total,changes:r.changes,legs:r.legs.map(l=>l.type==='ride'?[l.lineId,l.from,l.to,l.stops,Math.round(l.minutes),l.wait]:['walk',l.from,l.to,Math.round(l.minutes)])}); })()"
+},
+{
+"name": "finch->unionville",
+"js": "(() => { const r = GMMCJourney.plan('finch','unionville','peak'); return JSON.stringify({ok:r.ok,total:r.total,changes:r.changes,legs:r.legs.map(l=>l.type==='ride'?[l.lineId,l.from,l.to,l.stops,Math.round(l.minutes),l.wait]:['walk',l.from,l.to,Math.round(l.minutes)])}); })()"
+},
+{
+"name": "viva finch->unionville stop",
+"js": "(() => { const r = GMMCJourney.plan('finch','viva_highway_7_main_st_unionville','peak'); return JSON.stringify({ok:r.ok,total:r.total,changes:r.changes,legs:r.legs.map(l=>l.type==='ride'?[l.lineId,l.from,l.to,l.stops,Math.round(l.minutes),l.wait]:['walk',l.from,l.to,Math.round(l.minutes)])}); })()"
+},
+{
+"name": "bands",
+"js": "JSON.stringify(['peak','midday','evening','weekend'].map(b => Math.round(GMMCJourney.plan('union','langstaff',b).total)))"
+},
+{
+"name": "times",
+"js": "(() => { const t = GMMCJourney.times('union','peak'); const v = Object.values(t); return JSON.stringify({reached: v.length, stations: Object.keys(GMMC.getMap().stations).length, max: Math.max(...v), union: t.union}); })()"
+},
+{
+"name": "ui",
+"js": "(() => { document.getElementById('jyToggle').click(); const f = document.getElementById('jyFrom'), t = document.getElementById('jyTo'); f.value = 'Finch'; f.dispatchEvent(new Event('input', {bubbles:true})); t.value = 'Unionville'; t.dispatchEvent(new Event('input', {bubbles:true})); return document.getElementById('jyResult').innerText.slice(0, 300); })()"
+},
+{
+"wait": 600
+},
+{
+"shot": "journey-trip.png"
+},
+{
+"name": "times ui",
+"js": "(() => { document.getElementById('jyTimes').click(); return [document.getElementById('jyLegend').hidden, document.querySelectorAll('.jy-times circle').length]; })()"
+},
+{
+"wait": 600
+},
+{
+"shot": "journey-times.png"
+},
+{
+"name": "svg export",
+"js": "(() => { const s = GMMC.standaloneSvg ? GMMC.standaloneSvg() : ''; return [typeof s, String(s).length, String(s).includes('jy-export-legend')]; })()"
+}
+]
