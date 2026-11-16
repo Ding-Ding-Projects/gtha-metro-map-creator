@@ -98,7 +98,12 @@
           const times = [];
           let t = 0;
           ids.forEach((id, i) => {
-            if (i) t += haversineKm(stopCoord.get(ids[i - 1]), stopCoord.get(id)) / speed * 3600;
+            if (i) {
+              // a user-set travel time (line.times) replaces the estimate; it includes the dwell at the departure stop
+              const ov = window.GMMCJourney ? window.GMMCJourney.segmentOverride(l, ids[i - 1], id) : null;
+              const departed = !skip.has(ids[i - 1]) || i - 1 === 0;
+              t += ov !== null ? Math.max(5, ov * 60 - (departed ? DWELL_S : 0)) : haversineKm(stopCoord.get(ids[i - 1]), stopCoord.get(id)) / speed * 3600;
+            }
             const last = i === ids.length - 1, stops = !skip.has(id) || i === 0 || last;
             if (!stops) return;
             times.push({ id, arr: t, dep: last ? t : t + DWELL_S });

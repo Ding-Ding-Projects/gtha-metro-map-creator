@@ -98,7 +98,9 @@
       const s = stops[i];
       if (s.dwell) { segs.push({ t0: tm, t1: tm + s.dwell, f0: s.d, f1: s.d }); tm += s.dwell; }
       if (i < stops.length - 1) {
-        const dt = (stops[i + 1].d - s.d) * km * 1000 / mps;
+        // a user-set travel time (line.times) replaces the estimate; it includes the dwell at the departure stop
+        const ov = window.GMMCJourney && s.ref ? window.GMMCJourney.segmentOverride(line, s.ref, stops[i + 1].ref) : null;
+        const dt = ov !== null ? Math.max(5, ov * 60 - s.dwell) : (stops[i + 1].d - s.d) * km * 1000 / mps;
         segs.push({ t0: tm, t1: tm + dt, f0: s.d, f1: stops[i + 1].d });
         tm += dt;
       }

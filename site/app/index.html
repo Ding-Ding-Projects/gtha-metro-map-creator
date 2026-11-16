@@ -13,6 +13,8 @@
 <link rel="stylesheet" href="mod-timeline.css">
 <link rel="stylesheet" href="mod-gtfs-import.css">
 <link rel="stylesheet" href="mod-journey.css">
+<link rel="stylesheet" href="mod-times.css">
+<link rel="stylesheet" href="mod-vehicles.css">
 <link rel="stylesheet" href="mod-schematic.css">
 <link rel="stylesheet" href="mod-styles.css">
 <link rel="stylesheet" href="mod-print.css">
@@ -146,6 +148,7 @@
       <label class="tf"><span class="tf-label" data-t="background">Background</span><span class="tf-select"><select id="setBg"><option value="osm" data-t="bg_osm">OpenStreetMap</option><option value="none" data-t="bg_none">None</option></select><span data-ic="arrow_drop_down"></span></span></label>
       <label class="tf tf-range"><span class="tf-label" data-t="bgOpacity">Background strength</span><input id="setBgOpacity" type="range" min="0.2" max="1" step="0.05"></label>
       <label class="switch-row"><span data-t="showFreq">Show frequencies on the map</span><input id="setFreq" type="checkbox" role="switch" class="switch"></label>
+      <label class="switch-row"><span data-t="tvShowTimes">Show travel times when zoomed in</span><input id="setTimes" type="checkbox" role="switch" class="switch"></label>
       <label class="switch-row"><span data-t="liveStops">Show real stops when zoomed in</span><input id="setLive" type="checkbox" role="switch" class="switch"></label>
       <label class="tf"><span class="tf-label" data-t="overpassUrl">Stop data server (optional Overpass API address)</span><input id="setOverpass" type="url" inputmode="url" placeholder="https://" maxlength="300"></label>
       <label class="switch-row"><span data-t="grid">Show grid</span><input id="setGrid" type="checkbox" role="switch" class="switch"></label>
@@ -155,6 +158,8 @@
       <label class="tf"><span class="tf-label" data-t="language">Language</span><span class="tf-select"><select id="setLang"><option value="en" data-t="lang_en">English</option><option value="yue" data-t="lang_yue">Cantonese</option><option value="both" data-t="lang_both">Bilingual</option></select><span data-ic="arrow_drop_down"></span></span></label>
       <label class="tf"><span class="tf-label" data-t="theme">Theme</span><span class="tf-select"><select id="setTheme"><option value="system" data-t="system">Match system</option><option value="light" data-t="light">Light</option><option value="dark" data-t="dark">Dark</option></select><span data-ic="arrow_drop_down"></span></span></label>
       <label class="switch-row"><span data-t="legend">Show legend in exports</span><input id="setLegend" type="checkbox" role="switch" class="switch"></label>
+      <label class="switch-row"><span data-t="tvExportTimes">Include travel times in image exports</span><input id="setTimesExport" type="checkbox" role="switch" class="switch"></label>
+      <label class="switch-row"><span data-t="vhLegendCol">Show vehicles in the export legend</span><input id="setVehLegend" type="checkbox" role="switch" class="switch"></label>
       <label class="switch-row"><span data-t="sound">Sound effects</span><input id="setSound" type="checkbox" role="switch" class="switch"></label>
       <div class="row wrap">
         <button type="button" class="btn outlined" id="tidyBtn" data-t="tidyLabels">Reset all labels to automatic</button>
@@ -193,6 +198,8 @@
 <script src="mod-timeline.js"></script>
 <script src="mod-gtfs-import.js"></script>
 <script src="mod-journey.js"></script>
+<script src="mod-times.js"></script>
+<script src="mod-vehicles.js"></script>
 <script src="mod-schematic.js"></script>
 <script src="mod-styles.js"></script>
 <script src="mod-print.js"></script>
