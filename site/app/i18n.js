@@ -72,5 +72,7 @@
     if (lang === 'both') return a === b ? a : a + ' · ' + b;
     return a;
   }
-  window.I18N = { t, setLang(l) { lang = l; }, getLang() { return lang; }, en, yue };
+  /** Feature modules add their own strings: I18N.add({ key: 'English' }, { key: '廣東話' }). */
+  function add(e, y) { Object.assign(en, e || {}); Object.assign(yue, y || {}); }
+  window.I18N = { t, add, setLang(l) { lang = l; }, getLang() { return lang; }, en, yue };
 })();

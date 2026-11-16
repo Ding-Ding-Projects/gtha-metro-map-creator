@@ -18,6 +18,13 @@
   const OSM_TILES = 'https://tile.openstreetmap.org/';
   const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
 
+  // Extension hooks. Feature modules (mod-*.js) load before this file and push functions onto
+  // window.GMMCX; see docs/features/extensions.md.
+  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [] }, window.GMMCX || {});
+  for (const k of Object.keys(X)) if (!Array.isArray(X[k])) X[k] = [];
+  window.GMMCX = X;
+  const hook = (name, ...args) => { for (const f of X[name]) { try { const r = f(...args); if (r) return r; } catch (err) { console.error('extension ' + name, err); } } return null; };
+  const hookAll = (name, ...args) => X[name].map((f) => { try { return f(...args) || ''; } catch (err) { console.error('extension ' + name, err); return ''; } }).join('');
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const store = {
@@ -70,6 +77,7 @@
       }
     }
     out.transfers = (Array.isArray(m.transfers) ? m.transfers : []).filter((t) => t && out.stations[t.a] && out.stations[t.b] && t.a !== t.b).slice(0, 2000).map((t) => ({ a: String(t.a), b: String(t.b) }));
+    for (const f of X.validate) { try { f(m, out); } catch (err) { console.error('extension validate', err); } }
     return out;
   }
   function freqNum(v) { const n = Math.round(+v); return v !== null && v !== '' && Number.isFinite(n) && n >= 1 && n <= 240 ? n : null; }
@@ -115,6 +123,8 @@
   }
   /** Geographic grid position of a station, estimated from the schematic one when it has no coordinates. */
   function stGeo(s) { return s.lat !== undefined ? geoGrid(s.lat, s.lon) : fits().toGeo(s); }
+  /** Apply extension view transforms (for example the timeline year filter). */
+  function viewMap(m) { let v = m; for (const f of X.transform) { try { v = f(v) || v; } catch (err) { console.error('extension transform', err); } } return v; }
   /** The map as it is drawn: schematic as stored, or geographic positions scaled by the zoom, so
    * lines and labels keep their size on screen while the map underneath zooms. */
   function dm(k) {
@@ -316,10 +326,12 @@
       const a = m.stations[tr.a], b = m.stations[tr.b]; if (!a || !b) continue;
       out += `<line x1="${a.x * G}" y1="${a.y * G}" x2="${b.x * G}" y2="${b.y * G}" stroke="#16181D" stroke-width="12" stroke-linecap="round"/><line x1="${a.x * G}" y1="${a.y * G}" x2="${b.x * G}" y2="${b.y * G}" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>`;
     }
+    out += hookAll('svgUnder', m, { G, geo, opts });
     for (const g of geo) {
       const l = g.line, d = polyD(g.poly);
       if (!g.poly.length) continue;
-      out += linePaths(l, d);
+      let ls = l; for (const f of X.lineStyle) { try { ls = f(ls, m) || ls; } catch (err) { console.error('extension lineStyle', err); } }
+      out += linePaths(ls, d);
       if (opts.editor) for (const e of g.edges) out += `<path class="hit" d="${polyD(e.pts)}" stroke-width="${Math.max(16, l.width + 8)}" data-line="${esc(l.id)}" data-edge="${e.index}"/>`;
     }
     // stations and stops
@@ -362,6 +374,7 @@
       const ink = opts.exportColors ? ' fill="#16181D" stroke="#FFFFFF"' : '';
       out += `<text class="st-label" x="${tx.toFixed(1)}" y="${(rc.y0 + lfs).toFixed(1)}" font-size="${lfs}" font-weight="${weight}" text-anchor="${anchor}" data-st="${esc(s.id)}"${ink}>${esc(nm.main)}</text>`;
       if (nm.sub) out += `<text class="st-label" x="${tx.toFixed(1)}" y="${(rc.y0 + lfs * 2.1).toFixed(1)}" font-size="${(lfs * 0.9).toFixed(1)}" text-anchor="${anchor}"${ink}>${esc(nm.sub)}</text>`;
+      out += hookAll('labelExtra', m, s, rc, { G, opts, anchor, fs: lfs });
     }
     // frequency badges, placed on the middle of each route
     const badges = [];
@@ -379,6 +392,7 @@
       badges.push({ x: pos.x, y: pos.y, w });
       out += `<g transform="translate(${(pos.x - w / 2).toFixed(1)} ${(pos.y - 11).toFixed(1)})"><g class="freq" data-line="${esc(l.id)}"><rect width="${w}" height="22" rx="11" fill="${l.color}" stroke="#FFFFFF" stroke-width="2"/><text x="${w / 2}" y="15" font-size="12" font-weight="700" text-anchor="middle" fill="${inkFor(l.color)}">${esc(txt)}</text></g></g>`;
     }
+    out += hookAll('svgOver', m, { G, geo, opts });
     for (const lb of m.labels) {
       out += `<text class="map-label" data-label="${esc(lb.id)}" x="${lb.x * G}" y="${lb.y * G}" font-size="${lb.size}"${opts.exportColors ? ' fill="#545249"' : ''}>${esc(lb.text)}</text>`;
     }
@@ -403,7 +417,7 @@
   const svgEl = $('map'), vp = $('viewport');
   function render() {
     document.documentElement.lang = settings.lang === 'en' ? 'en' : 'yue-Hant';
-    const D = dm();
+    const D = viewMap(dm());
     const { svg } = buildMapSvg(D, { editor: true });
     let sel = '';
     if (selection && selection.type === 'station') for (const id of selection.ids) { const s = D.stations[id]; if (s) sel += `<circle class="sel-ring" cx="${s.x * G}" cy="${s.y * G}" r="16"/>`; }
@@ -421,6 +435,7 @@
     vp.innerHTML = grid + liveStopsSvg(D) + svg + sel;
     renderTiles();
     scheduleLiveStops();
+    hookAll('afterRender', D);
     document.querySelectorAll('[data-layout]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.layout === settings.layout)));
     svgEl.className.baseVal = 'tool-' + tool + (drag && drag.kind === 'pan' ? ' panning' : '');
     const n = Object.keys(map.stations).length;
@@ -571,6 +586,7 @@
     for (const [, ids] of names) if (ids.length > 1) issues.push({ id: ids[0], msg: t('dupName') + ': ' + map.stations[ids[0]].name + ' (' + ids.length + ')' });
     for (const [, ids] of pos) if (ids.length > 1) issues.push({ id: ids[0], msg: t('overlap') + ': ' + ids.map((i) => map.stations[i].name).join(', ') });
     for (const l of map.lines) if (l.path.length < 2) issues.push({ line: l.id, msg: t('shortLine') + ': ' + l.name });
+    for (const f of X.issues) { try { issues.push(...(f(map) || [])); } catch (err) { console.error('extension issues', err); } }
     $('issueList').innerHTML = issues.length ? issues.slice(0, 60).map((i) => `<li><button type="button" ${i.id ? `data-goto="${esc(i.id)}"` : `data-pickline="${esc(i.line)}"`}>${esc(i.msg)}</button></li>`).join('') : `<li class="hint">${esc(t('noIssues'))}</li>`;
   }
   function runSearch() {
@@ -672,7 +688,7 @@
         ${tf(t('size') + ' ' + lb.size, `<input type="range" min="8" max="48" data-f="lb.size" value="${lb.size}">`, ' tf-range')}
         <div class="actions">${btn('delSel', t('delete'), 'danger', 'delete')}</div></div>`;
     }
-    el.innerHTML = head + h;
+    el.innerHTML = head + h + hookAll('inspector', selection, map);
   }
   function renderPanels() { renderTools(); renderLines(); renderIssues(); renderInspector(); runSearch(); }
   function applyI18n() {
@@ -758,6 +774,7 @@
     const osmId = target && target.dataset.osm;
     const p = worldFromEvent(e);
     if (e.button === 1 || (e.button === 0 && spaceDown)) { startPan(e); return; }
+    if (hook('pointer', e, p, tool, target)) return;
     if (e.button !== 0) return;
     const stId = target && target.dataset.st, edge = target && target.dataset.edge !== undefined ? { lineId: target.dataset.line, index: +target.dataset.edge } : null;
     const lbId = target && target.dataset.label;
@@ -816,6 +833,7 @@
     svgEl.setPointerCapture(e.pointerId);
   }
   svgEl.addEventListener('pointermove', (e) => {
+    if (hook('pointermove', e, worldFromEvent(e))) return;
     if (!drag) return;
     if (drag.kind === 'pan') {
       const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
@@ -837,7 +855,8 @@
     }
     render();
   });
-  svgEl.addEventListener('pointerup', () => {
+  svgEl.addEventListener('pointerup', (e) => {
+    if (hook('pointerup', e, worldFromEvent(e))) return;
     if (!drag) return;
     const d = drag; drag = null;
     if (d.kind === 'pan' && !d.moved && d.clearOnClick) { selection = null; renderPanels(); }
@@ -874,6 +893,7 @@
   let spaceDown = false;
   document.addEventListener('keydown', (e) => {
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.querySelector('dialog[open]');
+    if (hook('keydown', e, !!typing)) return;
     if (e.key === 'Escape' && !document.querySelector('dialog[open]')) { selection = null; $('exportMenu').hidden = true; renderPanels(); render(); return; }
     if (typing) return;
     const mod = e.ctrlKey || e.metaKey;
@@ -897,6 +917,7 @@
 
   // ---------- panel events ----------
   document.addEventListener('click', (e) => {
+    if (hook('click', e)) return;
     const b = e.target.closest('button'); if (!b) { if (!e.target.closest('.menu-wrap')) $('exportMenu').hidden = true; return; }
     if (b.dataset.tool) { tool = b.dataset.tool; renderTools(); render(); return; }
     if (b.dataset.pickline) { const id = b.dataset.pickline; activeLineId = activeLineId === id ? null : id; selection = activeLineId ? { type: 'line', id } : null; renderPanels(); render(); return; }
@@ -937,6 +958,7 @@
   $('inspector').addEventListener('focusin', () => { fieldCheckpointed = null; });
   $('inspector').addEventListener('input', (e) => {
     const f = e.target.dataset.f; if (!f || !selection) return;
+    if (hook('input', f, e, selection)) return;
     if (fieldCheckpointed !== e.target) { checkpoint(); fieldCheckpointed = e.target; }
     const v = e.target.value;
     if (f === 'st.link') { if (v) { (map.transfers = map.transfers || []).push({ a: selection.ids[0], b: v }); beep(660); } changed(); return; }
@@ -974,7 +996,7 @@
     const geo = isGeo();
     let ek = 1;
     if (geo) { const b1 = bounds(dm(1)); ek = Math.min(4, Math.max(0.15, 2600 / Math.max(1, b1.x1 - b1.x0, b1.y1 - b1.y0))); }
-    const D = geo ? dm(ek) : map;
+    const D = viewMap(geo ? dm(ek) : map);
     const { svg } = buildMapSvg(D, { editor: false, exportColors: true });
     const b = bounds(D), pad = 120;
     const vis = map.lines.filter((l) => l.visible && l.path.length > 1);
@@ -1241,5 +1263,11 @@ addEventListener('resize',fit);fit();})();
   $('zoomOutBtn').addEventListener('click', () => zoomBy(1 / 1.6));
   $('bgBtn').addEventListener('click', () => { if (!isGeo()) { setLayout('geographic'); return; } settings.background = settings.background === 'osm' ? 'none' : 'osm'; saveSettings(); render(); toast(settings.background === 'osm' ? t('bgOn') : t('bgOff')); });
   function newMap(kind) { replaceMap(window.GTHATemplates[kind === 'blank' ? 'blank' : 'gtha']()); }
-  window.GMMC = { getMap: () => map, computeGeometry, route, validateMap, standaloneSvg, loadJson, newMap, exportAct, undo, redo, setLayout, dm, siteHtml, projectJson, getView: () => view, getSettings: () => settings, liveStops: () => liveStops };
+  window.GMMC = { getMap: () => map, computeGeometry, route, validateMap, standaloneSvg, loadJson, newMap, exportAct, undo, redo, setLayout, dm, siteHtml, projectJson, getView: () => view, getSettings: () => settings, liveStops: () => liveStops,
+    // extension API
+    G, t, esc, checkpoint, changed, render, renderPanels, renderInspector, toast, beep, fit, saveSettings, applyI18n, viewMap,
+    getSelection: () => selection, setSelection: (s) => { selection = s; }, getTool: () => tool, setTool: (x) => { tool = x; renderTools(); render(); },
+    getActiveLine: () => activeLineId, setActiveLine: (id) => { activeLineId = id; }, lineById, servingLines, isInterchangeIn, lineName, freqText, linePaths,
+    isGeo, stGeo, geoGrid, gridToLatLon, fits, worldFromEvent, addStation, snapPt, uid, svgEl: () => svgEl, replaceMap, loadText, download, exportScene };
+  for (const f of X.ready) { try { f(window.GMMC); } catch (err) { console.error('extension ready', err); } }
 })();
