@@ -1,0 +1,39 @@
+[
+ {
+  "wait": 2500
+ },
+ {
+  "name": "init",
+  "js": "(() => { const d = document.getElementById('setupDialog'); if (d.open) d.close(); window.GMMC.newMap('blank'); return typeof window.GMMCGtfs.open + ' item:' + !!document.getElementById('gtfsImportItem'); })()"
+ },
+ {
+  "name": "open",
+  "js": "(async () => { const r = await fetch('/test-feed.zip'); const b = await r.blob(); const f = new File([b], 'york-region-transit.zip', {type: 'application/zip'}); window.__t0 = performance.now(); window.GMMCGtfs.open(f); const t0 = performance.now(); while (document.getElementById('gtfsList').children.length === 0 && performance.now() - t0 < 120000) await new Promise(r => setTimeout(r, 200)); return {parseMs: Math.round(performance.now() - window.__t0), sub: document.getElementById('gtfsSub').textContent, chips: [...document.querySelectorAll('.gtfs-chip')].map(c => c.textContent), rows: document.querySelectorAll('.gtfs-row').length}; })()"
+ },
+ {
+  "name": "viva",
+  "js": "[...document.querySelectorAll('.gtfs-row')].filter(r => /Viva/i.test(r.textContent)).map(r => r.textContent.replace(/ +/g, ' ').trim())"
+ },
+ {
+  "name": "search",
+  "js": "(() => { const q = document.getElementById('gtfsQuery'); q.value = '60'; q.dispatchEvent(new Event('input')); return [...document.querySelectorAll('.gtfs-row')].map(r => r.textContent.replace(/\\s+/g, ' ').trim()); })()"
+ },
+ {
+  "name": "pick",
+  "js": "(() => { const q = document.getElementById('gtfsQuery'); q.value = ''; q.dispatchEvent(new Event('input')); const ids = ['601','5'].map(id => document.querySelector('input[data-id=\"' + id + '\"]')); ids.forEach(i => { i.checked = true; i.dispatchEvent(new Event('change', {bubbles: true})); }); return {picked: ids.length, count: document.getElementById('gtfsCount').textContent, go: document.getElementById('gtfsGo').textContent}; })()"
+ },
+ {
+  "shot": "dialog.png"
+ },
+ {
+  "name": "import",
+  "js": "(async () => { document.getElementById('gtfsGo').click(); await new Promise(r => setTimeout(r, 1500)); const m = window.GMMC.getMap(); return {lines: m.lines.map(l => ({name: l.name, style: l.style, width: l.width, color: l.color, stops: l.path.length, freq: l.freq, note: l.note})), stations: Object.keys(m.stations).length, sample: Object.values(m.stations).slice(0, 2), dialogOpen: document.getElementById('gtfsDialog').open}; })()"
+ },
+ {
+  "shot": "result.png"
+ },
+ {
+  "name": "reimport-merge",
+  "js": "(async () => { const r = await fetch('/test-feed.zip'); const f = new File([await r.blob()], 'again.zip'); window.GMMCGtfs.open(f); const t0 = performance.now(); while (document.getElementById('gtfsList').children.length === 0 && performance.now() - t0 < 120000) await new Promise(r => setTimeout(r, 200)); const cb = document.querySelector('input[data-id=\"601\"]'); cb.checked = true; cb.dispatchEvent(new Event('change', {bubbles: true})); const before = Object.keys(window.GMMC.getMap().stations).length; document.getElementById('gtfsGo').click(); await new Promise(r => setTimeout(r, 800)); return {before, after: Object.keys(window.GMMC.getMap().stations).length, lines: window.GMMC.getMap().lines.length}; })()"
+ }
+]
