@@ -114,7 +114,7 @@ website export, project files, and a Material Design 3 interface with motion.
 
 ### Not verified for 1.2.0
 
-- Wiki first page, Discussion pins and a GitHub Project: need a signed-in GitHub web page.
+- Wiki first page, Discussion pins and a GitHub Project: not doing, by the owner's decision on 16 November 2026.
 
 ### 1.1.x release record
 

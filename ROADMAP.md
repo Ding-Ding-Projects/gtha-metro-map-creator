@@ -113,3 +113,4 @@
 - [ ] Search across the documentation articles with the same regex builder
 - [ ] Sign-in option for the hosted server
 - [ ] Per-line station markers (ticks) style option
+- [ ] ~~GitHub wiki, pinned Discussion and a GitHub Project~~ Not doing (owner's decision, 16 November 2026): the documentation lives on the project site and in `docs/`, and release notes live in Discussions; the staged wiki pages stay in `docs/wiki/pending/` if this changes

@@ -13,7 +13,7 @@ images; released desktop app, deploy app and hosting bundle run locally (bundle 
 live site serves /, /app/, /gtfs/, /docs/.
 Not verified: real USB or SD writes, a real Raspberry Pi boot, the appliance inside VirtualBox or VMware,
 SSH and GitHub Pages deployment with real credentials, the TTC GTFS feed, Firefox and Safari.
-Blocked on the owner: GitHub wiki first page (content waits in docs/wiki/pending/), pinning a
-Discussion, and a GitHub Project (the CLI token lacks the project scope).
+Not doing, by the owner's decision: a GitHub wiki, a pinned Discussion and a GitHub Project
+(staged wiki pages stay in docs/wiki/pending/).
 Next ideas are in ROADMAP.md under "Phase 8: next".
 ```
