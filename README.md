@@ -46,6 +46,11 @@ Earlier captures are listed in [docs/screenshots/ARCHIVE.md](docs/screenshots/AR
 - Trip planner and travel-time map on your own network (1.4)
 - One-click auto-schematic from real positions (1.5)
 - Map style presets and a print layout with vector PDF (1.5)
+- Scenarios with swipe compare, change list and share links (1.6)
+- Live service simulation with clip recording (1.6)
+- GTFS feed export (1.6)
+- Coverage from Statistics Canada 2021 population and an illustrative ridership estimate (1.6)
+- Live TTC and YRT vehicles in the desktop app (1.6)
 
 - Built-in GTHA template (238 stations and stops, 20 routes, real coordinates): TTC Lines 1, 2, 4, 5 and 6, the planned Ontario Line, GO Lakeshore
   West and East, Kitchener, Milton, Barrie, Richmond Hill, Stouffville, UP Express, and

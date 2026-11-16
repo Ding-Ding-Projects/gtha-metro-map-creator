@@ -33,6 +33,11 @@
       <li><a href="#journey">Trips and travel times</a></li>
       <li><a href="#schematic">Auto-schematic</a></li>
       <li><a href="#styles">Styles and printing</a></li>
+      <li><a href="#scenarios">Scenarios and sharing</a></li>
+      <li><a href="#simulate">Simulation</a></li>
+      <li><a href="#gtfsexport">Export GTFS</a></li>
+      <li><a href="#coverage">Coverage and ridership</a></li>
+      <li><a href="#realtime">Live vehicles</a></li>
       <li><a href="#geographic">Geographic layout</a></li>
       <li><a href="#routes">Routes and frequencies</a></li>
       <li><a href="#stops">Stops and transfers</a></li>
@@ -143,6 +148,18 @@
     <section id="styles"><h2>Map styles and printing</h2>
       <p>Choose a <strong>Map style</strong>: Material, Classic metro (square line ends, tick stops, capital labels), Frequent network (line width follows frequency) or Night (dark paper). The style is saved with your project.</p>
       <p><strong>Export, Print layout</strong> makes a vector PDF on paper from A0 to A4, Letter or Tabloid, portrait or landscape, with margins, a title, a subtitle and a legend. Text stays sharp at any zoom. Maps with Chinese labels are exported as a high-resolution image PDF instead, because embedding Chinese fonts would make the file very large.</p></section>
+    <section id="scenarios"><h2>Scenarios, compare and share links</h2>
+      <p>Open <strong>Scenarios</strong> to keep several versions of the network in one project, such as Today, 2031 and My plan. Branch a new scenario from any other, then turn on <strong>Compare</strong> and drag the swipe handle to see two scenarios over the same map. The change list names the lines and stations that were added, removed or rerouted, and frequency changes.</p>
+      <p><strong>Share link</strong> packs the whole map into the address itself, compressed, so the map never goes to a server. Opening the link adds it as a new scenario. Very large maps make long links; the dialog shows the length and suggests saving a project file instead when it is too long.</p></section>
+    <section id="simulate"><h2>Live service simulation</h2>
+      <p>Press <strong>Simulate</strong> to see vehicles run along every route at its speed and frequency, spaced by the headway for the chosen time band. Pause, play and change speed from 1x to 60x. <strong>Record clip</strong> saves a short WebM video. With reduced motion turned on, the simulation starts paused.</p></section>
+    <section id="gtfsexport"><h2>Export a GTFS feed</h2>
+      <p><strong>Export, GTFS feed</strong> turns your map into a standard GTFS ZIP with agency, stops, routes, calendar, trips, stop times, frequencies and shapes, so trip planners and validators can read it. Times are estimates from distance and a typical speed for each service type, with a short stop at each station.</p></section>
+    <section id="coverage"><h2>Coverage and ridership</h2>
+      <p><strong>Coverage</strong> counts the people living within 400 m and 800 m of your stations, using Statistics Canada 2021 Census population for every dissemination area in the GTHA, and shows totals for each line. Turn on walksheds to draw the circles on the map. Job counts are not included because they are not published openly at this level.</p>
+      <p><strong>Ridership estimate</strong> draws each line wider where more people would ride it, from a simple gravity model on the fastest trips. It is an illustrative estimate to compare plans, not a forecast, and the map says so.</p></section>
+    <section id="realtime"><h2>Live vehicles (desktop app)</h2>
+      <p>In the desktop app, <strong>Live vehicles</strong> shows real TTC and York Region Transit vehicle positions from their public GTFS-Realtime feeds, refreshed every 30 seconds. Web browsers block these feeds, so the website editor explains this and offers the desktop app.</p></section>
     <section id="geographic"><h2>Geographic layout and OpenStreetMap</h2>
       <p>The editor has two layouts, switched with the <strong>Schematic / Geographic</strong> buttons in the top bar. Every station keeps a position in each.</p>
       <ul>

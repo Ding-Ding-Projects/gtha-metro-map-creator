@@ -66,13 +66,26 @@
 - [x] Style presets: Material, Classic metro, Frequent network, Night
 - [x] Print layout with vector PDF (Latin labels)
 
-## Phase 7: next
+## Phase 7: release 1.6.0
+
+- [x] Scenarios, swipe compare, change list
+- [x] Share link in the URL fragment
+- [x] Live service simulation and WebM clip
+- [x] GTFS feed export, checked by importing it back
+- [x] Coverage from Statistics Canada 2021 population, walksheds, per-line totals
+- [x] Illustrative ridership estimate with line widths
+- [x] Live TTC and YRT vehicles in the desktop app
+- [ ] One-click deploy app (desktop and website) for every hosting type: in progress
+- [ ] Redesigned GTFS import dialog with route preview: in progress
+
+## Phase 8: next
 
 - [ ] Shared bend setting across all lines on a bundled segment
 - [ ] Vector PDF with Chinese labels (needs an embedded font)
 - [ ] Crossing reduction in auto-schematic
+- [ ] Employment data for coverage, when an open small-area source exists
+- [ ] Appliance OS image for the hosted server
 - [ ] Chinese names for bus stops
-- [ ] Touch gestures for pinch zoom
 - [ ] ~~Automated browser tests in CI~~ Not doing: CI deliberately runs no tests here; browser checks run locally with `scripts/verify/`
 - [ ] Search across the documentation articles with the same regex builder
 - [ ] Sign-in option for the hosted server
