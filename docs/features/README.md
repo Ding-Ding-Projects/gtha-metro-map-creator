@@ -12,5 +12,6 @@
 | Scenarios | [scenarios.md](scenarios.md) | Named map versions, swipe compare, change list |
 | Share | [share.md](share.md) | Share link in the URL fragment |
 | Hosting | [hosting.md](hosting.md) | Container image, Compose, host.bat |
+| Simulation | [simulate.md](simulate.md) | Live service simulation, vehicle model, clip recording |
 
 There is no HTTP API, so no Postman collection applies.
