@@ -111,6 +111,17 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Build the Raspberry Pi image
         run: appliance/build-rpi.sh "${{ steps.img.outputs.version }}" "$IMAGE:${{ steps.img.outputs.version }}" "$PWD/appliance-rpi-out"
+      - name: Make the build outputs readable
+        run: sudo chown -R "$USER" appliance-rpi-out
+      - name: Allow KVM if the runner has it
+        run: |
+          if [ -e /dev/kvm ]; then
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger --name-match=kvm
+          else
+            echo "No /dev/kvm: the boot test will use software emulation (slower)."
+          fi
       - name: Boot test (QEMU virt twin of the same root file system)
         run: appliance/boot-test-rpi.sh "$PWD/appliance-rpi-out" "${{ steps.img.outputs.version }}" 1500
       - uses: actions/upload-artifact@v4

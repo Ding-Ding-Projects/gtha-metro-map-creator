@@ -60,6 +60,8 @@ echo '/dev/vda / ext4 defaults,noatime 0 1' > "$V/etc/fstab"
 ls "$V/boot" | grep -E 'vmlinuz-virt|initramfs-virt' >/dev/null
 mke2fs -q -t ext4 -L gmmc-root -d "$V" /out/"$base"-virt-root.ext4 "${ROOT_MB}M"
 cp "$V/boot/vmlinuz-virt" "$V/boot/initramfs-virt" /out/
+# mkinitfs writes the initramfs as root-only; the boot test runs as the runner user.
+chmod 0644 /out/vmlinuz-virt /out/initramfs-virt
 rm -rf "$V"
 
 # --- the Raspberry Pi boot partition -----------------------------------------------------------
