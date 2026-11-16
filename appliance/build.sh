@@ -55,4 +55,8 @@ echo "== Compressing"
 cp "$work/$base.qcow2" "$out/$base.qcow2"          # kept uncompressed for the boot test
 (cd "$work" && zip -9 -q "$out/$base.vhdx.zip" "$base.vhdx" && zip -9 -q "$out/$base.ova.zip" "$base.ova")
 xz -9 -T0 -k -c "$work/$base.qcow2" > "$out/$base.qcow2.xz"
+# A raw disk image for writing to a USB drive. It boots with legacy BIOS only: the bootloader is
+# syslinux in the MBR, and the image has no EFI system partition.
+qemu-img convert -O raw "$work/$base.qcow2" "$work/$base.img"
+xz -9 -T0 -c "$work/$base.img" > "$out/$base.img.xz"
 ls -l "$out"

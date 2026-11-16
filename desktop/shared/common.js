@@ -51,4 +51,17 @@ function portFree(p) {
   });
 }
 
-module.exports = { IMAGE, portNum, tagOk, lanAddresses, get, portFree };
+// First free port from "start" upward that is not in "avoid" (ports other instances already own).
+async function findFreePort(start, avoid = [], span = 200) {
+  const taken = new Set(avoid.map(Number));
+  for (let p = start; p < start + span && p <= 65535; p++) {
+    if (taken.has(p) || p < 1024) continue;
+    if ((await portFree(p)).ok) return p;
+  }
+  return null;
+}
+const slugify = (name) => String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'map';
+const INSTANCE_LABEL = 'io.github.dingdingprojects.gmmc.instance';
+const RELEASE_REPO = 'Ding-Ding-Projects/gtha-metro-map-creator';
+
+module.exports = { IMAGE, portNum, tagOk, lanAddresses, get, portFree, findFreePort, slugify, INSTANCE_LABEL, RELEASE_REPO };
