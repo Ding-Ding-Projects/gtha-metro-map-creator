@@ -5,6 +5,9 @@
 Proven in CI (appliance check run 43930391800 at 2664fc9): six boot tests passed, covering no password,
 a FAT config disk, the ISO config disk the deploy app writes, an invalid setting (editor refused,
 nothing secret on the console), and on the Raspberry Pi virt twin no password and a boot-partition file.
+Also checked by hand: the released 1.8.0 `.ova` in VMware Workstation with an ISO made by
+`desktop/deploy/lib/config-disk.js` booted in 15 s with "Password required"; `/healthz` 200, `/app/` 302 to
+sign-in, wrong password refused, right password signed in, no hash on the console.
 
 The appliance reads an optional password hash at boot (`appliance/skel/usr/local/sbin/gmmc-signin`, called by the
 `gmmc-app` service) from a read-only disk labelled `GMMCCONF` (FAT or ISO 9660, file `password-hash`) or a

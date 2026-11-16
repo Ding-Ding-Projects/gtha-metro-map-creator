@@ -109,7 +109,7 @@
 - [x] Documentation search with the regex builder, bounded so slow patterns are cut short
 - [x] Optional password sign-in for the hosted server (off by default; host.bat, setup wizard and deploy app)
 - [x] Sign-in on the appliance image: the appliance reads a password hash from a `GMMCCONF` disk (FAT or ISO) or a boot-partition file, with the logic tested against real loop devices and a fake docker, the deploy app's VirtualBox, VMware and Raspberry Pi options, and CI boot tests with a configuration disk
-- [x] Appliance sign-in proven by CI boot tests (1.8.0): FAT disk, ISO disk from the deploy app, invalid setting refused, and the Raspberry Pi boot-partition file on the virt twin; real Pi hardware and a VMware machine with the config disk are not tested
+- [x] Appliance sign-in proven by CI boot tests (1.8.0): FAT disk, ISO disk from the deploy app, invalid setting refused, and the Raspberry Pi boot-partition file on the virt twin; also checked by hand in VMware Workstation with the released 1.8.0 appliance and the deploy app's own config ISO (Password required banner, /app/ redirects, wrong password refused, right password signs in); real Pi hardware is not tested
 - [x] Sign-in through the deploy app's SSH target, run end to end against an OpenSSH container
 - [x] Firefox and WebKit (Safari's engine) checks of the live site, with no page errors
 
