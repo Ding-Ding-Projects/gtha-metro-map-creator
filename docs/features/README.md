@@ -24,6 +24,8 @@
 | GTFS import | [gtfs-import.md](gtfs-import.md) | Import routes, stops and headways from a GTFS feed |
 | Journey | [journey.md](journey.md) | Trip planner, travel-time map, travel times between stops |
 | Vehicles | [vehicles.md](vehicles.md) | Vehicle types per route |
+| GTFS viewer | [gtfs-viewer.md](gtfs-viewer.md) | Open any GTFS feed: routes, stops, trips, blocks, calendar, shapes, fares, flex, validation |
+| Journey | [journey.md](journey.md) | Trip planner and travel-time map |
 | Live vehicles | [realtime.md](realtime.md) | GTFS-Realtime vehicle positions in the desktop app |
 | Extensions | [extensions.md](extensions.md) | Hook API used by the feature modules |
 
