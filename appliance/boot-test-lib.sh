@@ -57,6 +57,8 @@ gmmc_check_refused() {
 	grep -q "the editor was not started" "$log" || { echo "refusal check: the console never said the editor was not started"; return 1; }
 	sleep 20
 	if curl -s --max-time 3 -o /dev/null "http://127.0.0.1:$port/healthz"; then echo "refusal check: the app answered although the password setting is invalid"; return 1; fi
-	if grep -q "pbkdf2" "$log"; then echo "refusal check: the serial console shows a hash"; return 1; fi
+	# The refusal message names the expected format ("pbkdf2-sha256 hash"), so look for an actual hash value
+	# or the invalid test value itself, not the word.
+	if grep -qE "pbkdf2-sha256:[0-9]+:" "$log" || grep -q "this is not a password hash" "$log"; then echo "refusal check: the serial console shows the password setting"; return 1; fi
 	grep -E "the editor was not started" "$log" | tail -n 1
 }
