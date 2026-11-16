@@ -102,7 +102,7 @@
     const selectById = (id) => { const i = shown.findIndex((b) => b.id === id); bs.sel = i; if (i >= 0) { vl.setActive(i, true); const y = i * ROW; scroller.scrollTop = Math.max(0, y - scroller.clientHeight / 3); showDetail(shown[i]); const b = shown[i]; bs.start = Math.max(0, Math.floor((b.start - 1800) / 900) * 900); startS.set(bs.start / 900); } else showDetail(null); draw(); };
     const left = h('div.listpane', null, h('div.row.ctl', null, dateBtn), only.el, count, h('div.listhost', null, vl.el));
     const right = h('div.detail', null, h('h2.pg-t', { text: t('nav_blocks') }), stats, h('div.row.ctl', null, zoomS.el, startS.el), wrap, GA.card(t('vehiclesByHour'), chart), detail);
-    page.append(GV.split(left, right, !!wantId)); apply();
+    page.append(GV.split(left, right, !!wantId, true)); apply();
     if (!blocks.length) right.insertBefore(GA.empty('gantt', t('noBlocks'), t('noBlocksSub')), wrap);
     if (wantId) selectById(wantId); else if (shown.length) { bs.sel = -1; } else showDetail(null);
     showDetail(shown[bs.sel] || null); setTimeout(resizeCv, 30);
@@ -146,7 +146,7 @@
       const on = h('div'); const drawOn = () => { on.textContent = ''; const sv = [...f.servicesOn(GA.date)].sort(); on.append(h('p.sub', { text: GA.dateText(GA.date) + ': ' + t('servicesRun', { n: sv.length, m: GA.n(f.tripsOn(GA.date).length) }) }), h('div.chips', null, sv.map((s) => { const a = h('a', { class: 'rchip', href: GA.href('service', s), text: s + ' · ' + GA.n((f.tripsByService.get(s) || []).length) }); return a; }))); }; detail.append(GA.card(t('whichServices'), h('div.row.ctl', null, dateBtn.cloneNode(false) && null), on)); drawOn();
       const days = f.tripsPerDay(); if (days.length) { const max = days.length > 366 ? 120 : 366; const step = Math.ceil(days.length / max); const data = []; for (let i = 0; i < days.length; i += step) { const sl = days.slice(i, i + step), v = Math.round(sl.reduce((n, d) => n + d[1], 0) / sl.length); data.push({ value: v, tip: GA.dateText(sl[0][0]) + (step > 1 ? ' - ' + GA.dateText(sl[sl.length - 1][0]) : '') + ': ' + GA.n(v) + ' ' + t('tripsLc'), date: sl[0][0] }); } detail.append(GA.card(t('tripsPerDay'), GA.barChart({ label: t('tripsPerDay'), data, height: 110, axis: [GA.dateText(days[0][0]), GA.dateText(days[days.length - 1][0])], onBar: (d) => { GA.date = d.date; cs.ym = d.date.slice(0, 6); dateBtn.redraw(); drawMonth(); drawOn(); U.snack(t('dateSet', { d: GA.dateText(d.date) })); } }))); }
     };
-    page.append(GV.split(list, detail, !!sel)); build(); detailDraw();
+    page.append(GV.split(list, detail, !!sel, true)); build(); detailDraw();
   };
 
   // ---------- SHAPES ----------
@@ -167,7 +167,7 @@
     const detail = h('div.detail'); const box = h('div.mapbox.tall');
     if (sel === undefined) detail.append(id ? GA.empty('error', t('notFound', { id })) : GA.empty('shapes', t('pickShape')), box);
     else { detail.append(h('header.dh', null, h('span.srow-ic.big', { html: U.icon('shapes', 28) }), h('div.dh-t', null, h('h2', { text: S.ids[sel] }), h('p.sub', { text: GA.n(S.start[sel + 1] - S.start[sel]) + ' ' + t('points') + ' · ' + (len[sel] / 1000).toFixed(2) + ' km' })), GV.backBtn('#shapes', t('nav_shapes'))), box); const rs0 = [...use[sel].routes]; detail.append(GA.card(t('usedBy'), use[sel].trips ? h('div.chips', null, rs0.map((ri) => { const a = h('a', { class: 'rchip', href: GA.href('route', f.routes[ri].route_id) }); a.append(GA.badge(f.routes[ri]), h('span', { text: f.routes[ri].route_long_name || '' })); return a; }), h('span.sub', { text: GA.n(use[sel].trips) + ' ' + t('tripsLc') })) : h('p.sub', { text: t('shapeUnused') }))); }
-    page.append(GV.split(left, detail, sel !== undefined)); apply();
+    page.append(GV.split(left, detail, sel !== undefined, true)); apply();
     setTimeout(() => { const m = GV.map(box, t('nav_shapes')); const drawOne = (ctx, i, color, w, o) => { const pts = []; const stride = Math.max(1, Math.floor((S.start[i + 1] - S.start[i]) / 1500)); for (let k = S.start[i]; k < S.start[i + 1]; k += stride) pts.push([S.lat[k], S.lon[k]]); GV.drawPath(ctx, m, pts, color, w, o); return pts; }; const prim = getComputedStyle(box).getPropertyValue('--md-primary');
       if (sel === undefined) { m.addLayer((ctx) => { const step = Math.max(1, Math.floor(S.ids.length / 800)); for (let i = 0; i < S.ids.length; i += step) drawOne(ctx, i, use[i].trips ? '#5f6368' : '#d93025', 1.5, { alpha: 0.6 }); }); const all = []; for (let i = 0; i < S.ids.length; i += Math.max(1, Math.floor(S.ids.length / 200))) { all.push([S.lat[S.start[i]], S.lon[S.start[i]]]); } m.setHome(GV.boundsOf(all.filter((p) => Number.isFinite(p[0])))); }
       else { const b = []; m.addLayer((ctx) => { drawOne(ctx, sel, prim, 5, { halo: '#fff', arrows: true }); for (let k = S.start[sel]; k < S.start[sel + 1]; k++) { const p = m.px(S.lat[k], S.lon[k]); if (m.z >= 14) { ctx.beginPath(); ctx.arc(p[0], p[1], 2.2, 0, 7); ctx.fillStyle = prim; ctx.fill(); } } }); for (let k = S.start[sel]; k < S.start[sel + 1]; k++) b.push([S.lat[k], S.lon[k]]); m.setHome(GV.boundsOf(b)); } }, 0);

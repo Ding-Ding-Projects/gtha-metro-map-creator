@@ -117,6 +117,12 @@ website export, project files, and a Material Design 3 interface with motion.
 - The regex builder uses the browser's JavaScript engine; other engines' syntax is not offered.
 - The hosted server has no sign-in.
 
+### GTFS viewer (verified locally in headless Edge)
+
+- `site/gtfs/` opens a GTFS feed in the browser; see `docs/features/gtfs-viewer.md`. Checks are driven by `scripts/verify/gtfs-viewer.steps.json` against the hand-made fixture `scripts/verify/fixtures/viewer-feed.zip` (regenerate with `make-gtfs-fixture.mjs`).
+- The editor adds **Export, View this map as GTFS** (`site/app/mod-gtfs-viewer.js`) and receives routes from **Add to map** through IndexedDB.
+- Not verified: Safari and Firefox, touch gestures on a real device, a TTC feed, screen reader output.
+
 ## Next steps
 
 See `ROADMAP.md`, Phase 3.

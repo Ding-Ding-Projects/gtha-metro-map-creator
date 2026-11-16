@@ -34,6 +34,15 @@
 - [x] Application icon for both executables (1.1.1)
 - [x] File menu verification: save as, recent, open, unsaved-changes prompt (1.1.1)
 
+## GTFS viewer
+
+- [x] Standalone viewer page `site/gtfs/` with English and Cantonese, light, dark and system themes, keyboard access and a 390 px layout
+- [x] Open a feed from a file, drag and drop, a web address (CORS permitting) or the map editor
+- [x] Worker parsing with typed arrays for stop_times and shapes; virtualised lists, tables and grids
+- [x] Overview, routes, stops, trips, blocks (Gantt), calendar, shapes, transfers and pathways, fares v1 and v2, flex, translations, validation, realtime and raw data views
+- [x] Global search, deep links, Add to map through the editor importer
+- [ ] Not verified: a real TTC feed (only the York Region Transit feed and a synthetic 5.5 million row feed were opened)
+
 ## Phase 3: geographic editor (1.2.0)
 
 - [x] Geographic layout over OpenStreetMap tiles with constant-size lines and labels

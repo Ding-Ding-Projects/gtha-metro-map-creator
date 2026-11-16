@@ -15,7 +15,7 @@
     inp.addEventListener('input', () => { clear.hidden = !inp.value; onInput(inp.value); });
     return { el: h('label.tf', null, o.icon === false ? null : h('span.tf-ic', { html: U.icon('search', 20) }), inp, h('span.tf-l', { text: label }), clear), input: inp };
   };
-  GV.split = (list, detail, hasDetail) => h('div.split' + (hasDetail ? '.has-detail' : ''), null, h('div.split-l', null, list), h('div.split-r', null, detail));
+  GV.split = (list, detail, hasDetail, both) => h('div.split' + (hasDetail ? '.has-detail' : '') + (both ? '.both' : ''), null, h('div.split-l', null, list), h('div.split-r', null, detail));
   GV.backBtn = (href, label) => { const a = h('a', { class: 'back', href }); a.innerHTML = U.icon('chevron_left', 22) + '<span>' + U.esc(label) + '</span>'; return a; };
 
   /** A map with a zoom slider, +/- and fit buttons. */

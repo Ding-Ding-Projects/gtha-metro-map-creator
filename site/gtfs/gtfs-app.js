@@ -38,7 +38,7 @@
   GA.kv = (pairs) => { const dl = h('dl.kv'); for (const [k, v] of pairs) { if (v === '' || v === undefined || v === null) continue; dl.append(h('dt', { text: k }), h('dd', null, v && v.nodeType ? v : String(v))); } return dl; };
   GA.dateText = (d) => C.dateLabel(d, U.lang());
   GA.timeText = (s) => C.fmtTime(s);
-  GA.typeName = (rt) => { const k = 'rt' + rt; return I.en[k] ? t(k) : C.routeTypeName(rt); };
+  GA.typeName = (rt) => { rt = +rt; const k = 'rt' + rt; if (I.en[k]) return t(k); const g = 'rtx' + Math.floor(rt / 100) * 100; return I.en[g] ? t(g) + ' (' + rt + ')' : C.routeTypeName(rt); };
 
   GA.dateButton = (value, onPick, extra) => {
     const b = h('button', { type: 'button', class: 'field picker', 'aria-haspopup': 'dialog', 'aria-label': t('serviceDate') });

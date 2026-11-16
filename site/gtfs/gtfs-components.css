@@ -223,7 +223,7 @@ a.rchip:not(:has(.badge)) { padding-left: 12px; }
 /* narrow layouts */
 @media (max-width: 960px) {
   .search-btn { width: 44px; padding: 0 10px; max-width: none; } .search-btn .sb-t, .search-btn kbd { display: none; } .feed-chip { display: none; }
-  .split { grid-template-columns: 1fr; height: auto; } .split-l { position: static; height: auto; } .split-l .listpane { height: 70vh; } .split.has-detail .split-l { display: none; } .split:not(.has-detail) .split-r { display: none; } .back { display: inline-flex; }
+  .split { grid-template-columns: 1fr; height: auto; } .split-l { position: static; height: auto; } .split-l .listpane { height: 70vh; } .split.has-detail:not(.both) .split-l { display: none; } .split:not(.has-detail):not(.both) .split-r { display: none; } .split.both .split-l .listpane { height: 44vh; } .back { display: inline-flex; }
 }
 @media (max-width: 760px) {
   .top { padding: 0 8px; gap: 4px; } .brand-t { display: none; } .btn span { display: none; } .btn { padding: 0; width: 44px; min-width: 44px; } .btn .ic { margin: 0; }
