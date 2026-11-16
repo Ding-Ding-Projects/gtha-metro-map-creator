@@ -1,5 +1,22 @@
 # Handoff
 
+## 1.7.0 (2026-11-16)
+
+New: per-line station markers (`mod-markers.js`), one bend for shared track (`map.sharedBends`),
+crossing reduction in auto-schematic (GTHA template 10 to 4 crossings after snapping, about 70 ms),
+documentation search with the regex builder (`site/docs/docs-search.js`, regex runs in a worker cut
+off after 400 ms), and optional password sign-in for the hosted server (nginx `auth_request` with a
+small Go service in `docker/auth/`, PBKDF2-SHA256 hash in `GMMC_PASSWORD_HASH`, HMAC-signed HttpOnly
+SameSite=Strict session cookie, rate-limited sign-in, `/healthz` stays open). Every design board
+now carries the shared `accent` and `motion` Tweaks.
+
+Verified on merged main: the `editor17`, `schematic`, `docs-search`, `deploy-web`, `times-vehicles`
+and `old-map-coords` step files; the merged image with and without a password (healthz 200 both,
+`/app/` 302 without a session and 200 after signing in, nothing secret in the logs); the deploy app
+and wizard sign-in flows (15 of 15 and 11 of 11 checks, run on the feature branch). Not verified:
+sign-in on the appliance (manual route documented), the SSH target with sign-in, `host.bat --password`
+in an interactive console.
+
 ## 1.6.0 (2026-11-16)
 
 New in this release: scenarios with compare and share links, live simulation, GTFS export, coverage

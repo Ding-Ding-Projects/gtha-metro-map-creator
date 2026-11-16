@@ -101,16 +101,21 @@
 - [x] Rebuilt home page with real captures, English and Cantonese, light and dark
 - [x] Real coordinates restored for maps saved before 1.2
 
-## Phase 8: next
+## Phase 8: release 1.7.0
 
-- [ ] Shared bend setting across all lines on a bundled segment
+- [x] Per-line station markers: ring, tick, pill, dot or follow the map style; interchanges keep a ring; exports match
+- [x] One bend for shared track, with a switch per segment
+- [x] Crossing reduction in auto-schematic (GTHA template: 19 geographic, 10 after snapping, 4 after reduction, about 70 ms)
+- [x] Documentation search with the regex builder, bounded so slow patterns are cut short
+- [x] Optional password sign-in for the hosted server (off by default; host.bat, setup wizard and deploy app)
+- [ ] Sign-in on the appliance image: documented manual console route only, not built in and not tested on a booted appliance
+- [ ] Sign-in through the deploy app's SSH target: written, not run against a real server
+
+## Phase 9: next
+
 - [ ] Vector PDF with Chinese labels (needs an embedded font)
-- [ ] Crossing reduction in auto-schematic
 - [ ] Employment data for coverage, when an open small-area source exists
 - [x] Appliance images attached to the v1.6.0 release after their CI boot tests (x86_64 answered in 15 s under KVM; the Raspberry Pi root file system answered in 206 s under QEMU emulation)
 - [ ] Chinese names for bus stops
 - [ ] ~~Automated browser tests in CI~~ Not doing: CI deliberately runs no tests here; browser checks run locally with `scripts/verify/`
-- [ ] Search across the documentation articles with the same regex builder
-- [ ] Sign-in option for the hosted server
-- [ ] Per-line station markers (ticks) style option
 - [ ] ~~GitHub wiki, pinned Discussion and a GitHub Project~~ Not doing (owner's decision, 16 November 2026): the documentation lives on the project site and in `docs/`, and release notes live in Discussions; the staged wiki pages stay in `docs/wiki/pending/` if this changes

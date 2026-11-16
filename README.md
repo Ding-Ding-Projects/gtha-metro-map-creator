@@ -15,7 +15,7 @@ or a website. It runs in the browser with no dependencies and stores your work l
 
 ## Screenshots
 
-Captured from the 1.6.0 build on 16 November 2026: the editor and GTFS viewer in headless Microsoft Edge at 1440 x 900, the deploy app from its packaged Windows executable at 1120 x 820. Earlier captures are listed in [docs/screenshots/ARCHIVE.md](docs/screenshots/ARCHIVE.md).
+Captured from the 1.6.0 and 1.7.0 builds on 16 November 2026: the editor and GTFS viewer in headless Microsoft Edge at 1440 x 900, the deploy app from its packaged Windows executable at 1120 x 820. Earlier captures are listed in [docs/screenshots/ARCHIVE.md](docs/screenshots/ARCHIVE.md).
 
 ![Trip planner: Finch to Unionville over OpenStreetMap, with the itinerary in the side panel](docs/screenshots/editor-trip.webp)
 
@@ -36,6 +36,16 @@ Captured from the 1.6.0 build on 16 November 2026: the editor and GTFS viewer in
 ![Deploy app with nine hosting targets (the signed-in GitHub account name is hidden in this capture)](docs/screenshots/deploy-targets.webp)
 
 ![Deploy app instance manager with two Docker instances and their health](docs/screenshots/deploy-instances.webp)
+
+![Per-line station markers: Line 1 drawn with ticks that point away from the station names](docs/screenshots/editor-markers.webp)
+
+![Segment inspector with the bend choice and the switch that keeps one bend for every line on shared track](docs/screenshots/editor-shared-bends.webp)
+
+![Documentation search in regular expression mode, with the builder, its plain-language explanation and grouped results](docs/screenshots/docs-search.webp)
+
+![Optional sign-in page of the hosted server](docs/screenshots/signin-en.webp)
+
+![Deploy app showing a Docker instance that is live with a password required](docs/screenshots/deploy-signin-live.webp)
 
 ## Features
 
@@ -88,6 +98,8 @@ Captured from the 1.6.0 build on 16 November 2026: the editor and GTFS viewer in
 - Portable Windows desktop app: works offline, native open and save, recent maps
 - Docker image, Compose file, `host.bat` (detached or interactive log view) and a portable server
   setup wizard that prints the address other devices on your network can open
+- Per-line station markers, one bend for shared track, and fewer crossings in auto-schematic (1.7)
+- Documentation search with the regex builder (1.7)
 - Optional password sign-in for the hosted server (off by default; `host.bat --password`, the wizard and the deploy app)
 
 ## Run locally
