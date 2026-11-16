@@ -5,16 +5,22 @@
   "version": 1,
   "title": "GTHA Rapid Transit",
   "titleZh": "",
-  "stations": { "union": { "name": "Union", "nameZh": "", "x": 0, "y": 4, "label": "auto", "interchange": "auto" } },
+  "stations": { "union": { "name": "Union", "nameZh": "聯合", "x": 0, "y": 4, "lat": 43.64564, "lon": -79.38021,
+                          "kind": "station", "label": "auto", "interchange": "auto" } },
   "lines": [{ "id": "l1", "name": "Line 1", "nameZh": "", "color": "#F8C300", "width": 10,
-              "style": "solid", "visible": true, "path": ["union", "@2,2", "king"], "bends": { "0": "late" } }],
+              "style": "solid", "visible": true, "path": ["union", "@2,2", "king"], "bends": { "0": "late" },
+              "freq": { "peak": 4, "offpeak": 5 }, "showFreq": true, "note": "" }],
+  "transfers": [{ "a": "union", "b": "union_go" }],
   "labels": [{ "id": "note1", "x": 0, "y": 10, "text": "Note", "size": 12 }]
 }
 ```
 
 - `label`: `auto` or one of `E W N S NE NW SE SW`.
 - `interchange`: `auto`, `yes` or `no`.
-- `style`: `solid`, `dashed` or `rail`.
+- `style`: `solid` (subway or metro), `dashed` (planned), `rail` (regional rail), `brt` (rapid bus), `bus`, `express` or `superExpress`.
+- `kind`: `station` or `stop` (bus stop). `lat`, `lon`: optional real position. `osm`: optional OpenStreetMap node ID.
+- `freq.peak`, `freq.offpeak`: minutes between vehicles, 1 to 240, or `null`. `showFreq`: show the badge.
+- `transfers`: walking links between two stations.
 - `width`: 3 to 16.
 
 ## Import validation
@@ -28,3 +34,9 @@ references to missing stations, clamps lengths and numbers, and rejects files ov
 colours, and unofficial Traditional Chinese names for every station and line (`ZH` and `LINE_ZH`).
 `scripts/build.mjs` fails if any path reference is missing, a station is on no line, or a station
 or line has no Chinese name.
+
+## Project files
+
+`Save project` writes `{ "format": "gtha-metro-map-creator-project", "version": 1, "savedAt",
+"map", "settings": { layout, background, bgOpacity, showFreq, fontSize, legend, lang,
+liveStops }, "view" }`. Opening it restores the map and those settings. A plain map file opens too.

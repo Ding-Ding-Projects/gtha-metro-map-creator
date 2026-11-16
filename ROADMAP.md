@@ -33,11 +33,27 @@
 - [x] Application icon for both executables (1.1.1)
 - [x] File menu verification: save as, recent, open, unsaved-changes prompt (1.1.1)
 
-## Phase 3: next
+## Phase 3: geographic editor (1.2.0)
+
+- [x] Geographic layout over OpenStreetMap tiles with constant-size lines and labels
+- [x] Real coordinates for every template station (OpenStreetMap)
+- [x] VIVA Blue, Purple, Orange and Yellow with stops and weekday frequencies (York Region Transit GTFS)
+- [x] Service types: bus, rapid bus, express, super express
+- [x] Peak and off-peak frequency per route with map badges and legend
+- [x] Bus stops, interchange markers and walking transfers
+- [x] Draw onto real OpenStreetMap stops at street level
+- [x] PDF export and a hostable single-file website
+- [x] Project save and open
+- [x] Material Design 3 interface with motion
+- [x] Label priority and collision culling
+
+## Phase 4: next
 
 - [ ] Shared bend setting across all lines on a bundled segment
 - [ ] Box selection and copy and paste
-- [ ] Geographic background layer and import from GTFS
+- [ ] Import any GTFS feed's routes and frequencies
+- [ ] Vector PDF export (the PDF is currently a high-resolution image)
+- [ ] Chinese names for bus stops
 - [ ] Touch gestures for pinch zoom
 - [ ] ~~Automated browser tests in CI~~ Not doing: CI deliberately runs no tests here; browser checks run locally with `scripts/verify/`
 - [ ] Search across the documentation articles with the same regex builder

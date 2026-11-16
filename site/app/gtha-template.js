@@ -334,16 +334,25 @@
   function build() {
     const stations = {};
     for (const [id, name, x, y] of S.concat(S2)) {
-      stations[id] = { id, name, nameZh: ZH[id] || '', x, y, label: 'auto', interchange: 'auto' };
+      stations[id] = { id, name, nameZh: ZH[id] || '', x, y, label: 'auto', interchange: 'auto', kind: 'station' };
+    }
+    // Real coordinates (OpenStreetMap) and VIVA rapid bus routes (York Region Transit GTFS),
+    // from gtha-transit-data.js when it is loaded.
+    const data = window.GTHATransitData;
+    const extraLines = [];
+    if (data) {
+      for (const [id, ll] of Object.entries(data.geo)) if (stations[id]) { stations[id].lat = ll[0]; stations[id].lon = ll[1]; }
+      for (const [id, st] of Object.entries(data.stops)) stations[id] = { id, name: st.name, nameZh: '', x: st.x, y: st.y, lat: st.lat, lon: st.lon, label: 'auto', interchange: 'auto', kind: 'stop' };
+      for (const l of data.lines) extraLines.push(Object.assign({ visible: true, bends: {} }, JSON.parse(JSON.stringify(l))));
     }
     return {
       version: 1,
       title: 'GTHA Rapid Transit',
       titleZh: '大多倫多及咸美頓地區快速交通',
       stations,
-      lines: L.map((l) => Object.assign({ nameZh: LINE_ZH[l.id] || '', visible: true, bends: {} }, JSON.parse(JSON.stringify(l)))),
+      lines: L.map((l) => Object.assign({ nameZh: LINE_ZH[l.id] || '', visible: true, bends: {} }, JSON.parse(JSON.stringify(l)))).concat(extraLines),
       labels: [
-        { id: 'note1', x: -66, y: 18, text: 'Schematic template. Not an official map. Verify service with TTC and Metrolinx.', size: 12 }
+        { id: 'note1', x: -66, y: 18, text: 'Template. Not an official map. Verify service with TTC, Metrolinx and York Region Transit.', size: 12 }
       ]
     };
   }

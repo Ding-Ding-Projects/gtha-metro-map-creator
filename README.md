@@ -1,7 +1,8 @@
 # GTHA Metro Map Creator
 
-A browser editor for schematic rapid transit maps of the Greater Toronto and Hamilton Area.
-It runs entirely in the browser, has no dependencies, and stores your work locally.
+An editor for rapid transit, rail and bus maps of the Greater Toronto and Hamilton Area: draw on
+OpenStreetMap or as a tidy schematic, give each route a frequency, and publish it as a PNG, a PDF
+or a website. It runs in the browser with no dependencies and stores your work locally.
 
 - **Editor:** https://ding-ding-projects.github.io/gtha-metro-map-creator/app/
 - **Project site and guides:** https://ding-ding-projects.github.io/gtha-metro-map-creator/
@@ -12,11 +13,32 @@ It runs entirely in the browser, has no dependencies, and stores your work local
 > Unofficial. The built-in template is a simplified schematic, not a TTC or Metrolinx product.
 > Line colours are approximate and service status is not tracked.
 
+## Screenshots
+
+Captured from version 1.2.0 in headless Microsoft Edge at 1440 x 900, 15 November 2026.
+
+![Geographic layout over OpenStreetMap with VIVA frequency badges and the route inspector](docs/screenshots/editor-geographic.png)
+
+![Street level: real stops from OpenStreetMap as grey dots, a new route drawn onto two of them](docs/screenshots/editor-real-stops.png)
+
+![Dark theme with English and Cantonese names](docs/screenshots/editor-dark-bilingual.png)
+
 ## Features
 
-- Built-in GTHA template: TTC Lines 1, 2, 4, 5 and 6, the planned Ontario Line, GO Lakeshore
+- Geographic layout over OpenStreetMap (default) or a schematic with 45-degree bends; stations keep
+  a position in both
+- Draw onto real stops: zoom in, and stops and platforms from OpenStreetMap become clickable
+- Service types: subway or metro, planned, regional rail, rapid bus, bus, express and super express
+- Peak and off-peak frequency on every route, shown as badges on the map and in the legend
+- Bus stops, interchanges and walking transfers
+- VIVA Blue, Purple, Orange and Yellow with real stops and weekday frequencies from the York Region
+  Transit timetable
+- Export PNG, PDF, SVG and a single-file website to host; save and open whole projects
+- Material Design 3 interface with motion, light and dark themes
+
+- Built-in GTHA template (238 stations and stops, 20 routes, real coordinates): TTC Lines 1, 2, 4, 5 and 6, the planned Ontario Line, GO Lakeshore
   West and East, Kitchener, Milton, Barrie, Richmond Hill, Stouffville, UP Express, and
-  simplified Hurontario and Hamilton LRT lines (171 stations, 16 lines)
+  simplified Hurontario and Hamilton LRT lines, plus VIVA
 - Octilinear routing: every segment bends at most once, at 45 degrees, diagonal first or
   straight first per segment
 - Shared track: lines between the same pair of stops are offset side by side automatically
@@ -73,6 +95,11 @@ to `main`. Pushing a `v*` tag builds the executables and publishes a release.
 | `design/` | Design canvas source for the editor, project site, desktop app and wizard |
 | `docs/features/` | Feature documentation |
 | `scripts/` | Build, local preview and executable verification scripts |
+
+## Data
+
+Station coordinates and map tiles: © OpenStreetMap contributors (ODbL). VIVA routes and frequencies:
+York Region Transit open data. See `scripts/data/README.md`.
 
 ## Licence
 

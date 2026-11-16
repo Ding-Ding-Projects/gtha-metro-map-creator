@@ -25,6 +25,7 @@ for (const f of files.filter((f) => extname(f) === '.js')) {
 // Template integrity
 const ctx = { window: {} };
 vm.createContext(ctx);
+vm.runInContext(await readFile(join(root, 'app', 'gtha-transit-data.js'), 'utf8'), ctx);
 vm.runInContext(await readFile(join(root, 'app', 'gtha-template.js'), 'utf8'), ctx);
 const m = ctx.window.GTHATemplates.gtha();
 const ids = new Set(Object.keys(m.stations));
@@ -34,7 +35,8 @@ for (const l of m.lines) {
 }
 const used = new Set(m.lines.flatMap((l) => l.path));
 for (const id of ids) if (!used.has(id)) errors.push(`template: station ${id} is on no line`);
-for (const s of Object.values(m.stations)) if (!s.nameZh) errors.push(`template: station ${s.id} has no Chinese name`);
+for (const s of Object.values(m.stations)) if (s.kind !== 'stop' && !s.nameZh) errors.push(`template: station ${s.id} has no Chinese name`);
+for (const s of Object.values(m.stations)) if (!(Number.isFinite(s.lat) && Number.isFinite(s.lon))) errors.push(`template: station ${s.id} has no coordinates`);
 for (const l of m.lines) if (!l.nameZh) errors.push(`template: line ${l.id} has no Chinese name`);
 
 // Local links in HTML

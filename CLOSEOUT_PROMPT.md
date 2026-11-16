@@ -2,30 +2,27 @@
 
 ```text
 Project: GTHA Metro Map Creator (github.com/Ding-Ding-Projects/gtha-metro-map-creator), public, MIT.
-Branch: main only. No other branches, worktrees or stashes.
+Branch: main only.
 
-Delivered and verified:
-- v1.1.1 normal release: GTHA-Metro-Map-Creator-1.1.1-portable.exe (desktop app),
-  GTHA-Metro-Map-Creator-Server-Setup-1.1.1-portable.exe (server setup wizard),
-  gtha-metro-map-creator-site.zip, SHA256SUMS.txt. Release, Container image and Deploy site
-  workflows succeeded.
-- Container image ghcr.io/ding-ding-projects/gtha-metro-map-creator (latest, 1.1.0, 1.1.1),
-  public. compose.yaml and host.bat (--detached, --logs, --stop) verified against it, including
-  a LAN address returning HTTP 200.
-- Live site https://ding-ding-projects.github.io/gtha-metro-map-creator/ with editor, regex
-  builder, documentation articles for the desktop app and hosting.
-- Desktop app: offline content, File menu (save as, open recent, open, unsaved-changes prompt)
-  verified through its real menu items with simulated dialog answers; app icon; Chinese names.
-- Wizard: Docker check, port validation, pull, start, health, LAN address, bilingual text, resume.
-- Design canvas source in design/ with review notes and frames.
-- Discussion #1 announces 1.1.0.
+Version 1.2.0 (this commit, tagged v1.2.0):
+- Geographic layout over OpenStreetMap tiles (default) and the schematic layout; real coordinates
+  for all template stations; label priority and collision culling.
+- VIVA Blue, Purple, Orange and Yellow with real stops and weekday frequencies (York Region Transit
+  GTFS, 1 Nov to 19 Dec 2026); service types bus, rapid bus, express, super express; frequency
+  badges; bus stops; walking transfers.
+- Draw onto real stops from Overpass at street level, with a custom server setting and fallbacks.
+- Exports: PNG and PDF with background, SVG, single-file hostable website; project save and open.
+- Material Design 3 interface with motion; design artboard Editor2 in design/ with review notes.
+
+Verified locally in headless Edge: fit, VIVA badges, inspector edits, all exports, project
+round trip, schematic, dark Cantonese, 390 px phone, drawing onto real stops (OpenStreetMap data
+replayed locally because every public Overpass server was at capacity).
 
 Open:
-- Wiki: needs its first page created on github.com, then push docs/wiki/pending/ pages.
-- Pin Discussion #1 (web page only).
-- GitHub Project for the repository (needs a signed-in web page or a token with project scope).
-- Operating system file dialog windows and a second device on the LAN were not exercised.
-- Executables are not code signed.
+- Live stops against a public Overpass server (busy during testing).
+- Release workflow, Pages deploy and image for v1.2.0: check the Actions runs for this tag.
+- Wiki first page, Discussion pin and a GitHub Project need a signed-in GitHub web page.
+- Executables are not code signed. PDF is a raster image. Bus stops have no Chinese names.
 
-Next safe steps: finish the three web-page items above, then follow ROADMAP.md Phase 3.
+Next safe steps: confirm the v1.2.0 runs and release assets, then ROADMAP.md Phase 4.
 ```

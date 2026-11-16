@@ -14,9 +14,19 @@ perpendicular to the segment by `(i - (n - 1) / 2) * spacing`, where spacing is 
 line in the group plus 2 px. Bends use mitred offsets. The first line drawn on a pair sets its
 geometry.
 
+## Interface
+
+Material Design 3: top app bar with a layout segmented button, navigation rail for tools, search
+bar, list items, filled text fields and menus, switches, chips, FABs for map controls, dialogs and a
+snackbar with Undo or Retry. Colour roles are generated from `#1F5FBF`; icons are Material Symbols
+Rounded (`site/app/icons.js`). Motion uses M3 emphasized easing for panels, lists, menus, dialogs,
+the snackbar, the rail indicator, switches and ripples, and is reduced to near zero when the system
+asks for reduced motion.
+
 ## Labels
 
-Automatic placement scores eight positions by segment intersections (Liang-Barsky) and nearby
+Labels are placed by importance (interchanges, termini, stations, stops) and one that would
+overlap a placed label is left out. Automatic placement scores eight positions by segment intersections (Liang-Barsky) and nearby
 stations and takes the lowest score. Manual positions override it.
 
 ## Tools

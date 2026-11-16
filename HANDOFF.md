@@ -1,34 +1,33 @@
 # Handoff
 
-## State (2026-11-15)
+## State (2026-11-15), version 1.2.0
 
-Version 1.1.1: Chinese template names, app icon and verified File menu on top of 1.1.0's editor with regex builder, container hosting, portable desktop app and portable
-server setup wizard, plus the project site and documentation.
+Geographic editor: OpenStreetMap background, real coordinates, VIVA with real frequencies,
+service types, frequency badges, bus stops, walking transfers, drawing onto real stops, PDF and
+website export, project files, and a Material Design 3 interface with motion.
 
-### Verified locally
+### 1.2.0 verified locally (headless Edge, 1440 x 900 and 390 x 844)
 
-- `node scripts/build.mjs` passes: syntax, template integrity (171 stations, 16 lines) and links.
-- Editor in a browser: setup wizard and persistence, drawing, erase trim and split, undo, regex
-  search; regex builder tokens, explanation, highlighted matches, named and numbered groups,
-  replace preview, invalid pattern message and saving a pattern; PNG export produced a valid
-  6192 x 5864 PNG; JSON import through the file input loads a map and a bad file is refused with
-  the current map kept; SVG export parses; language and theme persist; no horizontal overflow at
-  375 px.
-- Container: the image builds; the container reports healthy; `/healthz` returns `ok`; `/app/`
-  returns 200 on localhost and on the LAN address.
-- Published image: pulled anonymously from GitHub Container Registry (manifest 200 without
-  credentials).
-- `host.bat --detached` against the published image: pulled, started, healthy, printed
-  `http://<LAN IP>:<port>/`, which returned 200. `host.bat --logs` with keys T, S, Q: tail,
-  status, leave with the server still running.
-- Desktop app executable, launched hidden and driven over DevTools: loads from the bundle, 171
-  stations, regex builder present, `loadJson` and `newMap` work, docs and site pages load, no
-  remote assets.
-- Wizard executable, driven hidden: Docker check, port validation (out of range refused, port
-  used by another program refused, port used by this server allowed), pull with digest, start,
-  health, network address on the real adapter only, bilingual relabelling, resume note.
+- Template: 238 stations and stops, 20 routes, every station with coordinates; build passes.
+- Geographic fit shows the region over OpenStreetMap with attribution; four VIVA frequency badges
+  on their routes (11/15, 17/21, 13/18, 13/15 min); route inspector edits service type, colour,
+  width and frequency (bus sets width 4; 8/20 min stored).
+- Exports from the running page: project `.gmmc.json`, website HTML (contains the map, tiles and
+  attribution), SVG, PNG 6000 x 6768, PDF starting `%PDF-1.4` and ending `%%EOF`. Re-opening the
+  project into a blank map restored all 21 routes.
+- Drawing onto real stops: 6 real platforms near Richmond Hill Centre appeared at street level;
+  clicking one added "Yonge Street / Langstaff Road" as a bus stop with OSM node 2620454491, with
+  an Undo snackbar. The stop data came from a local server replaying OpenStreetMap data captured
+  from Overpass the same day, because all public Overpass servers were at capacity (502/504).
+- Schematic layout, dark theme with Cantonese, export menu, settings dialog; no horizontal
+  overflow at 1440 or 390 px; no errors from the app.
 
-### Release (verified)
+### Not verified for 1.2.0
+
+- Live stops against a public Overpass server (at capacity during testing).
+- The new interface inside the desktop executable (checked after the release build, see below).
+
+### 1.1.x release record
 
 - `v1.1.0` at `b7f037b` is a normal release (not draft, not prerelease) with
   `GTHA-Metro-Map-Creator-1.1.0-portable.exe`, `GTHA-Metro-Map-Creator-Server-Setup-1.1.0-portable.exe`,

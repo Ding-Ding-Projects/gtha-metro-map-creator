@@ -22,9 +22,14 @@
       <li><a href="#labels">Labels and languages</a></li>
       <li><a href="#search">Finding stations</a></li>
       <li><a href="#check">Map check</a></li>
-      <li><a href="#export">Saving, import and export</a></li>
+      <li><a href="#export">Export, projects and import</a></li>
       <li><a href="#settings">Settings</a></li>
       <li><a href="#keys">Keyboard shortcuts</a></li>
+      <li><a href="#geographic">Geographic layout</a></li>
+      <li><a href="#routes">Routes and frequencies</a></li>
+      <li><a href="#stops">Stops and transfers</a></li>
+      <li><a href="#realstops">Draw onto real stops</a></li>
+      <li><a href="#viva">VIVA rapid bus</a></li>
       <li><a href="#desktop">Desktop app</a></li>
       <li><a href="#server">Host it on your network</a></li>
       <li><a href="#format">Map file format</a></li>
@@ -68,9 +73,15 @@
       <p>The engine is the JavaScript regular expression engine in your browser. Other engines' syntax, such as possessive quantifiers or atomic groups, is not available, and patterns over 200 characters are refused.</p></section>
     <section id="check"><h2>Map check</h2>
       <p>The Map check panel updates on every change and lists stations that no line serves, lines with fewer than two stops, names used more than once, and stations sharing one position. Click an item to jump to it.</p></section>
-    <section id="export"><h2>Saving, import and export</h2>
-      <p>Every change autosaves in this browser's local storage. Nothing is uploaded. Undo and redo keep the last 200 steps for this session.</p>
-      <p>Export offers SVG (vector, with title and optional legend), PNG (rendered at up to twice the size), and JSON (the editable map). Open JSON from the Export menu or drop a file on the editor. Files over 5 MB or with an unexpected shape are refused and your current map is kept.</p></section>
+    <section id="export"><h2>Export, projects and import</h2>
+      <p>Open <strong>Export</strong> in the top bar:</p>
+      <ul>
+        <li><strong>PNG image</strong> and <strong>PDF document</strong>: the map with its title and legend. In the geographic layout they include the OpenStreetMap background and attribution. The PDF is one page holding a high-resolution image.</li>
+        <li><strong>SVG vector</strong>: for print and further editing.</li>
+        <li><strong>Website to host</strong>: one HTML file with the map, a legend with frequencies, pan and zoom, and station search. Upload it to any static host, such as GitHub Pages.</li>
+        <li><strong>Save project</strong>: a <code>.gmmc.json</code> file with the map and its layout, background and display settings. <strong>Open project or map</strong> reads a project or a plain map file; you can also drop either on the editor.</li>
+        <li><strong>Map data (JSON)</strong>: the map alone.</li>
+      </ul></section>
     <section id="settings"><h2>Settings</h2>
       <p>Language, theme, label size, grid visibility, snapping, export legend and sound effects are saved in this browser. Sound effects are short tones for actions; turn them off here. Reset settings returns everything to defaults. Reset all labels to automatic clears pinned label positions.</p></section>
     <section id="keys"><h2>Keyboard shortcuts</h2>
@@ -99,6 +110,26 @@
       <h3>With Docker Compose</h3>
       <p>The image is <code>ghcr.io/ding-ding-projects/gtha-metro-map-creator</code>. Run <code>docker compose up -d</code> next to the project's <code>compose.yaml</code>. The container runs nginx as a non-root user on port 8080 with a read-only file system, and answers <code>/healthz</code> for health checks.</p>
       <p>If other devices cannot connect, allow the port through Windows Firewall. The server has no sign-in, so only run it on a network you trust.</p></section>
+    <section id="geographic"><h2>Geographic layout and OpenStreetMap</h2>
+      <p>The editor has two layouts, switched with the <strong>Schematic / Geographic</strong> buttons in the top bar. Every station keeps a position in each.</p>
+      <ul>
+        <li><strong>Geographic</strong> draws stations where they really are, over an OpenStreetMap background. Lines run straight between stops, and lines and labels keep their size while you zoom from the whole region down to street level.</li>
+        <li><strong>Schematic</strong> is the tidy diagram with 45-degree bends and a snapping grid.</li>
+        <li>A station you add in one layout gets an estimated position in the other, from a fit across all stations that have both.</li>
+        <li>Settings let you turn the background off or make it lighter. In dark theme the map is shown in dark colours.</li>
+      </ul>
+      <p>Map tiles come from the OpenStreetMap tile servers and need an internet connection. The attribution stays visible whenever they are shown. The template's station coordinates are also from OpenStreetMap contributors.</p></section>
+    <section id="routes"><h2>Routes, service types and frequencies</h2>
+      <p>Select a route in the list to edit it. <strong>Service type</strong> sets how it is drawn: subway or metro, planned (dashed), regional rail (centre stripe), rapid bus (white casing), bus (thin), express (dark casing) and super express (double casing with a white dash).</p>
+      <p>Under <strong>Frequency</strong>, enter how often a vehicle comes at peak and off-peak, in minutes. With <strong>Show frequency on the map</strong> on, a badge such as <code>11/15 min</code> sits on the route; badges of routes that share a corridor move apart. The legend in exports lists the frequency too. Turn all badges off in Settings.</p></section>
+    <section id="stops"><h2>Stops, interchanges and transfers</h2>
+      <p>Each station has a <strong>Type</strong>: a station (a ring) or a bus stop (a small dot with a smaller label). A station served by two or more routes is drawn as an interchange, or set Interchange to yes or no.</p>
+      <p>For a walking transfer between two nearby stations, select one and choose the other under <strong>Link a walking transfer</strong>. The link is drawn as a white connector with a dark edge. Remove it with the cross on its chip.</p></section>
+    <section id="realstops"><h2>Draw onto real bus stops</h2>
+      <p>In the geographic layout, zoom in to street level. Real stops and platforms from OpenStreetMap appear as grey dots. With <strong>Route</strong> selected, click a dot to add that stop to the active route, with its real name and position; with <strong>Station</strong> selected, click to add it on its own. A snackbar confirms it and offers Undo.</p>
+      <p>Stops are loaded from public Overpass API servers, which are often busy. If they cannot be reached, a snackbar offers Retry. You can enter your own Overpass server under Settings, Stop data server (an https address, or a server on this computer). Turn the dots off with Show real stops when zoomed in.</p></section>
+    <section id="viva"><h2>VIVA rapid bus</h2>
+      <p>The template includes York Region's VIVA Blue, Purple, Orange and Yellow, with their stops and weekday frequencies (peak 7 to 9 a.m., midday 10 a.m. to 3 p.m.). They come from the York Region Transit timetable feed for 1 November to 19 December 2026. Frequencies are averages of scheduled departures in one direction. Check yrt.ca for current service.</p></section>
     <section id="format"><h2>Map file format</h2>
       <p>A map is JSON with <code>version: 1</code>, <code>title</code>, <code>stations</code> (an object keyed by id, each with <code>name</code>, <code>nameZh</code>, <code>x</code>, <code>y</code>, <code>label</code>, <code>interchange</code>), <code>lines</code> (each with <code>name</code>, <code>color</code>, <code>width</code>, <code>style</code>, <code>visible</code>, <code>path</code>, <code>bends</code>), and <code>labels</code>. A path entry is a station id or a bend point written <code>@x,y</code>. <code>bends</code> maps a segment index to <code>late</code> for straight first.</p></section>
   </div>

@@ -4,91 +4,94 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GTHA Metro Map Creator</title>
-<meta name="description" content="Browser editor for schematic metro maps of the Greater Toronto and Hamilton Area.">
+<meta name="description" content="Editor for metro, rail and bus maps of the Greater Toronto and Hamilton Area, on OpenStreetMap or as a schematic.">
+<meta name="theme-color" content="#185bbb">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
 <a class="skip" href="#map">Skip to map</a>
-<header class="topbar">
-  <div class="brand">
-    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="currentColor" stroke-width="3"/><path d="M6 14h16M14 6v16" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/></svg>
-    <span data-t="appName">GTHA Metro Map Creator</span>
-  </div>
+<header class="appbar">
+  <div class="brand"><span class="brand-ic" data-ic="route"></span><span class="title-lg" data-t="appName">GTHA Metro Map Creator</span></div>
   <label class="title-field"><span class="vh" data-t="title">Map title</span>
     <input id="mapTitle" type="text" maxlength="120">
   </label>
-  <nav class="tools" aria-label="Tools" id="tools"></nav>
   <div class="spacer"></div>
-  <div class="actions">
-    <button type="button" id="undoBtn" data-t="undo">Undo</button>
-    <button type="button" id="redoBtn" data-t="redo">Redo</button>
-    <button type="button" id="fitBtn" data-t="fit">Fit map</button>
-    <div class="menu-wrap">
-      <button type="button" id="exportBtn" class="primary" aria-haspopup="menu" aria-expanded="false" data-t="export">Export</button>
-      <div class="menu" id="exportMenu" role="menu" hidden>
-        <button type="button" role="menuitem" data-act="svg" data-t="exportSvg">Download SVG</button>
-        <button type="button" role="menuitem" data-act="png" data-t="exportPng">Download PNG</button>
-        <button type="button" role="menuitem" data-act="json" data-t="exportJson">Download JSON</button>
-        <button type="button" role="menuitem" data-act="open" data-t="importJson">Open JSON file</button>
-        <button type="button" role="menuitem" data-act="template" data-t="template">GTHA template</button>
-        <button type="button" role="menuitem" data-act="blank" data-t="blankMap">Blank map</button>
-      </div>
-    </div>
-    <button type="button" id="settingsBtn" data-t="settings">Settings</button>
+  <div class="segmented" role="group" aria-label="Layout" id="layoutSeg">
+    <button type="button" data-layout="schematic" aria-pressed="false"><span class="seg-check" data-ic="check"></span><span data-t="layout_schematic">Schematic</span></button>
+    <button type="button" data-layout="geographic" aria-pressed="true"><span class="seg-check" data-ic="check"></span><span data-t="layout_geographic">Geographic</span></button>
   </div>
+  <button type="button" class="icon-btn" id="undoBtn" aria-label="Undo"><span data-ic="undo"></span></button>
+  <button type="button" class="icon-btn" id="redoBtn" aria-label="Redo"><span data-ic="redo"></span></button>
+  <div class="menu-wrap">
+    <button type="button" id="exportBtn" class="btn filled" aria-haspopup="menu" aria-expanded="false"><span data-ic="download"></span><span data-t="export">Export</span></button>
+    <div class="menu" id="exportMenu" role="menu" hidden>
+      <button type="button" role="menuitem" data-act="png"><span data-ic="image"></span><span data-t="exportPng">PNG image</span></button>
+      <button type="button" role="menuitem" data-act="pdf"><span data-ic="picture_as_pdf"></span><span data-t="exportPdf">PDF document</span></button>
+      <button type="button" role="menuitem" data-act="svg"><span data-ic="route"></span><span data-t="exportSvg">SVG vector</span></button>
+      <button type="button" role="menuitem" data-act="site"><span data-ic="public"></span><span data-t="exportSite">Website to host</span></button>
+      <hr>
+      <button type="button" role="menuitem" data-act="project"><span data-ic="save"></span><span data-t="saveProject">Save project</span></button>
+      <button type="button" role="menuitem" data-act="open"><span data-ic="folder_open"></span><span data-t="openFile">Open project or map</span></button>
+      <button type="button" role="menuitem" data-act="json"><span data-ic="upload_file"></span><span data-t="exportJson">Map data (JSON)</span></button>
+      <hr>
+      <button type="button" role="menuitem" data-act="template"><span data-ic="map"></span><span data-t="template">GTHA template</span></button>
+      <button type="button" role="menuitem" data-act="blank"><span data-ic="add"></span><span data-t="blankMap">Blank map</span></button>
+    </div>
+  </div>
+  <button type="button" class="icon-btn" id="settingsBtn" aria-label="Settings"><span data-ic="settings"></span></button>
   <input type="file" id="fileInput" accept="application/json,.json" hidden>
+  <div class="progress" id="progress" role="progressbar" aria-label="Working" hidden></div>
 </header>
 <div class="workspace">
-  <aside class="panel left" aria-label="Lines and search">
-    <section>
-      <h2 data-t="search">Find station</h2>
-      <div class="search-row">
+  <nav class="rail" aria-label="Tools" id="tools"></nav>
+  <aside class="panel left" aria-label="Routes and search">
+    <section class="search-sec">
+      <div class="search-bar">
+        <span data-ic="search"></span>
         <label class="vh" for="searchInput" data-t="search">Find station</label>
         <input id="searchInput" type="search" autocomplete="off">
       </div>
       <div class="regex-row">
-        <label><span data-t="mode">Mode</span>
-          <select id="searchMode"><option value="plain" data-t="plain">Plain text</option><option value="regex" data-t="regex">Regular expression</option></select>
-        </label>
+        <label class="tf tf-dense"><span class="tf-label" data-t="mode">Search mode</span>
+          <span class="tf-select"><select id="searchMode"><option value="plain" data-t="plain">Plain text</option><option value="regex" data-t="regex">Regular expression</option></select><span data-ic="arrow_drop_down"></span></span></label>
         <label class="check"><input type="checkbox" id="searchCase" checked> <span data-t="ignoreCase">Ignore case</span></label>
       </div>
       <details class="rx" id="rxBuilder">
         <summary data-t="rxTitle">Regex builder</summary>
-        <p class="hint" id="rxModeNote"></p>
-        <p class="hint"><span data-t="rxEngine">Engine: JavaScript RegExp in this browser, Unicode mode</span> <code id="rxFlagsOut"></code></p>
+        <p class="supporting" id="rxModeNote"></p>
+        <p class="supporting"><span data-t="rxEngine">Engine: JavaScript RegExp in this browser, Unicode mode</span> <code id="rxFlagsOut"></code></p>
         <div class="rx-tokens" id="rxTokens" role="group" aria-label="Pattern tokens"></div>
-        <div class="row"><button type="button" id="rxEscape" data-t="rxEscapeBtn">Escape as literal text</button></div>
+        <div class="row"><button type="button" class="btn text" id="rxEscape" data-t="rxEscapeBtn">Escape as literal text</button></div>
         <div class="regex-row">
           <label class="check"><input type="checkbox" id="rxFlagM"> <span data-t="rxFlagMulti">Multiline (m)</span></label>
           <label class="check"><input type="checkbox" id="rxFlagS"> <span data-t="rxFlagDot">Dot matches newline (s)</span></label>
         </div>
-        <h3 data-t="rxExplainTitle">What the pattern means</h3>
+        <h3 class="title-sm" data-t="rxExplainTitle">What the pattern means</h3>
         <ul class="rx-explain" id="rxExplain"></ul>
-        <h3 data-t="rxTestTitle">Test text</h3>
+        <h3 class="title-sm" data-t="rxTestTitle">Test text</h3>
         <label class="vh" for="rxText" data-t="rxTestTitle">Test text</label>
         <textarea id="rxText" rows="3" maxlength="5000" placeholder="Station names on the current map"></textarea>
-        <div class="row"><button type="button" id="rxUseStations" data-t="rxUseStations">Use station names</button></div>
-        <p class="hint" id="rxStatus" role="status" aria-live="polite"></p>
+        <div class="row"><button type="button" class="btn text" id="rxUseStations" data-t="rxUseStations">Use station names</button></div>
+        <p class="supporting" id="rxStatus" role="status" aria-live="polite"></p>
         <pre class="rx-preview" id="rxPreview" aria-label="Matches"></pre>
-        <h3 data-t="rxGroupsTitle">Groups in the first match</h3>
+        <h3 class="title-sm" data-t="rxGroupsTitle">Groups in the first match</h3>
         <ul class="rx-explain" id="rxGroups"></ul>
-        <label><span data-t="rxReplaceLabel">Replace with ($1, $&lt;name&gt;)</span><input type="text" id="rxReplace" maxlength="200"></label>
+        <label class="tf"><span class="tf-label" data-t="rxReplaceLabel">Replace with ($1, $&lt;name&gt;)</span><input type="text" id="rxReplace" maxlength="200"></label>
         <pre class="rx-preview" id="rxReplaceOut" aria-label="Replacement preview"></pre>
-        <h3 data-t="rxLibraryTitle">Pattern library</h3>
-        <label class="vh" for="rxSaved" data-t="rxLibraryTitle">Pattern library</label>
-        <select id="rxSaved"></select>
-        <div class="row"><label class="grow"><span data-t="rxNameLabel">Name</span><input type="text" id="rxName" maxlength="40"></label>
-          <button type="button" id="rxSave" data-t="rxSaveBtn">Save pattern</button><button type="button" id="rxDelete" class="danger" data-t="rxDeleteBtn">Delete by name</button></div>
+        <h3 class="title-sm" data-t="rxLibraryTitle">Pattern library</h3>
+        <label class="tf"><span class="tf-label" data-t="rxLibraryTitle">Pattern library</span><span class="tf-select"><select id="rxSaved"></select><span data-ic="arrow_drop_down"></span></span></label>
+        <div class="row"><label class="tf grow"><span class="tf-label" data-t="rxNameLabel">Name</span><input type="text" id="rxName" maxlength="40"></label>
+          <button type="button" class="btn tonal" id="rxSave" data-t="rxSaveBtn">Save pattern</button><button type="button" id="rxDelete" class="btn text danger" data-t="rxDeleteBtn">Delete by name</button></div>
       </details>
-      <p class="hint" id="searchStatus" role="status" aria-live="polite"></p>
+      <p class="supporting" id="searchStatus" role="status" aria-live="polite"></p>
       <ul class="results" id="searchResults"></ul>
     </section>
     <section>
-      <div class="section-head"><h2 data-t="lines">Lines</h2><button type="button" id="newLineBtn" data-t="newLine">New line</button></div>
+      <div class="section-head"><h2 class="title-sm" data-t="lines">Routes</h2><button type="button" class="btn tonal sm" id="newLineBtn"><span data-ic="add"></span><span data-t="newLine">New route</span></button></div>
       <ul class="line-list" id="lineList"></ul>
     </section>
     <section>
-      <h2 data-t="mapCheck">Map check</h2>
+      <h2 class="title-sm" data-t="mapCheck">Map check</h2>
       <ul class="issues" id="issueList"></ul>
     </section>
   </aside>
@@ -97,55 +100,73 @@
       <defs>
         <pattern id="gridPat" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="1.2" class="griddot"/></pattern>
       </defs>
+      <g id="tiles"></g>
       <g id="viewport"></g>
     </svg>
+    <div class="fab-col" role="group" aria-label="Map controls">
+      <button type="button" class="fab" id="fitBtn" aria-label="Fit map"><span data-ic="fit_screen"></span></button>
+      <button type="button" class="fab" id="zoomInBtn" aria-label="Zoom in"><span data-ic="add"></span></button>
+      <button type="button" class="fab" id="zoomOutBtn" aria-label="Zoom out"><span data-ic="remove"></span></button>
+      <button type="button" class="fab" id="bgBtn" aria-label="Map background"><span data-ic="layers"></span></button>
+    </div>
+    <p class="attrib" id="attrib" hidden>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</p>
     <p class="status" id="statusBar" aria-live="polite"></p>
-    <div class="drop" id="dropOverlay" hidden><p data-t="dropHere">Drop a map JSON file to open it</p></div>
+    <div class="drop" id="dropOverlay" hidden><p data-t="dropHere">Drop a project or map file to open it</p></div>
   </main>
   <aside class="panel right" aria-label="Inspector">
-    <h2 data-t="inspector">Inspector</h2>
+    <h2 class="title-sm" data-t="inspector">Inspector</h2>
     <div id="inspector"></div>
   </aside>
 </div>
-<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="snackbar" id="toast" role="status" aria-live="polite"><span class="sb-text"></span><button type="button" class="btn text inverse" id="toastAction" hidden></button></div>
 
 <dialog id="settingsDialog" aria-labelledby="settingsTitle">
   <form method="dialog" class="dialog-body">
-    <h2 id="settingsTitle" data-t="settings">Settings</h2>
-    <label><span data-t="language">Language</span>
-      <select id="setLang"><option value="en" data-t="lang_en">English</option><option value="yue" data-t="lang_yue">Cantonese</option><option value="both" data-t="lang_both">Bilingual</option></select></label>
-    <label><span data-t="theme">Theme</span>
-      <select id="setTheme"><option value="system" data-t="system">Match system</option><option value="light" data-t="light">Light</option><option value="dark" data-t="dark">Dark</option></select></label>
-    <label><span data-t="fontSize">Label size</span> <input id="setFont" type="range" min="9" max="22" step="1"></label>
-    <label class="check"><input id="setGrid" type="checkbox"> <span data-t="grid">Show grid</span></label>
-    <label class="check"><input id="setSnap" type="checkbox"> <span data-t="snap">Snap to grid</span></label>
-    <label class="check"><input id="setLegend" type="checkbox"> <span data-t="legend">Show legend in exports</span></label>
-    <label class="check"><input id="setSound" type="checkbox"> <span data-t="sound">Sound effects</span></label>
-    <div class="row">
-      <button type="button" id="tidyBtn" data-t="tidyLabels">Reset all labels to automatic</button>
-      <button type="button" id="setupBtn" data-t="runSetup">Run setup again</button>
-      <button type="button" id="resetSettingsBtn" data-t="resetSettings">Reset settings</button>
+    <h2 id="settingsTitle" class="headline" data-t="settings">Settings</h2>
+    <div class="dialog-scroll">
+      <h3 class="title-sm" data-t="mapSection">Map</h3>
+      <label class="tf"><span class="tf-label" data-t="layout">Layout</span><span class="tf-select"><select id="setLayout"><option value="geographic" data-t="layout_geographic">Geographic</option><option value="schematic" data-t="layout_schematic">Schematic</option></select><span data-ic="arrow_drop_down"></span></span></label>
+      <label class="tf"><span class="tf-label" data-t="background">Background</span><span class="tf-select"><select id="setBg"><option value="osm" data-t="bg_osm">OpenStreetMap</option><option value="none" data-t="bg_none">None</option></select><span data-ic="arrow_drop_down"></span></span></label>
+      <label class="tf tf-range"><span class="tf-label" data-t="bgOpacity">Background strength</span><input id="setBgOpacity" type="range" min="0.2" max="1" step="0.05"></label>
+      <label class="switch-row"><span data-t="showFreq">Show frequencies on the map</span><input id="setFreq" type="checkbox" role="switch" class="switch"></label>
+      <label class="switch-row"><span data-t="liveStops">Show real stops when zoomed in</span><input id="setLive" type="checkbox" role="switch" class="switch"></label>
+      <label class="tf"><span class="tf-label" data-t="overpassUrl">Stop data server (optional Overpass API address)</span><input id="setOverpass" type="url" inputmode="url" placeholder="https://" maxlength="300"></label>
+      <label class="switch-row"><span data-t="grid">Show grid</span><input id="setGrid" type="checkbox" role="switch" class="switch"></label>
+      <label class="switch-row"><span data-t="snap">Snap to grid</span><input id="setSnap" type="checkbox" role="switch" class="switch"></label>
+      <label class="tf tf-range"><span class="tf-label" data-t="fontSize">Label size</span><input id="setFont" type="range" min="9" max="22" step="1"></label>
+      <h3 class="title-sm" data-t="appSection">App</h3>
+      <label class="tf"><span class="tf-label" data-t="language">Language</span><span class="tf-select"><select id="setLang"><option value="en" data-t="lang_en">English</option><option value="yue" data-t="lang_yue">Cantonese</option><option value="both" data-t="lang_both">Bilingual</option></select><span data-ic="arrow_drop_down"></span></span></label>
+      <label class="tf"><span class="tf-label" data-t="theme">Theme</span><span class="tf-select"><select id="setTheme"><option value="system" data-t="system">Match system</option><option value="light" data-t="light">Light</option><option value="dark" data-t="dark">Dark</option></select><span data-ic="arrow_drop_down"></span></span></label>
+      <label class="switch-row"><span data-t="legend">Show legend in exports</span><input id="setLegend" type="checkbox" role="switch" class="switch"></label>
+      <label class="switch-row"><span data-t="sound">Sound effects</span><input id="setSound" type="checkbox" role="switch" class="switch"></label>
+      <div class="row wrap">
+        <button type="button" class="btn outlined" id="tidyBtn" data-t="tidyLabels">Reset all labels to automatic</button>
+        <button type="button" class="btn outlined" id="setupBtn" data-t="runSetup">Run setup again</button>
+        <button type="button" class="btn outlined" id="resetSettingsBtn" data-t="resetSettings">Reset settings</button>
+      </div>
+      <h3 class="title-sm" data-t="shortcuts">Keyboard shortcuts</h3>
+      <p class="supporting">V S L T E · Delete · Ctrl+Z / Ctrl+Y · Arrows · F · Esc</p>
     </div>
-    <h3 data-t="shortcuts">Keyboard shortcuts</h3>
-    <p class="hint">V S L T E · Delete · Ctrl+Z / Ctrl+Y · Arrows · F · Esc</p>
-    <div class="row end"><button value="close" class="primary" data-t="close">Close</button></div>
+    <div class="row end"><button value="close" class="btn text" data-t="close">Close</button></div>
   </form>
 </dialog>
 
 <dialog id="setupDialog" aria-labelledby="setupTitle">
   <div class="dialog-body">
-    <p class="hint" id="setupProgress"></p>
-    <h2 id="setupTitle" data-t="setupTitle">Set up your map</h2>
+    <p class="supporting" id="setupProgress"></p>
+    <h2 id="setupTitle" class="headline" data-t="setupTitle">Set up your map</h2>
     <div id="setupStep"></div>
     <div class="row end">
-      <button type="button" id="setupSkip" data-t="skip">Skip</button>
-      <button type="button" id="setupBack" data-t="back">Back</button>
-      <button type="button" id="setupNext" class="primary" data-t="next">Next</button>
+      <button type="button" class="btn text" id="setupSkip" data-t="skip">Skip</button>
+      <button type="button" class="btn text" id="setupBack" data-t="back">Back</button>
+      <button type="button" class="btn filled" id="setupNext" data-t="next">Next</button>
     </div>
   </div>
 </dialog>
 
+<script src="icons.js"></script>
 <script src="i18n.js"></script>
+<script src="gtha-transit-data.js"></script>
 <script src="gtha-template.js"></script>
 <script src="regex-builder.js"></script>
 <script src="app.js"></script>
