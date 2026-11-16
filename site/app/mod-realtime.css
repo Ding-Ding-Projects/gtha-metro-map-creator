@@ -1,1 +1,12 @@
-/* mod-realtime.css */
+/* mod-realtime.css: live vehicle markers, the status chip and the disabled control state. */
+.live-chip { position: absolute; left: 16px; bottom: 32px; z-index: 5; display: flex; align-items: center; gap: 8px; max-width: min(520px, calc(100% - 100px)); padding: 6px 12px; border-radius: 16px; background: var(--md-surface-container-high); color: var(--md-on-surface); box-shadow: var(--elev-3); font-size: 13px; }
+.live-chip[hidden] { display: none; }
+.live-chip .lv-dot { width: 10px; height: 10px; border-radius: 50%; background: #1E8E3E; flex: none; animation: live-pulse 2s ease-in-out infinite; }
+.live-chip.stale .lv-dot { background: #B3261E; animation: none; }
+.live-vehicles { pointer-events: none; }
+.live-veh.stale { opacity: .45; }
+.fab.live-on { background: var(--md-primary-container, #D8E2FF); color: var(--md-on-primary-container, #001A41); }
+.fab.live-fab.disabled { opacity: .5; }
+.live-setting .supporting { margin: 0 0 12px; }
+@keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .live-chip .lv-dot { animation: none; } }

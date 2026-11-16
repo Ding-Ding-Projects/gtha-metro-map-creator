@@ -1,7 +1,7 @@
 // Desktop app: the full editor, project site and documentation, bundled offline,
 // with native file open and save, recent maps and an unsaved-changes prompt.
 'use strict';
-const { app, BrowserWindow, Menu, dialog, protocol, shell, net } = require('electron');
+const { app, BrowserWindow, Menu, dialog, protocol, shell, net, ipcMain } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -9,6 +9,14 @@ const { pathToFileURL } = require('node:url');
 const SCHEME = 'gmmc';
 const CONTENT = path.join(__dirname, '..', 'content', 'site');
 const MAX_FILE = 5 * 1024 * 1024;
+// Live vehicle feeds the editor may read, by exact URL. Transit agencies do not send CORS headers,
+// so the page asks this process to fetch them. Anything else is refused.
+const FEED_ALLOWLIST = new Set([
+  'https://rtu.york.ca/gtfsrealtime/VehiclePositions',
+  'https://bustime.ttc.ca/gtfsrt/vehicles'
+]);
+const FEED_TIMEOUT_MS = 15000;
+const FEED_MAX_BYTES = 5 * 1024 * 1024;
 protocol.registerSchemesAsPrivileged([{ scheme: SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 
 let win = null;
@@ -32,6 +40,31 @@ const ask = {
   save: (opts) => (TEST && TEST.save ? Promise.resolve({ canceled: false, filePath: TEST.save }) : dialog.showSaveDialog(win, opts)),
   box: (opts) => (TEST && opts.buttons && TEST.confirm.length ? Promise.resolve({ response: Number(TEST.confirm.shift()) }) : TEST && !opts.buttons ? Promise.resolve({ response: 0 }) : dialog.showMessageBox(win, opts))
 };
+
+async function fetchFeed(url) {
+  if (typeof url !== 'string' || !FEED_ALLOWLIST.has(url)) throw new Error('Feed address is not allowed.');
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), FEED_TIMEOUT_MS);
+  try {
+    const res = await net.fetch(url, { signal: ctl.signal, redirect: 'error', headers: { accept: 'application/x-protobuf, application/octet-stream' } });
+    if (!res.ok) throw new Error('Feed answered ' + res.status + '.');
+    const len = Number(res.headers.get('content-length'));
+    if (len > FEED_MAX_BYTES) throw new Error('Feed is larger than 5 MB.');
+    const reader = res.body.getReader();
+    const chunks = []; let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > FEED_MAX_BYTES) { ctl.abort(); throw new Error('Feed is larger than 5 MB.'); }
+      chunks.push(value);
+    }
+    const out = new Uint8Array(total); let o = 0;
+    for (const c of chunks) { out.set(c, o); o += c.byteLength; }
+    return out.buffer;
+  } finally { clearTimeout(timer); }
+}
+ipcMain.handle('gmmc:fetch-feed', (_e, url) => fetchFeed(url));
 
 const page = (js) => (win ? win.webContents.executeJavaScript(js, true) : Promise.resolve(null));
 const mapJson = () => page('JSON.stringify(window.GMMC.getMap(), null, 2)');
@@ -136,7 +169,7 @@ function buildMenu() {
 function createWindow() {
   win = new BrowserWindow({
     width: 1360, height: 860, minWidth: 720, minHeight: 520, show: false, backgroundColor: '#F6F5F1',
-    webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: false }
+    webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: false, preload: path.join(__dirname, 'preload.js') }
   });
   // GMMC_HIDDEN=1 keeps the window off screen for automated verification.
   win.once('ready-to-show', () => { if (process.env.GMMC_HIDDEN !== '1') win.show(); });
