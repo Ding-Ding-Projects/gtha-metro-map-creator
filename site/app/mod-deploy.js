@@ -33,6 +33,7 @@
     dp_net_bridged: 'bridged network', dp_net_nat: 'NAT with a forwarded port', dp_port: 'port', dp_chooseDrive: 'Choose a drive',
     dp_why_server: 'Needs the desktop deploy app. Browsers cannot start servers or virtual machines.', dp_why_ssh: 'Needs the desktop deploy app. Browsers cannot open SSH connections.', dp_why_drive: 'Needs the desktop deploy app. Browsers cannot write to drives.',
     dp_getApp: 'Get the desktop deploy app', dp_noPicker: 'This browser cannot write to a folder, so a ZIP file is used.',
+    dp_f_requirePw: 'Require a password', dp_f_password: 'Password (stored hashed, never shown again)', dp_f_passwordHint: '8 to 200 characters. Everyone on the network must sign in. The health check stays open.', dp_livePw: 'Live, password required',
     dp_f_name: 'Instance name', dp_f_nameHint: 'Deploying the same name again updates that instance. A new name makes a new one.', dp_f_port: 'Port', dp_f_portHint: 'If the port is taken, the next free one is used.', dp_f_tag: 'Image version tag', dp_f_keep: 'Keep running after closing this window (the app stays in the tray)',
     dp_keepNote: 'With this off, the servers stop when you close the app. With it on, closing the window hides it to the tray; quit from the tray icon to stop the servers.',
     dp_stopServer: 'Stop the built-in servers', dp_f_host: 'Server name or address', dp_f_user: 'User name', dp_f_sshPort: 'SSH port', dp_f_folder: 'Remote folder',
@@ -71,6 +72,7 @@
     dp_net_bridged: '橋接網絡', dp_net_nat: 'NAT 加轉發連接埠', dp_port: '連接埠', dp_chooseDrive: '揀一個磁碟',
     dp_why_server: '要用桌面部署程式。瀏覽器開唔到伺服器或虛擬機。', dp_why_ssh: '要用桌面部署程式。瀏覽器開唔到 SSH 連線。', dp_why_drive: '要用桌面部署程式。瀏覽器寫唔到磁碟。',
     dp_getApp: '下載桌面部署程式', dp_noPicker: '呢個瀏覽器寫唔到資料夾，所以改用 ZIP 檔案。',
+    dp_f_requirePw: '要求輸入密碼', dp_f_password: '密碼（只儲存雜湊，之後唔會再顯示）', dp_f_passwordHint: '8 至 200 個字元。網絡上所有人都要登入。健康檢查保持開放。', dp_livePw: '已上線，需要密碼',
     dp_f_name: '實例名稱', dp_f_nameHint: '用同一個名再部署會更新嗰個實例，用新名就開一個新嘅。', dp_f_port: '連接埠', dp_f_portHint: '如果連接埠被佔用，會用下一個空閒嘅。', dp_f_tag: '映像版本標籤', dp_f_keep: '關閉視窗後繼續行（程式留喺系統匣）',
     dp_keepNote: '關咗呢個選項，關閉程式伺服器就會停。開咗之後，關視窗只係收埋去系統匣；要停伺服器就喺系統匣圖示退出。',
     dp_stopServer: '停止內置伺服器', dp_f_host: '伺服器名稱或地址', dp_f_user: '用戶名稱', dp_f_sshPort: 'SSH 連接埠', dp_f_folder: '遠端資料夾',
@@ -95,9 +97,9 @@
   const t = (k, vars) => { let s = window.I18N.t(k); if (vars) for (const [a, b] of Object.entries(vars)) s = s.split('{' + a + '}').join(String(b)); return s; };
 
   const DEFAULTS = {
-    docker: { name: '', port: 8080, tag: 'latest' }, builtin: { name: '', port: 8090, keepRunning: false },
+    docker: { name: '', port: 8080, tag: 'latest', requirePassword: false }, builtin: { name: '', port: 8090, keepRunning: false },
     virtualbox: { name: '', netMode: 'bridged' }, vmware: { name: '' },
-    ssh: { name: '', host: '', user: '', sshPort: 22, folder: '~/gtha-map', key: '', port: 8080, tag: 'latest' },
+    ssh: { name: '', host: '', user: '', sshPort: 22, folder: '~/gtha-map', key: '', port: 8080, tag: 'latest', requirePassword: false },
     usb: { disk: -1 }, rpi: { disk: -1 }, pages: { name: '', repo: '' }, folder: { name: '', mode: 'zip', path: '' }
   };
 
@@ -290,6 +292,7 @@
       onStatus(fn) { api.onStatus(fn); }, onLog(fn) { api.onLog(fn); },
       start(id) { return api.deploy(id); }, cancel(id) { api.cancel(id); },
       disks: () => api.listDisks(), flash: (id, n) => api.flash(id, n),
+      setSecret: (id, v) => api.setSecret(id, v),
       chooseMap: () => api.chooseMap(), clearMap: () => api.clearMap(), pickPath: (m) => api.pickPath(m), builtinStop: () => api.builtinStop(),
       gh: {
         async status() { return api.ghStatus(); },
@@ -314,12 +317,14 @@
     // Field descriptors: [key, kind, label key, extra]. kinds: text, number, select, switch, seg, path, secret.
     const NAME = ['name', 'text', 'dp_f_name', { wide: true, hint: 'dp_f_nameHint' }];
     const FIELDS = {
-      docker: [NAME, ['port', 'number', 'dp_f_port', { min: 1024, max: 65535, hint: 'dp_f_portHint' }], ['tag', 'text', 'dp_f_tag', {}]],
+      docker: [NAME, ['port', 'number', 'dp_f_port', { min: 1024, max: 65535, hint: 'dp_f_portHint' }], ['tag', 'text', 'dp_f_tag', {}],
+        ['requirePassword', 'switch', 'dp_f_requirePw', { wide: true }], ['password', 'secret', 'dp_f_password', { wide: true, hint: 'dp_f_passwordHint', needs: 'requirePassword' }]],
       builtin: [NAME, ['port', 'number', 'dp_f_port', { min: 1024, max: 65535, hint: 'dp_f_portHint' }], ['keepRunning', 'switch', 'dp_f_keep', { wide: true }]],
       virtualbox: [NAME, ['netMode', 'seg', 'dp_f_net', { wide: true, options: [['bridged', 'dp_m_bridged'], ['nat', 'dp_m_nat']] }]],
       vmware: [NAME],
       ssh: [NAME, ['host', 'text', 'dp_f_host', {}], ['user', 'text', 'dp_f_user', {}], ['sshPort', 'number', 'dp_f_sshPort', { min: 1, max: 65535 }], ['folder', 'text', 'dp_f_folder', {}],
-        ['port', 'number', 'dp_f_webPort', { min: 1024, max: 65535 }], ['tag', 'text', 'dp_f_tag', {}], ['key', 'text', 'dp_f_key', { wide: true }]],
+        ['port', 'number', 'dp_f_webPort', { min: 1024, max: 65535 }], ['tag', 'text', 'dp_f_tag', {}], ['key', 'text', 'dp_f_key', { wide: true }],
+        ['requirePassword', 'switch', 'dp_f_requirePw', { wide: true }], ['password', 'secret', 'dp_f_password', { wide: true, hint: 'dp_f_passwordHint', needs: 'requirePassword' }]],
       usb: [], rpi: [],
       pages: [NAME, ['repo', 'text', 'dp_f_repo', { wide: true }]],
       folder: [NAME, ['mode', 'seg', 'dp_f_mode', { wide: true, options: [['zip', 'dp_m_zip'], ['folder', 'dp_m_folder']] }]].concat(desk ? [['path', 'path', 'dp_f_path', { wide: true }]] : [])
@@ -363,7 +368,12 @@
         let c;
         if (kind === 'switch') c = switchControl({ label: t(lk), wide: extra.wide, onChange: commit });
         else if (kind === 'seg') { c = segmented({ options: extra.options.map(([v, k]) => [v, t(k)]), value: '', aria: t(lk), onChange: commit }); const wrap = el('div', extra.wide ? 'wide' : ''); const cap = el('div', 'dp-hint', t(lk)); wrap.append(cap, c.root); c.root = wrap; c.cap = cap; }
-        else if (kind === 'path') {
+        else if (kind === 'secret') {
+          // A password is not part of the saved settings. It goes to the app process as typed and is hashed at deploy time.
+          c = textField({ label: t(lk), type: 'password', wide: extra.wide, hint: extra.hint ? t(extra.hint) : undefined });
+          c.input.autocomplete = 'new-password'; c.input.maxLength = 200;
+          c.input.addEventListener('input', () => { if (backend.setSecret) backend.setSecret(id, c.input.value); });
+        } else if (kind === 'path') {
           c = textField({ label: t(lk), wide: true, mono: true, onChange: (v) => { st.settings[id].path = v; persist(); } });
           const row = el('div', 'dp-row wide'); r.browse = button('', 'sm', async () => { const p = await backend.pickPath(st.settings.folder.mode); if (p && p.path) { c.input.value = p.path; st.settings.folder.path = p.path; persist(); } }); row.append(c.root, r.browse); c.root.style.flex = '1 1 200px'; c.row = row;
         } else {
@@ -393,7 +403,7 @@
       const caps = backend.caps(id); const s = st.status[id] || { state: 'idle' };
       if (!caps.ok) return { cls: 'idle', text: t('dp_unavailable') };
       if (s.state === 'running') return { cls: '', text: t('dp_running') + (s.pct ? ' ' + Math.round(s.pct) + '%' : ''), spin: true };
-      if (s.state === 'live') return { cls: 'live', text: FLASH.includes(id) ? t('dp_verified') : '✓ ' + t('dp_live') };
+      if (s.state === 'live') return { cls: 'live', text: FLASH.includes(id) ? t('dp_verified') : '✓ ' + t(s.signin ? 'dp_livePw' : 'dp_live') };
       if (s.state === 'failed') return { cls: 'failed', text: t('dp_failed') };
       if (id === 'pages' && st.ticked.pages && pagesNeedsSignIn()) return { cls: 'signin', text: t('dp_signin') };
       return { cls: 'idle', text: t('dp_idle') };
@@ -423,7 +433,10 @@
       for (const [key, c2] of Object.entries(r.fields)) {
         if (c2.kind === 'switch') { c2.setLabel(t(c2.lk)); c2.set(set[key]); }
         else if (c2.kind === 'seg') { c2.cap.textContent = t(c2.lk); c2.setAria(t(c2.lk)); for (const [v, k] of FIELDS[id].find((f) => f[0] === key)[3].options) c2.setLabel(v, t(k)); c2.set(set[key]); }
+        else if (c2.kind === 'secret') { c2.setLabel(t(c2.lk)); if (c2.hk) c2.setHint(t(c2.hk)); }
         else { c2.setLabel(t(c2.lk)); if (c2.hk) c2.setHint(t(c2.hk)); c2.set(set[key]); }
+        const need = (FIELDS[id].find((f) => f[0] === key)[3] || {}).needs; // a field that only matters while a switch is on
+        if (need) c2.root.hidden = !set[need];
       }
       if (r.browse) r.browse.setLabel(t('dp_browse'));
       if (r.note2) r.note2.textContent = t(NOTES[id]);

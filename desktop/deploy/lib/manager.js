@@ -8,6 +8,7 @@ const path = require('node:path');
 const { portNum, findFreePort, slugify, get } = require('../../shared/common');
 const { Registry, newId } = require('./registry');
 const { latestReleaseVersion, cmpVersion } = require('./download');
+const { hashPasswordAsync } = require('../../shared/password');
 
 const SERVER_KINDS = ['docker', 'builtin', 'ssh', 'virtualbox', 'vmware']; // targets that keep something running
 const PORT_KINDS = ['docker', 'builtin'];
@@ -52,10 +53,12 @@ class Manager {
   }
   list(released) {
     return this.registry.list().map((i) => {
+      // The renderer is told whether sign-in is on, never the hash itself.
+      const signin = !!i.passwordHash; delete i.passwordHash;
       const latest = this.latestFor(i, released || this.latest.version);
       const canUpdate = ['docker', 'builtin', 'ssh', 'virtualbox', 'vmware'].includes(i.kind);
       return Object.assign({}, i, {
-        busy: this.busy.has(i.id), latest, updateAvailable: canUpdate && !!i.version && /^\d/.test(i.version) && cmpVersion(i.version, latest) < 0,
+        signin, busy: this.busy.has(i.id), latest, updateAvailable: canUpdate && !!i.version && /^\d/.test(i.version) && cmpVersion(i.version, latest) < 0,
         canRun: SERVER_KINDS.includes(i.kind), canDuplicate: SERVER_KINDS.includes(i.kind)
       });
     });
@@ -100,7 +103,7 @@ class Manager {
     if (existing && this.busy.has(existing.id)) throw new Error('"' + name + '" is busy. Wait for it to finish.');
     const fresh = !existing;
     const inst = existing ? JSON.parse(JSON.stringify(existing)) : {
-      id: newId(), kind, name, slug: this.registry.uniqueSlug(kind, slugify(name)), created: new Date().toISOString(), version: '', port: 0, url: '', map: '', tag: '', where: '',
+      id: newId(), kind, name, slug: this.registry.uniqueSlug(kind, slugify(name)), created: new Date().toISOString(), version: '', port: 0, passwordHash: '', url: '', map: '', tag: '', where: '',
       run: { project: '', dir: '', vm: '', uuid: '', vmx: '', host: '', user: '', sshPort: 0, key: '', remoteDir: '', path: '', repo: '', mac: '', netMode: '' }, check: { at: 0, state: '' }
     };
     inst.name = name; inst.map = mapInfo && mapInfo.name ? mapInfo.name : '';
@@ -108,7 +111,7 @@ class Manager {
     const log = (line) => this.send('log', { id: inst.id, line: String(line).slice(0, 400) });
     try {
       if (PORT_KINDS.includes(kind) || (kind === 'ssh')) await this.choosePort(inst, s, kind, fresh, log);
-      if (kind === 'docker' || kind === 'ssh') inst.tag = String(s.tag || 'latest').trim() || 'latest';
+      if (kind === 'docker' || kind === 'ssh') { inst.tag = String(s.tag || 'latest').trim() || 'latest'; await this.applyPassword(inst, s); }
       if (kind === 'virtualbox') inst.run.netMode = s.netMode === 'nat' ? 'nat' : 'bridged';
       if (kind === 'ssh') inst.run = Object.assign({}, inst.run, { host: String(s.host || '').trim(), user: String(s.user || '').trim(), sshPort: Number(s.sshPort || 22), key: String(s.key || '').trim(), remoteDir: String(s.folder || '~/gtha-map').trim() });
       if (kind === 'folder' || kind === 'pages') inst.slug = inst.slug || slugify(name);
@@ -122,7 +125,7 @@ class Manager {
       if (res.patch && res.patch.run) done.run = Object.assign({}, inst.run, res.patch.run);
       done.check = { at: Date.now(), state: 'healthy' };
       this.registry.upsert(done);
-      this.status(inst.id, { state: 'live', pct: 100, msg: 'Live', links: res.links, note: res.note || '' });
+      this.status(inst.id, { state: 'live', pct: 100, msg: done.passwordHash ? 'Live, password required' : 'Live', links: res.links, note: res.note || '', signin: !!done.passwordHash });
       this.changed();
       return { ok: true, id: inst.id };
     } catch (e) {
@@ -137,6 +140,15 @@ class Manager {
       this.changed();
       return { ok: false, error: msg, id: inst.id };
     } finally { this.busy.delete(inst.id); this.kindOf.delete(inst.id); }
+  }
+
+  // Sign-in: the password is hashed here and only the hash is kept (in the registry and in the instance's .env).
+  // With sign-in on and no new password typed, the hash already recorded for the instance is kept.
+  async applyPassword(inst, s) {
+    if (!s.requirePassword) { inst.passwordHash = ''; return; }
+    if (s.password) inst.passwordHash = await hashPasswordAsync(String(s.password));
+    else if (s.inheritHash) inst.passwordHash = String(s.inheritHash);
+    else if (!inst.passwordHash) throw new Error('Enter a password, or turn off "Require a password".');
   }
 
   // New instances get the requested port, or the next free one when it is taken by another instance or by something else.
@@ -197,7 +209,7 @@ class Manager {
     if (!SERVER_KINDS.includes(src.kind)) return { ok: false, error: 'This kind of instance cannot be duplicated.' };
     const copyName = String(name || '').trim() || src.name + ' copy';
     if (this.registry.findByName(src.kind, copyName)) return { ok: false, error: 'There is already an instance named "' + copyName + '".' };
-    const s = { name: copyName, port: src.port ? src.port + 1 : 0, tag: src.tag, netMode: src.run.netMode, host: src.run.host, user: src.run.user, sshPort: src.run.sshPort, key: src.run.key, folder: src.run.remoteDir.replace(/\/[^/]+$/, '') };
+    const s = { name: copyName, port: src.port ? src.port + 1 : 0, tag: src.tag, requirePassword: !!src.passwordHash, inheritHash: src.passwordHash, netMode: src.run.netMode, host: src.run.host, user: src.run.user, sshPort: src.run.sshPort, key: src.run.key, folder: src.run.remoteDir.replace(/\/[^/]+$/, '') };
     let map = mapInfo || null;
     const f = path.join(this.instDir(id), 'default-map.json');
     if (!map && fs.existsSync(f)) map = { name: src.map, text: fs.readFileSync(f, 'utf8') };

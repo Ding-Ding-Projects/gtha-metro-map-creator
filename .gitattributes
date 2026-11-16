@@ -5,3 +5,6 @@
 
 # Appliance files run inside Linux
 appliance/** text eol=lf
+
+# Container files run inside Linux
+docker/** text eol=lf

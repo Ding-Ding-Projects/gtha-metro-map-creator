@@ -40,3 +40,15 @@ button:disabled { opacity: .45; cursor: default; }
 @keyframes r { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; border-top-color: var(--accent); } }
 @media (max-width: 640px) { .wiz { flex-direction: column; } .rail { width: auto; } .rail ol { flex-direction: row; flex-wrap: wrap; } .rail li span.t { display: none; } }
+
+.switch-row { margin-top: 4px; }
+.switch { display: flex; align-items: center; gap: 12px; cursor: pointer; max-width: 440px; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { width: 52px; height: 32px; flex: none; border-radius: 16px; border: 2px solid var(--field); position: relative; transition: background .15s, border-color .15s; }
+.switch .thumb { position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; border-radius: 50%; background: var(--field); transition: transform .15s, width .15s, height .15s, background .15s; }
+.switch input:checked + .track { background: var(--accent); border-color: var(--accent); }
+.switch input:checked + .track .thumb { width: 24px; height: 24px; top: 2px; transform: translateX(18px); background: var(--bg); }
+.switch input:focus-visible + .track { outline: 3px solid var(--accent); outline-offset: 2px; }
+.switch-text { display: flex; flex-direction: column; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .switch .track, .switch .thumb { transition: none; } }

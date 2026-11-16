@@ -7,6 +7,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 
 const KINDS = ['docker', 'builtin', 'ssh', 'virtualbox', 'vmware', 'folder', 'pages'];
+const { hashOk } = require('../../shared/password');
 const newId = () => crypto.randomBytes(6).toString('hex');
 
 // Keeps only known fields of the right type, so a damaged or hand-edited file cannot inject anything.
@@ -20,7 +21,7 @@ function clean(raw) {
   const run = raw.run && typeof raw.run === 'object' ? raw.run : {};
   return {
     id, kind, name: str(raw.name, 80) || 'Untitled', slug: str(raw.slug, 40), created: str(raw.created, 40), version: str(raw.version, 40),
-    port: num(raw.port), url: str(raw.url, 400), map: str(raw.map, 200), tag: str(raw.tag, 128), where: str(raw.where, 200),
+    port: num(raw.port), passwordHash: hashOk(raw.passwordHash) ? raw.passwordHash : '', url: str(raw.url, 400), map: str(raw.map, 200), tag: str(raw.tag, 128), where: str(raw.where, 200),
     run: {
       project: str(run.project, 80), dir: str(run.dir, 400), vm: str(run.vm, 120), uuid: str(run.uuid, 80), vmx: str(run.vmx, 400),
       host: str(run.host, 253), user: str(run.user, 40), sshPort: num(run.sshPort), key: str(run.key, 400), remoteDir: str(run.remoteDir, 200),

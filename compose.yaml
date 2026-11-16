@@ -1,10 +1,16 @@
 # Run the published image. Override the tag or host port with GMMC_TAG and GMMC_PORT.
+# Optional sign-in: set GMMC_PASSWORD_HASH (a hash, never the password) in the environment or in a
+# git-ignored .env file next to this file. host.bat --password and the desktop tools create it for you.
 name: gtha-metro-map-creator
 services:
   web:
     image: ghcr.io/ding-ding-projects/gtha-metro-map-creator:${GMMC_TAG:-latest}
     ports:
       - "${GMMC_PORT:-8080}:8080"
+    environment:
+      GMMC_PASSWORD_HASH: ${GMMC_PASSWORD_HASH:-}
+      GMMC_SESSION_HOURS: ${GMMC_SESSION_HOURS:-}
+      GMMC_COOKIE_SECURE: ${GMMC_COOKIE_SECURE:-}
     restart: unless-stopped
     read_only: true
     tmpfs:

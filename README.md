@@ -88,6 +88,7 @@ Captured from the 1.6.0 build on 16 November 2026: the editor and GTFS viewer in
 - Portable Windows desktop app: works offline, native open and save, recent maps
 - Docker image, Compose file, `host.bat` (detached or interactive log view) and a portable server
   setup wizard that prints the address other devices on your network can open
+- Optional password sign-in for the hosted server (off by default; `host.bat --password`, the wizard and the deploy app)
 
 ## Run locally
 
@@ -101,7 +102,8 @@ Then open http://127.0.0.1:8765/app/.
 
 Run `host.bat --detached` (needs Docker Desktop). It pulls the image, starts it, waits for the
 health check and prints an address such as `http://192.168.1.20:8080/`. `host.bat --logs` adds a
-status and log view; `host.bat --stop` stops it. Or run the server setup wizard from the releases.
+status and log view; `host.bat --stop` stops it. `host.bat --password` asks for a password first, so everyone on the
+network must sign in (off by default). Or run the server setup wizard from the releases.
 See [docs/features/hosting.md](docs/features/hosting.md).
 
 Each release also attaches a hosting bundle (`compose.yaml` and `host.bat` pinned to that version) and

@@ -41,6 +41,8 @@ Start it
                         health check and print the addresses, then exit.
   host.bat --logs       The same, then a menu to follow logs, show status, restart or stop.
   host.bat --stop       Stop the server.
+  host.bat --password   Ask for a password (hidden), keep only its hash in .env, then start. Everyone
+                        must sign in. host.bat --no-password turns it off again.
   host.bat              Choose a mode from a menu.
 
 The addresses
@@ -53,7 +55,7 @@ Change the port or the version
   GMMC_TAG chooses another image tag. This bundle defaults to ${version}.
 
 Security
-  There is no sign-in. The server only serves static files and stores nothing; maps stay in each
+  Sign-in is off unless you run host.bat --password. With it off there is none: the server only serves static files and stores nothing; maps stay in each
   visitor's browser. Use it on a network you trust and do not forward the port to the internet.
   If other devices cannot connect, allow the port through Windows Firewall.
 

@@ -3,10 +3,11 @@
   const $ = (id) => document.getElementById(id);
   const S = window.setup;
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const st = { step: 0, port: 8080, tag: 'latest', lang: 'en', done: [false, false, false, false, false] };
+  const st = { step: 0, port: 8080, tag: 'latest', lang: 'en', requirePassword: false, done: [false, false, false, false, false] };
+  let password = ''; // kept in memory only, never saved
   let busy = false, result = {}, resumedNote = false;
   const t = (k) => { const en = window.WI18N.en[k] ?? k, yue = window.WI18N.yue[k] ?? en; return st.lang === 'yue' ? yue : st.lang === 'both' ? (en === yue ? en : en + ' · ' + yue) : en; };
-  const save = () => S.saveState({ step: st.step, port: st.port, tag: st.tag, lang: st.lang });
+  const save = () => S.saveState({ step: st.step, port: st.port, tag: st.tag, lang: st.lang, requirePassword: st.requirePassword });
   const log = $('log');
   S.onLog((s) => { log.hidden = false; log.textContent = (log.textContent + s).slice(-8000); log.scrollTop = log.scrollHeight; });
   const check = (ok, text, extra) => `<li class="${ok ? 'ok' : 'bad'}"><span class="dot" aria-hidden="true">${ok ? '&#10003;' : '!'}</span><span>${esc(text)}${extra || ''}</span></li>`;
@@ -28,17 +29,24 @@
     { key: 's1', async run() {
       setPane(() => `<label class="field"><span>${esc(t('port'))}</span><input id="port" type="number" min="1024" max="65535" step="1" value="${st.port}" inputmode="numeric"></label>
         <label class="field"><span>${esc(t('tag'))}</span><input id="tag" type="text" maxlength="128" value="${esc(st.tag)}" spellcheck="false"></label>
-        <p class="hint" id="portMsg" role="status"></p>`);
+        <p class="hint" id="portMsg" role="status"></p>
+        <div class="switch-row"><label class="switch"><input id="reqpw" type="checkbox" role="switch"${st.requirePassword ? ' checked' : ''}><span class="track" aria-hidden="true"><span class="thumb"></span></span><span class="switch-text"><b>${esc(t('requirePassword'))}</b><span class="hint">${esc(t('requirePasswordHint'))}</span></span></label></div>
+        <label class="field" id="pwField"${st.requirePassword ? '' : ' hidden'}><span>${esc(t('password'))}</span><input id="pw" type="password" maxlength="200" autocomplete="new-password" spellcheck="false" value="${esc(password)}"></label>
+        <p class="hint" id="pwMsg" role="status"></p>`);
       const validate = async () => {
         const n = Number($('port').value); const msg = $('portMsg'); msg.classList.remove('err');
         st.port = n; st.tag = $('tag').value.trim() || 'latest'; save();
+        st.requirePassword = $('reqpw').checked; password = $('pw').value; $('pwField').hidden = !st.requirePassword; save();
+        const pwShort = st.requirePassword && (password.length < 8 || password.length > 200);
+        $('pwMsg').textContent = pwShort ? t('passwordShort') : (st.requirePassword ? t('passwordStored') : ''); $('pwMsg').classList.toggle('err', pwShort);
         if (!Number.isInteger(n) || n < 1024 || n > 65535) { msg.textContent = t('portRange'); msg.classList.add('err'); st.done[1] = false; return render(false); }
         const free = await S.portFree(n);
         if (free.ok) { msg.textContent = t('portOk'); st.done[1] = true; }
         else { const ours = await S.existing(); if (ours.includes(':' + n + '->')) { msg.textContent = t('portOurs'); st.done[1] = true; } else { msg.textContent = t('portBusy'); msg.classList.add('err'); st.done[1] = false; } }
+        if (pwShort) st.done[1] = false;
         render(false);
       };
-      $('port').addEventListener('input', validate); $('tag').addEventListener('input', validate);
+      $('port').addEventListener('input', validate); $('tag').addEventListener('input', validate); $('reqpw').addEventListener('change', validate); $('pw').addEventListener('input', validate);
       await validate();
     } },
     { key: 's2', async run() {
@@ -49,11 +57,11 @@
     } },
     { key: 's3', async run() {
       log.textContent = ''; setPane(() => spinner(t('starting')));
-      const r = await S.start(st.port, st.tag);
+      const r = await S.start(st.port, st.tag, st.requirePassword ? password : '');
       if (!r.ok) { st.done[3] = false; setPane(() => `<p class="err">${esc(t('startFailed'))}</p><div class="row"><button type="button" data-act="rerun">${esc(t('retry'))}</button></div>`); return; }
       setPane(() => '<ul class="checks">' + check(true, t('started')) + '</ul>' + spinner(t('checking')));
       const h = await S.health(st.port); result.health = h; st.done[3] = h.ok;
-      setPane(() => h.ok ? '<ul class="checks">' + check(true, t('started')) + check(true, `${t('healthy')} ${h.seconds} ${t('seconds')}`) + '</ul>'
+      setPane(() => h.ok ? '<ul class="checks">' + check(true, t('started')) + check(true, `${t('healthy')} ${h.seconds} ${t('seconds')}`) + (st.requirePassword ? check(!!h.passwordRequired, t(h.passwordRequired ? 'liveSignin' : 'signinFailed')) : '') + '</ul>'
         : `<p class="err">${esc(t('healthFailed'))}</p><div class="row"><button type="button" data-act="rerun">${esc(t('retry'))}</button></div>`);
     } },
     { key: 's4', title: 's4title', async run() {
@@ -67,6 +75,7 @@
         if (url) html += `<span class="hint">${esc(t('address'))}</span><span class="addr" id="addr">${esc(url)}</span>`;
         else html += `<p class="hint">${esc(t('noLan'))}</p>`;
         html += `<span class="hint">${esc(t('thisComputer'))}: ${esc(local)}</span><div class="row"><button type="button" class="primary" data-act="open" data-url="${esc(url || local)}">${esc(t('openBrowser'))}</button><button type="button" data-act="copy" data-url="${esc(url || local)}">${esc(t('copy'))}</button></div></div>`;
+        if (st.requirePassword) html += `<p class="hint">${esc(t(h && h.passwordRequired ? 'liveSignin' : 'signinFailed'))}</p>`;
         html += '<ul class="checks">' + check(true, t('dockerEngine')) + check(true, t('downloaded')) + check(!!(h && h.ok), `${t('healthy')} ${h && h.seconds != null ? h.seconds : '-'} ${t('seconds')}`)
           + reach.map((r) => check(r.ok, r.ok ? `${t('reachable')}: ${r.ip}` : `${t('notReachable')} ${st.port} (${r.ip})`)).join('') + '</ul>';
         html += `<p class="hint">${esc(t('hostBat'))}</p><div class="row"><button type="button" data-act="stop">${esc(t('stop'))}</button></div><p class="hint" id="stopMsg" role="status"></p>`;
@@ -118,7 +127,7 @@
 
   (async () => {
     const saved = await S.loadState();
-    if (saved) { st.port = saved.port || 8080; st.tag = saved.tag || 'latest'; st.lang = saved.lang || 'en'; resumedNote = (saved.step || 0) > 0; }
+    if (saved) { st.port = saved.port || 8080; st.tag = saved.tag || 'latest'; st.lang = saved.lang || 'en'; st.requirePassword = !!saved.requirePassword; resumedNote = (saved.step || 0) > 0; }
     $('lang').value = st.lang;
     $('ver').textContent = 'Version ' + (await S.version());
     // Steps after the first need a fresh Docker check, so resume always re-checks first, then

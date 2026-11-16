@@ -3,3 +3,6 @@ node_modules/
 .agent/
 desktop/node_modules/
 desktop/content/
+
+# Local sign-in settings written by host.bat --password
+.env

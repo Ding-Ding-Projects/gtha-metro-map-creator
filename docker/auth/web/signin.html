@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="{{.HTMLLang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex">
+<title>GTHA Metro Map Creator · {{.T.Title}}</title>
+<link rel="stylesheet" href="/signin/assets/signin.css">
+</head>
+<body>
+<main class="card">
+  <span class="logo" aria-hidden="true"><svg width="26" height="26" viewBox="0 -960 960 960"><path d="m592-127-243-86-188 75q-8 3-15 1.5t-13-5.5q-6-4-9.5-10t-3.5-14v-565q0-13 7.5-23t19.5-15l182-64q5-2 10-2.5t10-.5q5 0 10 .5t10 2.5l243 85 187-75q8-3 15-2t13 5q6 4 9.5 10.5T840-795v572q0 11-7.5 19T814-192l-182 65q-5 2-10 2.5t-10 .5q-5 0-10-.5t-10-2.5Zm-14-68v-505l-196-66v505l196 66Zm60 0 142-47v-512l-142 54v505Zm-458-12 142-54v-505l-142 47v512Zm458-493v505-505Zm-316-66v505-505Z"/></svg></span>
+  <h1>GTHA Metro Map Creator</h1>
+  <p class="sub">{{.T.Sub}}</p>
+  {{if .Err}}<p class="err" id="err" role="alert">{{.Err}}</p>{{end}}
+  <form method="post" action="/signin/login">
+    <input type="hidden" name="next" value="{{.Next}}">
+    <input type="hidden" name="lang" value="{{.Lang}}">
+    <div class="field">
+      <input id="pw" name="password" type="password" required maxlength="1024" placeholder=" " autocomplete="current-password" autofocus{{if .Err}} aria-describedby="err" aria-invalid="true"{{end}}>
+      <label for="pw">{{.T.Password}}</label>
+      <button type="button" class="eye" id="eye" aria-label="{{.T.Show}}" data-show="{{.T.Show}}" data-hide="{{.T.Hide}}">
+        <svg width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-300Zm0 220q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280Z"/></svg>
+      </button>
+    </div>
+    <button class="btn" type="submit">{{.T.Button}}</button>
+  </form>
+  <a class="lang" href="{{.OtherHref}}">{{.T.Other}}</a>
+</main>
+<script src="/signin/assets/signin.js"></script>
+</body>
+</html>
