@@ -29,6 +29,8 @@
 - `transfers`: walking links between two stations.
 - `opens`, `closes`: optional years (integers, 1800 to 2100) on a line or a station, used by the network timeline. Absent means unknown or always open. See [timeline.md](timeline.md).
 - `width`: 3 to 16.
+- `marker` (line, optional): `ring`, `tick`, `pill` or `dot`; any other value is dropped. Unset follows the map style. See [styles.md](styles.md).
+- `sharedBends` (map, optional boolean): when true, changing a segment's bend changes it for every line over the same two consecutive nodes. Absent means false, so older files draw exactly as before; new maps and the GTHA template set it to true. See [editor.md](editor.md).
 
 ## Import validation
 

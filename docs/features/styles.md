@@ -11,6 +11,26 @@ Implemented in `site/app/mod-styles.js` and `mod-styles.css` through the hooks i
 | Frequent network | Width follows frequency: peak (or off-peak) headway up to 10 min is 10 px, up to 15 min 7 px, up to 30 min 5 px, longer 3 px. Routes with no frequency are 3 px grey | Rings | Mixed case | White paper |
 | Night | Line colours lightened 30% | Dark centre rings, white ring for interchanges | Light labels | Dark map, dark paper in every export; OpenStreetMap tiles are inverted |
 
+## Per-line markers
+
+A line may set its own station marker, which overrides the preset for that line's stations.
+Values: `ring`, `tick`, `pill`, `dot`; unset follows the preset (Classic metro gives ticks, the
+others give rings). Implemented in `mod-markers.js`, which registers its `stationMarker` hook before
+this module so a line value wins.
+
+| Marker | Drawing |
+| --- | --- |
+| Ring | White-centred ring in the line colour (smaller for a stop). |
+| Tick | A stub across the line, perpendicular to it, on the side away from the label. |
+| Pill | A rounded bar across the line, white-centred with a line-coloured outline. |
+| Dot | A filled dot in the line colour, never smaller than the line is wide. |
+
+Interchanges (two or more drawn lines, or the station set to "yes") always keep their ring. The
+marker is drawn the same way in the editor and in SVG, PNG, PDF and website exports. It is chosen
+in the line inspector (**Station markers**), changes are undoable, and `line.marker` is saved in
+project and map files. A tick or pill with no nearby drawn segment falls back to a ring. Under
+the Night preset the marker uses the same lightened colours and dark centre.
+
 ## Where it is chosen
 
 - The "Map style" cards in the right panel (under the inspector).
@@ -22,7 +42,7 @@ The choice is saved in `settings.mapStyle` (browser storage) and in project file
 
 `app.js` gained three small hooks, all optional and defaulting to the old drawing:
 
-- `stationMarker(map, station, { inter, col, cx, cy, geo, G, opts })`: first non-empty return replaces the circle marker.
+- `stationMarker(map, station, { inter, col, cx, cy, geo, G, opts, lines, labelDir })`: first non-empty return replaces the circle marker. `lines` are the drawn lines serving the station and `labelDir` is the side its label was placed on (labels are placed before markers are drawn).
 - `labelStyle(map, station, { inter, small })`: `{ upper, weight }` for the label text. Capitals widen the label rectangle so placement still avoids overlaps.
 - `exportTheme()`: `{ bg, ink, halo, sub, tileFilter }` for SVG, PNG and PDF exports (paper colour, label colours, tile filter).
 

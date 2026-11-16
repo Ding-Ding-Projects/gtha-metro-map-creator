@@ -1,0 +1,226 @@
+[
+ {
+  "name": "clear",
+  "js": "(() => { try { localStorage.clear(); } catch (e) {} location.reload(); return true; })()"
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "name": "prep",
+  "js": "(() => {\n  const d = document.getElementById('setupDialog'); if (d && d.close) d.close();\n  const s = GMMC.getSettings(); s.lang = 'en'; s.mapStyle = 'material'; s.theme = 'light'; GMMC.saveSettings(); GMMC.applyI18n();\n  document.documentElement.setAttribute('data-theme', 'light');\n  GMMC.setLayout('schematic'); GMMC.fit();\n  window.__toasts = []; GMMC.toast = (m) => { window.__toasts.push(m); };\n  const m = GMMC.getMap();\n  window.__pickLine = (id) => { const l = GMMC.lineById(id); GMMC.setSelection({ type: 'line', id }); GMMC.renderPanels(); return l; };\n  window.__marker = (v) => { document.querySelector('#inspector [data-marker=\"' + v + '\"]').click(); };\n  window.__vp = () => document.getElementById('viewport');\n  window.__expected = (l) => Object.values(GMMC.getMap().stations).filter((st) => {\n    if (!l.path.includes(st.id)) return false;\n    const mm = GMMC.getMap();\n    const vis = mm.lines.filter((x) => x.visible && x.path.includes(st.id));\n    const lines = vis.filter((x) => !(x.skip && x.skip.includes(st.id)));\n    if (!lines.length || GMMC.isInterchangeIn(mm, st)) return false;\n    return lines[0] === l;\n  }).length;\n  const line = m.lines.find((l) => l.path.length >= 8 && window.__expected(l) >= 5);\n  window.__line = line.id;\n  return { sharedBends: m.sharedBends, line: line.id, plainStations: window.__expected(line), lines: m.lines.length };\n})()"
+ },
+ {
+  "wait": 400
+ },
+ {
+  "name": "baseline",
+  "js": "(() => {\n  const vp = window.__vp();\n  window.__interRings = vp.querySelectorAll('circle[stroke=\"#16181D\"]').length;\n  return { interchangeRings: window.__interRings, mk: vp.querySelectorAll('.mk-tick,.mk-pill,.mk-dot').length };\n})()"
+ },
+ {
+  "name": "select-line",
+  "js": "(() => { window.__pickLine(window.__line); return { section: !!document.querySelector('#inspector .mk-sec'), buttons: [...document.querySelectorAll('#inspector [data-marker]')].map((b) => b.dataset.marker + ':' + b.getAttribute('aria-pressed')).join(','), preview: !!document.querySelector('#inspector .mk-preview') }; })()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "01-inspector-ring-default.png"
+ },
+ {
+  "name": "tick",
+  "js": "(() => {\n  window.__marker('tick');\n  const l = GMMC.lineById(window.__line), vp = window.__vp();\n  const ticks = [...vp.querySelectorAll('path.mk-tick')];\n  let awayViolations = 0, notOctilinear = 0, checked = 0;\n  for (const t of ticks) {\n    const n = t.getAttribute('d').match(/-?\\d+(\\.\\d+)?/g).map(Number);\n    const g = t.closest('g[data-st]'), id = g.dataset.st;\n    const vx = n[2] - n[0], vy = n[3] - n[1];\n    const ang = Math.atan2(vy, vx) * 180 / Math.PI;\n    if (Math.abs(ang / 45 - Math.round(ang / 45)) > 0.02) notOctilinear++;\n    const lab = vp.querySelector('text.st-label[data-st=\"' + id + '\"]');\n    if (!lab) continue;\n    const b = lab.getBBox(), lx = b.x + b.width / 2 - n[0], ly = b.y + b.height / 2 - n[1];\n    checked++;\n    if (vx * lx + vy * ly > 0.5) awayViolations++;\n  }\n  return { marker: l.marker, ticks: ticks.length, expected: window.__expected(l), labelsChecked: checked, ticksPointingToLabel: awayViolations, notMultipleOf45: notOctilinear, interchangeRings: vp.querySelectorAll('circle[stroke=\"#16181D\"]').length, baselineRings: window.__interRings, pressed: document.querySelector('#inspector [data-marker=\"tick\"]').getAttribute('aria-pressed') };\n})()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "02-tick.png"
+ },
+ {
+  "name": "zoom-tick",
+  "js": "(() => {\n  const m = GMMC.getMap(), l = GMMC.lineById(window.__line), v = GMMC.getView(), r = document.getElementById('map').getBoundingClientRect();\n  const st = m.stations[l.path[Math.floor(l.path.length / 2)]];\n  v.k = 2.2; v.tx = r.width / 2 - st.x * GMMC.G * v.k; v.ty = r.height / 2 - st.y * GMMC.G * v.k; GMMC.render();\n  return { zoomed: v.k };\n})()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "02b-tick-zoom.png"
+ },
+ {
+  "name": "export-svg-tick",
+  "js": "(() => {\n  const svg = GMMC.standaloneSvg(GMMC.exportScene());\n  return { ticksInExport: (svg.match(/class=\"mk-tick\"/g) || []).length, expected: window.__expected(GMMC.lineById(window.__line)) };\n})()"
+ },
+ {
+  "name": "pill",
+  "js": "(() => { window.__marker('pill'); const vp = window.__vp(), svg = GMMC.standaloneSvg(GMMC.exportScene()); return { marker: GMMC.lineById(window.__line).marker, pills: vp.querySelectorAll('rect.mk-pill').length, ticks: vp.querySelectorAll('path.mk-tick').length, pillsInExport: (svg.match(/class=\"mk-pill\"/g) || []).length, interchangeRings: vp.querySelectorAll('circle[stroke=\"#16181D\"]').length }; })()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "03-pill.png"
+ },
+ {
+  "name": "zoom-pill",
+  "js": "(() => {\n  const m = GMMC.getMap(), l = GMMC.lineById(window.__line), v = GMMC.getView(), r = document.getElementById('map').getBoundingClientRect();\n  const st = m.stations[l.path[Math.floor(l.path.length / 2)]];\n  v.k = 2.2; v.tx = r.width / 2 - st.x * GMMC.G * v.k; v.ty = r.height / 2 - st.y * GMMC.G * v.k; GMMC.render();\n  return { zoomed: v.k };\n})()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "03b-pill-zoom.png"
+ },
+ {
+  "name": "dot",
+  "js": "(() => { window.__marker('dot'); const vp = window.__vp(), svg = GMMC.standaloneSvg(GMMC.exportScene()); return { marker: GMMC.lineById(window.__line).marker, dots: vp.querySelectorAll('.mk-dot').length, dotsInExport: (svg.match(/class=\"mk-dot\"/g) || []).length, interchangeRings: vp.querySelectorAll('circle[stroke=\"#16181D\"]').length }; })()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "04-dot.png"
+ },
+ {
+  "name": "zoom-dot",
+  "js": "(() => {\n  const m = GMMC.getMap(), l = GMMC.lineById(window.__line), v = GMMC.getView(), r = document.getElementById('map').getBoundingClientRect();\n  const st = m.stations[l.path[Math.floor(l.path.length / 2)]];\n  v.k = 2.2; v.tx = r.width / 2 - st.x * GMMC.G * v.k; v.ty = r.height / 2 - st.y * GMMC.G * v.k; GMMC.render();\n  return { zoomed: v.k };\n})()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "04b-dot-zoom.png"
+ },
+ {
+  "name": "ring",
+  "js": "(() => { window.__marker('ring'); const vp = window.__vp(); return { marker: GMMC.lineById(window.__line).marker, rings: vp.querySelectorAll('.mk-ring').length, others: vp.querySelectorAll('.mk-tick,.mk-pill,.mk-dot').length }; })()"
+ },
+ {
+  "name": "unset",
+  "js": "(() => { window.__marker(''); const l = GMMC.lineById(window.__line); return { marker: l.marker === undefined ? 'unset' : l.marker, mkAny: window.__vp().querySelectorAll('.mk-ring,.mk-tick,.mk-pill,.mk-dot').length }; })()"
+ },
+ {
+  "name": "undo-redo",
+  "js": "(() => {\n  window.__marker('tick'); const a = GMMC.lineById(window.__line).marker;\n  GMMC.undo(); const b = GMMC.lineById(window.__line).marker;\n  GMMC.redo(); const c = GMMC.lineById(window.__line).marker;\n  return { afterSet: a, afterUndo: b === undefined ? 'unset' : b, afterRedo: c };\n})()"
+ },
+ {
+  "name": "style-default-and-override",
+  "js": "(() => {\n  window.__marker('pill');\n  const s = GMMC.getSettings(); s.mapStyle = 'classic'; GMMC.saveSettings(); GMMC.render();\n  const vp = window.__vp();\n  const out = { styleTicks: vp.querySelectorAll('line[stroke-linecap=\"butt\"]').length, ownPills: vp.querySelectorAll('rect.mk-pill').length };\n  window.__marker('');\n  out.afterUnsetPills = vp.querySelectorAll('rect.mk-pill').length;\n  out.afterUnsetStyleTicks = vp.querySelectorAll('line[stroke-linecap=\"butt\"]').length;\n  s.mapStyle = 'material'; GMMC.saveSettings(); GMMC.render();\n  return out;\n})()"
+ },
+ {
+  "name": "save-load",
+  "js": "(() => {\n  window.__marker('dot');\n  const proj = JSON.parse(GMMC.projectJson());\n  const saved = proj.map.lines.find((l) => l.id === window.__line).marker;\n  const flag = proj.map.sharedBends;\n  const ok = GMMC.loadJson(GMMC.projectJson());\n  const l = GMMC.lineById(window.__line);\n  return { savedMarker: saved, savedSharedBends: flag, reloaded: ok, afterLoadMarker: l && l.marker, afterLoadShared: GMMC.getMap().sharedBends, dots: window.__vp().querySelectorAll('.mk-dot').length };\n})()"
+ },
+ {
+  "name": "old-map-loads",
+  "js": "(() => {\n  const m = JSON.parse(JSON.stringify(GMMC.getMap()));\n  delete m.sharedBends; for (const l of m.lines) delete l.marker;\n  const ok = GMMC.loadJson(JSON.stringify(m));\n  const nm = GMMC.getMap();\n  return { loaded: ok, sharedBends: nm.sharedBends, anyMarker: nm.lines.some((l) => l.marker), stations: Object.keys(nm.stations).length, lines: nm.lines.length, svgOk: window.__vp().querySelectorAll('circle').length > 100 };\n})()"
+ },
+ {
+  "name": "restore-template",
+  "js": "(() => { GMMC.newMap('template'); GMMC.setLayout('schematic'); GMMC.fit(); const m = GMMC.getMap(); const l = m.lines.find((x) => x.id === window.__line); return { sharedBends: m.sharedBends, markerOnLine: l && l.marker }; })()"
+ },
+ {
+  "name": "find-pair",
+  "js": "(() => {\n  const m = GMMC.getMap(), seen = new Map();\n  for (const l of m.lines) for (let i = 0; i < l.path.length - 1; i++) {\n    const a = l.path[i], b = l.path[i + 1]; if (a === b || a[0] === '@' || b[0] === '@') continue;\n    const k = a < b ? a + '|' + b : b + '|' + a;\n    (seen.get(k) || seen.set(k, []).get(k)).push({ l: l.id, i, same: a < b });\n  }\n  const cands = [...seen.entries()].filter(([, v]) => new Set(v.map((x) => x.l)).size >= 2);\n  cands.sort((p, q) => (new Set(q[1].map((x) => x.same)).size - new Set(p[1].map((x) => x.same)).size));\n  const [key, segs] = cands[0];\n  const b = key.split('|')[1];\n  const st = m.stations[b]; GMMC.checkpoint(); st.x += 3; st.y += 1; GMMC.changed();\n  window.__pair = { key, segs };\n  return { key, lines: segs.map((s) => s.l + (s.same ? '>' : '<')).join(','), bothDirections: new Set(segs.map((x) => x.same)).size === 2, candidates: cands.length };\n})()"
+ },
+ {
+  "name": "canon",
+  "js": "(() => {\n  window.__canon = () => window.__pair.segs.map((s) => { const l = GMMC.lineById(s.l); const v = l.bends[s.i] || 'early'; return s.l + ':' + (s.same ? v : (v === 'late' ? 'early' : 'late')); });\n  window.__selSeg = (k) => { const s = window.__pair.segs[k]; GMMC.setSelection({ type: 'edge', lineId: s.l, index: s.i }); GMMC.renderPanels(); };\n  window.__selSeg(0);\n  const sw = document.querySelector('#inspector input[data-f=\"map.sharedBends\"]');\n  return { switchPresent: !!sw, switchOn: sw && sw.checked, segmented: [...document.querySelectorAll('#inspector [data-bend]')].map((b) => b.dataset.bend + ':' + b.getAttribute('aria-pressed')).join(','), initial: window.__canon() };\n})()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "05-segment-inspector.png"
+ },
+ {
+  "name": "shared-on-change",
+  "js": "(() => {\n  window.__eq = () => { const c = window.__canon(); return { canonical: c, allEqual: new Set(c.map((x) => x.split(':')[1])).size === 1 }; };\n  document.querySelector('#inspector [data-bend=\"late\"]').click();\n  return window.__eq();\n})()"
+ },
+ {
+  "name": "shared-on-other-line",
+  "js": "(() => {\n  window.__selSeg(window.__pair.segs.length - 1);\n  document.querySelector('#inspector [data-bend=\"late\"]').click();\n  return window.__eq();\n})()"
+ },
+ {
+  "name": "undo-bend",
+  "js": "(() => { GMMC.undo(); return window.__eq(); })()"
+ },
+ {
+  "name": "switch-off",
+  "js": "(() => {\n  window.__selSeg(0);\n  document.querySelector('#inspector input[data-f=\"map.sharedBends\"]').click();\n  const off = GMMC.getMap().sharedBends === false;\n  window.__selSeg(0);\n  document.querySelector('#inspector [data-bend=\"early\"]').click();\n  const r = window.__eq();\n  return { switchOff: off, canonical: r.canonical, independent: !r.allEqual };\n})()"
+ },
+ {
+  "name": "switch-on-syncs",
+  "js": "(() => {\n  window.__selSeg(0);\n  document.querySelector('#inspector input[data-f=\"map.sharedBends\"]').click();\n  const r = window.__eq();\n  return { sharedBends: GMMC.getMap().sharedBends, canonical: r.canonical, allEqual: r.allEqual };\n})()"
+ },
+ {
+  "name": "undo-switch",
+  "js": "(() => { GMMC.undo(); return { sharedBends: GMMC.getMap().sharedBends }; })()"
+ },
+ {
+  "name": "shared-save-load",
+  "js": "(() => {\n  GMMC.redo();\n  window.__selSeg(0);\n  document.querySelector('#inspector [data-bend=\"late\"]').click();\n  const before = window.__canon();\n  const proj = GMMC.projectJson();\n  GMMC.loadJson(proj);\n  return { sharedBendsInFile: JSON.parse(proj).map.sharedBends, before, after: window.__canon(), same: JSON.stringify(before) === JSON.stringify(window.__canon()) };\n})()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "06-shared-bend-map.png"
+ },
+ {
+  "name": "schematic-numbers",
+  "js": "(async () => {\n  GMMC.newMap('template'); GMMC.setLayout('geographic'); GMMC.fit();\n  const out = {};\n  for (const reduce of [false, true]) {\n    const t0 = performance.now();\n    const r = await GMMCSchematic.run({ spacing: 2, keepShape: 0.3, reduce });\n    const s = r.stats;\n    out[reduce ? 'reduceOn' : 'reduceOff'] = { wallMs: Math.round(performance.now() - t0), crossingsGeographic: s.crossingsBefore, crossingsSnapped: s.crossingsSnapped, crossingsFinal: s.crossings, moves: s.reduceMoves, orderChanges: s.orderChanges, straightShare: +s.straightShare.toFixed(3), lateBends: r.bends.length, integers: Object.values(r.positions).every((p) => Number.isInteger(p.x) && Number.isInteger(p.y)) };\n    if (reduce) window.__r = r;\n  }\n  return out;\n})()"
+ },
+ {
+  "name": "minimum-spacing",
+  "js": "(() => {\n  const p = Object.values(window.__r.positions), seen = new Set(p.map((q) => q.x + ',' + q.y));\n  return { distinctCells: seen.size, stations: p.length };\n})()"
+ },
+ {
+  "name": "apply-and-draw",
+  "js": "(() => {\n  GMMC.setLayout('schematic');\n  const ok = GMMCSchematic.apply(window.__r);\n  const m = GMMC.getMap();\n  const late = m.lines.reduce((n, l) => n + Object.values(l.bends).filter((v) => v === 'late').length, 0);\n  return { ok, lateSegments: late, sharedBends: m.sharedBends };\n})()"
+ },
+ {
+  "wait": 700
+ },
+ {
+  "shot": "07-after-reduce-applied.png"
+ },
+ {
+  "name": "side-sheet",
+  "js": "(() => {\n  const sw = document.getElementById('schReduce');\n  document.getElementById('schApply').scrollIntoView();\n  return new Promise((res) => { document.getElementById('schPreview').click(); setTimeout(() => res({ switchChecked: sw.checked, cross: document.getElementById('schStatCross').textContent, note: document.getElementById('schNote').textContent }), 2500); });\n})()"
+ },
+ {
+  "wait": 400
+ },
+ {
+  "shot": "08-side-sheet.png"
+ },
+ {
+  "name": "cantonese",
+  "js": "(() => {\n  const s = GMMC.getSettings(); s.lang = 'yue'; GMMC.saveSettings(); GMMC.applyI18n();\n  window.__selSeg(0);\n  const sw = [...document.querySelectorAll('#inspector .switch-row')].pop().textContent;\n  window.__pickLine(window.__line);\n  return { title: document.querySelector('#inspector .mk-sec .tf-label').textContent, buttons: [...document.querySelectorAll('#inspector [data-marker]')].map((b) => b.textContent.trim()).join('|'), sharedSwitch: sw, reduceLabel: document.getElementById('schReduceT').textContent };\n})()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "09-cantonese.png"
+ },
+ {
+  "name": "dark",
+  "js": "(() => {\n  const s = GMMC.getSettings(); s.theme = 'dark'; GMMC.saveSettings(); document.documentElement.setAttribute('data-theme', 'dark'); GMMC.render();\n  window.__pickLine(window.__line); window.__marker('tick');\n  const cs = getComputedStyle(document.querySelector('#inspector .segmented.wide button[aria-pressed=\"true\"]'));\n  return { theme: document.documentElement.getAttribute('data-theme'), pressedBg: cs.backgroundColor };\n})()"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "shot": "10-dark.png"
+ },
+ {
+  "name": "overflow",
+  "js": "(() => {\n  const de = document.documentElement, insp = document.getElementById('inspector');\n  const wide = [...document.querySelectorAll('#inspector .segmented.wide')];\n  const r = insp.getBoundingClientRect();\n  const out = [...insp.querySelectorAll('.segmented.wide, .mk-preview, .switch-row, .supporting')].filter((n) => { const b = n.getBoundingClientRect(); return b.right > r.right + 1 || b.left < r.left - 1; }).length;\n  return { viewport: innerWidth, pageScrollWidth: de.scrollWidth, pageOverflow: de.scrollWidth > innerWidth + 1, inspectorOverflowingChildren: out, inspectorScroll: insp.scrollWidth > insp.clientWidth + 1, segmentedFitting: wide.every((w) => w.scrollWidth <= w.clientWidth + 1) };\n})()"
+ },
+ {
+  "name": "visible-focus",
+  "js": "(() => {\n  const b = document.querySelector('#inspector [data-marker=\"pill\"]'); b.focus();\n  return { focused: document.activeElement === b, outline: getComputedStyle(b).outlineStyle };\n})()"
+ }
+]

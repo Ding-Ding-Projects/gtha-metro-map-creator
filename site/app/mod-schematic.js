@@ -18,7 +18,8 @@
     schPreview: 'Preview', schApply: 'Apply', schClear: 'Clear preview', schOpen: 'Auto-schematic…',
     schWorking: 'Working out the layout', schApplied: 'Schematic layout applied', schNoStations: 'Add stations and routes first',
     schFailed: 'Auto-schematic failed', schPreviewing: 'Previewing. Nothing has changed yet.',
-    schOneBend: 'with one bend', schBefore: 'before', schRan: 'Computed in'
+    schOneBend: 'with one bend', schBefore: 'before', schRan: 'Computed in',
+    schReduce: 'Reduce crossings', schSnapped: 'after snapping', schReduced: 'after reduction'
   }, {
     schTitle: '自動示意圖',
     schIntro: '將真實位置變成整齊嘅 45 度示意圖，每條路線嘅車站次序保持不變。',
@@ -27,12 +28,13 @@
     schPreview: '預覽', schApply: '套用', schClear: '清除預覽', schOpen: '自動示意圖…',
     schWorking: '計緊版面', schApplied: '已套用示意圖版面', schNoStations: '請先加車站同路線',
     schFailed: '自動示意圖失敗', schPreviewing: '預覽中，暫時未改任何嘢。',
-    schOneBend: '有一個轉角', schBefore: '之前', schRan: '運算時間'
+    schOneBend: '有一個轉角', schBefore: '之前', schRan: '運算時間',
+    schReduce: '減少交叉', schSnapped: '貼齊格線後', schReduced: '減少交叉後'
   });
 
   const t = (k) => (GM ? GM.t(k) : k);
   const el = (id) => document.getElementById(id);
-  const params = () => ({ spacing: +(el('schSpacing') || { value: 2 }).value, keepShape: +(el('schKeep') || { value: 0.3 }).value });
+  const params = () => ({ spacing: +(el('schSpacing') || { value: 2 }).value, keepShape: +(el('schKeep') || { value: 0.3 }).value, reduce: el('schReduce') ? el('schReduce').checked : true });
 
   function collect() {
     const m = GM.getMap();
@@ -78,14 +80,15 @@
     const prm = { spacing: Math.min(4, Math.max(1, +(p && p.spacing) || 2)), keepShape: Math.min(1, Math.max(0, p && p.keepShape !== undefined ? +p.keepShape : 0.3)) };
     const input = collect();
     if (!input.stations.length) throw new Error('no stations');
-    input.spacing = prm.spacing; input.keepShape = prm.keepShape;
+    prm.reduce = !p || p.reduce !== false;
+    input.spacing = prm.spacing; input.keepShape = prm.keepShape; input.reduce = prm.reduce;
     const t0 = performance.now();
     const res = await solveAsync(input, onProgress);
     // keep the diagram where the current schematic sits
     const old = centroid(Object.values(GM.getMap().stations)), now = centroid(Object.values(res.positions));
     const dx = Math.round(old.x - now.x), dy = Math.round(old.y - now.y);
     for (const id of Object.keys(res.positions)) { res.positions[id].x += dx; res.positions[id].y += dy; }
-    return { positions: res.positions, stats: res.stats, params: prm, runtimeMs: Math.round(performance.now() - t0) };
+    return { positions: res.positions, bends: res.bends || [], stats: res.stats, params: prm, runtimeMs: Math.round(performance.now() - t0) };
   }
 
   /** Write a result into the map as one undoable step and switch to the schematic layout. */
@@ -106,6 +109,14 @@
       if (p) { lb.x += Math.round(p.x) - best.x; lb.y += Math.round(p.y) - best.y; }
     }
     for (const l of m.lines) { l.path = l.path.filter((r) => r[0] !== '@'); l.bends = {}; }
+    // bends the crossing reduction chose: [stationA, stationB, 'late'] for segments drawn straight first
+    for (const [A, B] of result.bends || []) {
+      for (const l of m.lines) for (let i = 0; i < l.path.length - 1; i++) {
+        if (l.path[i] === A && l.path[i + 1] === B) l.bends[i] = 'late';
+        else if (l.path[i] === B && l.path[i + 1] === A) l.bends[i] = 'early';
+      }
+    }
+    for (const l of m.lines) for (const k of Object.keys(l.bends)) if (l.bends[k] === 'early') delete l.bends[k];
     preview = null; last = null;
     GM.setLayout('schematic');
     GM.changed();
@@ -117,14 +128,15 @@
   // ---------- overlay ----------
   hk('svgOver').push((m, ctx) => {
     if (!preview || m._geo || (ctx.opts && ctx.opts.exportColors)) return '';
-    const G = ctx.G, pos = preview.positions;
+    const G = ctx.G, pos = preview.positions, lateSet = new Set((preview.bends || []).map(([a, b]) => a + '|' + b));
     let out = '<g class="sch-ghost" pointer-events="none">';
     for (const l of m.lines) {
       if (!l.visible) continue;
       const ids = l.path.filter((r) => r[0] !== '@' && pos[r]);
       for (let i = 0; i < ids.length - 1; i++) {
         if (ids[i] === ids[i + 1]) continue;
-        const pts = GM.route(pos[ids[i]], pos[ids[i + 1]], 'early');
+        const lateFwd = lateSet.has(ids[i] + '|' + ids[i + 1]), lateRev = lateSet.has(ids[i + 1] + '|' + ids[i]);
+        const pts = GM.route(pos[ids[i]], pos[ids[i + 1]], lateFwd ? 'late' : lateRev ? 'early' : 'early');
         out += '<path d="' + pts.map((p, k) => (k ? 'L' : 'M') + (p.x * G).toFixed(1) + ' ' + (p.y * G).toFixed(1)).join('') + '" fill="none" stroke="' + l.color + '" stroke-width="3" stroke-opacity=".7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 7"/>';
       }
     }
@@ -158,12 +170,12 @@
     el('schStatCross').textContent = s ? String(s.crossings) : '–';
     if (!busy) {
       el('schNote').textContent = s
-        ? Math.round(s.oneBendShare * 100) + '% ' + t('schOneBend') + ' · ' + t('schCross') + ' ' + t('schBefore') + ': ' + s.crossingsBefore + ' · ' + last.runtimeMs + ' ms'
+        ? Math.round(s.oneBendShare * 100) + '% ' + t('schOneBend') + ' · ' + t('schCross') + ' ' + t('schBefore') + ': ' + s.crossingsBefore + ' → ' + t('schSnapped') + ': ' + s.crossingsSnapped + ' → ' + t('schReduced') + ': ' + s.crossings + ' · ' + last.runtimeMs + ' ms'
         : '';
     }
   }
   function relabel() {
-    for (const [id, k] of [['schTitleT', 'schTitle'], ['schIntroT', 'schIntro'], ['schSpacingT', 'schSpacing'], ['schKeepT', 'schKeep'], ['schPctT', 'schPercent'], ['schOrderT', 'schOrder'], ['schCrossT', 'schCross'], ['schPreview', 'schPreview'], ['schApply', 'schApply'], ['schClear', 'schClear'], ['schOpen', 'schOpen']]) {
+    for (const [id, k] of [['schTitleT', 'schTitle'], ['schIntroT', 'schIntro'], ['schSpacingT', 'schSpacing'], ['schKeepT', 'schKeep'], ['schPctT', 'schPercent'], ['schOrderT', 'schOrder'], ['schCrossT', 'schCross'], ['schReduceT', 'schReduce'], ['schPreview', 'schPreview'], ['schApply', 'schApply'], ['schClear', 'schClear'], ['schOpen', 'schOpen']]) {
       const n = el(id); if (n) n.textContent = t(k);
     }
   }
@@ -196,6 +208,7 @@
       + '<p class="supporting sch-intro" id="schIntroT"></p>'
       + '<label class="tf tf-range sch-range"><span class="tf-label"><span id="schSpacingT"></span> <output id="schSpacingOut" for="schSpacing"></output></span><input id="schSpacing" type="range" min="1" max="4" step="0.5" value="2"></label>'
       + '<label class="tf tf-range sch-range"><span class="tf-label"><span id="schKeepT"></span> <output id="schKeepOut" for="schKeep"></output></span><input id="schKeep" type="range" min="0" max="1" step="0.05" value="0.3"></label>'
+      + '<label class="switch-row sch-reduce" title=""><span id="schReduceT"></span><input type="checkbox" role="switch" class="switch" id="schReduce" checked></label>'
       + '<div class="sch-stats" role="group" aria-label="Auto-schematic results">'
       + '<div><b id="schStatPct">–</b><span id="schPctT"></span></div>'
       + '<div><b id="schStatOrder">–</b><span id="schOrderT"></span></div>'
@@ -208,7 +221,7 @@
     const h = aside.querySelector('h2');
     aside.insertBefore(sec, h || aside.firstChild);
     relabel(); refreshUi();
-    for (const id of ['schSpacing', 'schKeep']) el(id).addEventListener('input', () => { last = null; if (preview) { preview = null; GM.render(); } refreshUi(); });
+    for (const id of ['schSpacing', 'schKeep', 'schReduce']) el(id).addEventListener('input', () => { last = null; if (preview) { preview = null; GM.render(); } refreshUi(); });
     el('schPreview').addEventListener('click', () => { doRun(true); });
     el('schClear').addEventListener('click', clearPreview);
     el('schApply').addEventListener('click', async () => {
