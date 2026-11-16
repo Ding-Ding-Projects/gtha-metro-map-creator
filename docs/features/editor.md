@@ -14,6 +14,24 @@ perpendicular to the segment by `(i - (n - 1) / 2) * spacing`, where spacing is 
 line in the group plus 2 px. Bends use mitred offsets. The first line drawn on a pair sets its
 geometry.
 
+### One bend for shared track
+
+The segment inspector has a **Diagonal first / Straight first** segmented button and a switch,
+**Same bend for every line here**, which shows the lines that share the segment. With the switch
+on (`map.sharedBends`, on for new maps), choosing a bend on one line writes the same bend to
+every line that has the same two consecutive nodes, in either direction (a line that runs the
+other way stores the mirrored value, so the drawn path is identical). Turning the switch on
+aligns existing shared pairs to the bend that is drawn now, so nothing moves. With the switch off
+every line keeps its own bend. All changes, including the switch, are single undo steps. Maps
+saved without `sharedBends` open with it off, so older files look the same as before.
+
+## Station markers per line
+
+The line inspector has a **Station markers** segmented button: **Auto** (follow the map style),
+**Ring**, **Tick**, **Pill** or **Dot**, with a live preview strip. The value is `line.marker`
+(see `map-format.md`) and overrides the map style for that line only; see `styles.md`. A station
+served by two or more drawn lines is an interchange and always keeps its ring.
+
 ## Interface
 
 Material Design 3: top app bar with a layout segmented button, navigation rail for tools, search

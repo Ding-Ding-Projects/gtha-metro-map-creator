@@ -346,7 +346,7 @@
       for (const l of data.lines) extraLines.push(Object.assign({ visible: true, bends: {} }, JSON.parse(JSON.stringify(l))));
     }
     return {
-      version: 1,
+      version: 1, sharedBends: true,
       title: 'GTHA Rapid Transit',
       titleZh: '大多倫多及咸美頓地區快速交通',
       stations,
@@ -358,7 +358,7 @@
   }
 
   function blank() {
-    return { version: 1, title: 'Untitled map', titleZh: '', stations: {}, lines: [], labels: [] };
+    return { version: 1, sharedBends: true, title: 'Untitled map', titleZh: '', stations: {}, lines: [], labels: [] };
   }
 
   window.GTHATemplates = { gtha: build, blank };

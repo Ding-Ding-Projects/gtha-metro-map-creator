@@ -20,7 +20,7 @@
 
   // Extension hooks. Feature modules (mod-*.js) load before this file and push functions onto
   // window.GMMCX; see docs/features/extensions.md.
-  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [], stationMarker: [], labelStyle: [], exportTheme: [], projectSave: [], projectLoad: [], lineRow: [], legendColumn: [] }, window.GMMCX || {});
+  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [], stationMarker: [], labelStyle: [], exportTheme: [], projectSave: [], projectLoad: [], lineRow: [], legendColumn: [], lineInspector: [] }, window.GMMCX || {});
   for (const k of Object.keys(X)) if (!Array.isArray(X[k])) X[k] = [];
   window.GMMCX = X;
   const hook = (name, ...args) => { for (const f of X[name]) { try { const r = f(...args); if (r) return r; } catch (err) { console.error('extension ' + name, err); } } return null; };
@@ -78,6 +78,7 @@
     }
     out.transfers = (Array.isArray(m.transfers) ? m.transfers : []).filter((t) => t && out.stations[t.a] && out.stations[t.b] && t.a !== t.b).slice(0, 2000).map((t) => ({ a: String(t.a), b: String(t.b) }));
     fillKnownCoords(out);
+    out.sharedBends = m.sharedBends === true;
     for (const f of X.validate) { try { f(m, out); } catch (err) { console.error('extension validate', err); } }
     return out;
   }
@@ -377,38 +378,26 @@
       out += linePaths(ls, d);
       if (opts.editor && !l._branchOf) for (const e of g.edges) out += `<path class="hit" d="${polyD(e.pts)}" stroke-width="${Math.max(16, l.width + 8)}" data-line="${esc(l.id)}" data-edge="${e.index}"/>`;
     }
-    // stations and stops
+    // stations and stops: first decide which stations get a label, then place the labels, so a marker can
+    // know which side its label is on, then draw the markers and append the labels over them.
     const zoomedOut = m._geo && m._k < 0.55;
-    const labelled = [];
+    const labelled = [], info = new Map();
     for (const s of Object.values(m.stations)) {
       const inter = isInterchangeIn(m, s);
       const allLines = m.lines.filter((l) => l.visible && l.path.includes(s.id));
       const lines = allLines.filter((l) => !(l.skip && l.skip.includes(s.id)));
       const passOnly = allLines.length > 0 && !lines.length && s.interchange !== 'yes';
       const col = (lines[0] || allLines[0]) ? (lines[0] || allLines[0]).color : '#16181D';
-      const cx = s.x * G, cy = s.y * G;
-      if (passOnly) {
-        out += `<g data-st="${esc(s.id)}">${opts.editor ? `<circle cx="${cx}" cy="${cy}" r="2.5" fill="${col}" opacity=".7"/><circle cx="${cx}" cy="${cy}" r="14" fill="transparent"/>` : ''}</g>`;
-        continue;
-      }
-      const custom = hook('stationMarker', m, s, { inter, col, cx, cy, geo, G, opts });
-      if (custom) {
-        out += `<g data-st="${esc(s.id)}">${custom}`;
-      } else if (s.kind === 'stop' && !inter) {
-        out += `<g data-st="${esc(s.id)}"><circle cx="${cx}" cy="${cy}" r="3.6" fill="#FFFFFF" stroke="${col}" stroke-width="2.2"/>`;
-      } else {
-        const r = inter ? 8.5 : 6;
-        out += `<g data-st="${esc(s.id)}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFFFFF" stroke="${inter ? '#16181D' : col}" stroke-width="${inter ? 3.5 : 3}"/>`;
-      }
-      if (opts.editor) out += `<circle cx="${cx}" cy="${cy}" r="14" fill="transparent"/>`;
-      out += '</g>';
+      info.set(s.id, { inter, lines, passOnly, col });
+      if (passOnly) continue;
       const terminal = lines.some((l) => l.path[0] === s.id || l.path[l.path.length - 1] === s.id);
       if (zoomedOut && !inter && !terminal) continue;
       if (m._geo && s.kind === 'stop' && !inter && m._k < 1.6) continue;
       labelled.push(s);
     }
     // Place labels by importance (interchanges, termini, stations, stops) and drop any that would overlap.
-    const placed = [];
+    const placed = [], labelDirs = new Map();
+    let labelOut = '';
     const rank = (s) => { const inter = isInterchangeIn(m, s); const term = m.lines.some((l) => l.visible && (l.path[0] === s.id || l.path[l.path.length - 1] === s.id)); return (inter ? 0 : term ? 1 : s.kind === 'stop' ? 3 : 2); };
     labelled.sort((a, b) => rank(a) - rank(b));
     for (const s of labelled) {
@@ -420,15 +409,36 @@
       if (!rc) continue;
       if (placed.some((q) => rc.x0 < q.x1 + 3 && rc.x1 > q.x0 - 3 && rc.y0 < q.y1 + 2 && rc.y1 > q.y0 - 2)) continue;
       placed.push(rc);
+      labelDirs.set(s.id, rc.dir);
       const nm = displayName(s), [ux] = DIRS[rc.dir];
       const anchor = ux > 0 ? 'start' : ux < 0 ? 'end' : 'middle';
       const tx = ux > 0 ? rc.x0 + 2 : ux < 0 ? rc.x1 - 2 : (rc.x0 + rc.x1) / 2;
       const weight = lst.weight || (inter ? 700 : small ? 400 : 500);
       const ink = opts.exportColors ? ` fill="${th.ink}" stroke="${th.halo}"` : '';
-      out += `<text class="st-label" x="${tx.toFixed(1)}" y="${(rc.y0 + lfs).toFixed(1)}" font-size="${lfs}" font-weight="${weight}" text-anchor="${anchor}" data-st="${esc(s.id)}"${ink}>${esc(lst.upper ? nm.main.toUpperCase() : nm.main)}</text>`;
-      if (nm.sub) out += `<text class="st-label" x="${tx.toFixed(1)}" y="${(rc.y0 + lfs * 2.1).toFixed(1)}" font-size="${(lfs * 0.9).toFixed(1)}" text-anchor="${anchor}"${ink}>${esc(nm.sub)}</text>`;
-      out += hookAll('labelExtra', m, s, rc, { G, opts, anchor, fs: lfs });
+      labelOut += `<text class="st-label" x="${tx.toFixed(1)}" y="${(rc.y0 + lfs).toFixed(1)}" font-size="${lfs}" font-weight="${weight}" text-anchor="${anchor}" data-st="${esc(s.id)}"${ink}>${esc(lst.upper ? nm.main.toUpperCase() : nm.main)}</text>`;
+      if (nm.sub) labelOut += `<text class="st-label" x="${tx.toFixed(1)}" y="${(rc.y0 + lfs * 2.1).toFixed(1)}" font-size="${(lfs * 0.9).toFixed(1)}" text-anchor="${anchor}"${ink}>${esc(nm.sub)}</text>`;
+      labelOut += hookAll('labelExtra', m, s, rc, { G, opts, anchor, fs: lfs });
     }
+    for (const s of Object.values(m.stations)) {
+      const { inter, lines, passOnly, col } = info.get(s.id);
+      const cx = s.x * G, cy = s.y * G;
+      if (passOnly) {
+        out += `<g data-st="${esc(s.id)}">${opts.editor ? `<circle cx="${cx}" cy="${cy}" r="2.5" fill="${col}" opacity=".7"/><circle cx="${cx}" cy="${cy}" r="14" fill="transparent"/>` : ''}</g>`;
+        continue;
+      }
+      const custom = hook('stationMarker', m, s, { inter, col, cx, cy, geo, G, opts, lines, labelDir: labelDirs.get(s.id) || (s.label !== 'auto' ? s.label : null) });
+      if (custom) {
+        out += `<g data-st="${esc(s.id)}">${custom}`;
+      } else if (s.kind === 'stop' && !inter) {
+        out += `<g data-st="${esc(s.id)}"><circle cx="${cx}" cy="${cy}" r="3.6" fill="#FFFFFF" stroke="${col}" stroke-width="2.2"/>`;
+      } else {
+        const r = inter ? 8.5 : 6;
+        out += `<g data-st="${esc(s.id)}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFFFFF" stroke="${inter ? '#16181D' : col}" stroke-width="${inter ? 3.5 : 3}"/>`;
+      }
+      if (opts.editor) out += `<circle cx="${cx}" cy="${cy}" r="14" fill="transparent"/>`;
+      out += '</g>';
+    }
+    out += labelOut;
     // frequency badges, placed on the middle of each route
     const badges = [];
     if (settings.showFreq) for (const g of geo) {
@@ -729,10 +739,14 @@
         <div class="two">${freqField('freqEvening', t('bandEvening'), f.evening)}${freqField('freqWeekend', t('bandWeekend'), f.weekend)}</div>
         ${sw('ln.showFreq', l.showFreq, t('showFreqLine'))}
         ${l.note ? `<p class="supporting">${esc(l.note)}</p>` : ''}
+        ${hookAll('lineInspector', l)}
         <div class="actions">${btn('moveUp', t('moveUp'), 'text')}${btn('moveDown', t('moveDown'), 'text')}${btn('reverse', t('reverse'), 'text', 'sync_alt')}${btn('delLine', t('delete'), 'danger', 'delete')}</div>`;
       if (selection.type === 'edge') {
         const mode = l.bends[selection.index] || 'early';
-        h += `<h3 class="title-sm">${esc(t('segment'))} ${selection.index + 1}</h3>${isGeo() ? '' : tf(t('bend'), sel('edge.bend', [['early', t('bendEarly')], ['late', t('bendLate')]], mode))}
+        const peers = pairSegments(l.path[selection.index], l.path[selection.index + 1]).map((sg) => sg.line).filter((x, i, a) => a.indexOf(x) === i);
+        const seg = (v, label) => `<button type="button" data-bend="${v}" aria-pressed="${mode === v}"><span class="seg-check">${ic('check')}</span><span>${esc(label)}</span></button>`;
+        h += `<h3 class="title-sm">${esc(t('segment'))} ${selection.index + 1}</h3>${isGeo() ? '' : `<span class="tf-label" id="bendLbl">${esc(t('bend'))}</span><div class="segmented wide" role="group" aria-labelledby="bendLbl">${seg('early', t('bendEarly'))}${seg('late', t('bendLate'))}</div>
+          <label class="switch-row"><span class="sw-text"><span>${esc(t('sharedBend'))}</span><span class="supporting">${esc(peers.length > 1 ? peers.map(lineName).join(', ') + ' ' + t('sharedBendShare') : t('sharedBendAlone'))}</span></span><input type="checkbox" role="switch" class="switch" data-f="map.sharedBends"${map.sharedBends ? ' checked' : ''}></label>`}
           <div class="actions">${btn('insertStation', t('insertStation'), 'tonal', 'add_location_alt')}${btn('eraseEdge', t('erase'), 'danger', 'ink_eraser')}</div>`;
       }
       h += '</div>';
@@ -761,6 +775,42 @@
     else document.documentElement.setAttribute('data-theme', settings.theme);
   }
   function saveSettings() { store.set(STORE_SET, settings); }
+
+  // ---------- shared bends ----------
+  const flipBend = (v) => (v === 'late' ? 'early' : 'late');
+  const putBend = (l, i, v) => { if (v === 'early') delete l.bends[i]; else l.bends[i] = v; };
+  /** Every drawn segment, on any line, that joins the same two nodes as segment i of line l, in either direction. */
+  function pairSegments(a, b) {
+    const out = [];
+    for (const l of map.lines) for (let i = 0; i < l.path.length - 1; i++) {
+      const x = l.path[i], y = l.path[i + 1];
+      if (x !== y && ((x === a && y === b) || (x === b && y === a))) out.push({ line: l, index: i, same: x === a });
+    }
+    return out;
+  }
+  /** Set a bend. With shared bends on, every line over the same pair of nodes follows, so shared track stays one track. */
+  function setBend(line, index, mode) {
+    putBend(line, index, mode);
+    if (!map.sharedBends) return;
+    for (const sg of pairSegments(line.path[index], line.path[index + 1])) {
+      if (sg.line === line && sg.index === index) continue;
+      putBend(sg.line, sg.index, sg.same ? mode : flipBend(mode));
+    }
+  }
+  /** Make every shared pair agree, keeping the bend that is drawn now (the first visible line wins, as in the geometry). */
+  function syncSharedBends() {
+    const seen = new Set();
+    for (const l of map.lines) for (let i = 0; i < l.path.length - 1; i++) {
+      const a = l.path[i], b = l.path[i + 1], key = a < b ? a + '|' + b : b + '|' + a;
+      if (a === b || seen.has(key)) continue;
+      seen.add(key);
+      const segs = pairSegments(a, b);
+      if (segs.length < 2) continue;
+      const lead = segs.find((sg) => sg.line.visible) || segs[0];
+      const mode = lead.line.bends[lead.index] || 'early';
+      for (const sg of segs) putBend(sg.line, sg.index, sg.line === lead.line && sg.index === lead.index ? mode : (sg.same === lead.same ? mode : flipBend(mode)));
+    }
+  }
 
   // ---------- edits ----------
   function snapPt(p) { if (isGeo()) return { x: Math.round(p.x * 1000) / 1000, y: Math.round(p.y * 1000) / 1000 }; return settings.snap ? { x: Math.round(p.x), y: Math.round(p.y) } : { x: Math.round(p.x * 4) / 4, y: Math.round(p.y * 4) / 4 }; }
@@ -981,6 +1031,7 @@
     if (b.dataset.goto) { const s = map.stations[b.dataset.goto]; if (s) { selection = { type: 'station', ids: [s.id] }; centerOnStation(s); renderPanels(); } return; }
     if (b.dataset.layout) { setLayout(b.dataset.layout); return; }
     if (b.dataset.unlink !== undefined) { checkpoint(); map.transfers.splice(+b.dataset.unlink, 1); changed(); return; }
+    if (b.dataset.bend && b.closest('#inspector') && selection && selection.type === 'edge') { const l = lineById(selection.lineId); if ((l.bends[selection.index] || 'early') !== b.dataset.bend) { checkpoint(); setBend(l, selection.index, b.dataset.bend); changed(); } return; }
     if (b.dataset.act && b.closest('#inspector')) { act(b.dataset.act); return; }
     if (b.dataset.act && b.closest('#exportMenu')) { $('exportMenu').hidden = true; $('exportBtn').setAttribute('aria-expanded', 'false'); exportAct(b.dataset.act); return; }
   });
@@ -1027,7 +1078,7 @@
       else if (k === 'showFreq') l.showFreq = e.target.checked;
       else l[k] = v;
     }
-    else if (f === 'edge.bend') { const l = lineById(selection.lineId); if (v === 'early') delete l.bends[selection.index]; else l.bends[selection.index] = v; }
+    else if (f === 'map.sharedBends') { map.sharedBends = e.target.checked; if (map.sharedBends) syncSharedBends(); }
     else if (f.startsWith('lb.')) { const lb = map.labels.find((x) => x.id === selection.id); const k = f.slice(3); lb[k] = k === 'size' ? +v : v; }
     render(); renderLines(); renderIssues();
     clearTimeout(saveTimer); saveTimer = setTimeout(() => store.set(STORE_MAP, map), 400);
@@ -1340,6 +1391,6 @@ addEventListener('resize',fit);fit();})();
     getSelection: () => selection, setSelection: (s) => { selection = s; }, getTool: () => tool, setTool: (x) => { tool = x; renderTools(); render(); },
     getActiveLine: () => activeLineId, setActiveLine: (id) => { activeLineId = id; }, lineById, servingLines, isInterchangeIn, lineName, freqText, linePaths,
     renderLines, saveMap: () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => store.set(STORE_MAP, map), 400); },
-    isGeo, stGeo, geoGrid, gridToLatLon, fits, worldFromEvent, addStation, snapPt, uid, svgEl: () => svgEl, replaceMap, loadText, download, exportScene };
+    isGeo, stGeo, geoGrid, gridToLatLon, fits, worldFromEvent, addStation, snapPt, uid, svgEl: () => svgEl, replaceMap, loadText, download, exportScene, setBend, syncSharedBends };
   for (const f of X.ready) { try { f(window.GMMC); } catch (err) { console.error('extension ready', err); } }
 })();

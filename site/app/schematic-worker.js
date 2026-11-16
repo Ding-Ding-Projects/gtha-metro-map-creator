@@ -13,11 +13,12 @@
     const a = Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI;
     return Math.min(a, Math.abs(a - 45), 90 - a);
   }
-  /** Same two-segment route as the editor's route() with the default bend. */
-  function routePts(a, b) {
+  /** Same two-segment route as the editor's route(); late is the "straight first" bend. */
+  function routePts(a, b, late) {
     const dx = b.x - a.x, dy = b.y - a.y, adx = Math.abs(dx), ady = Math.abs(dy);
     if (adx === 0 || ady === 0 || adx === ady) return [a, b];
     const d = Math.min(adx, ady), sx = Math.sign(dx), sy = Math.sign(dy);
+    if (late) return [a, adx > ady ? { x: b.x - sx * d, y: a.y } : { x: a.x, y: b.y - sy * d }, b];
     return [a, { x: a.x + sx * d, y: a.y + sy * d }, b];
   }
   const orient = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
@@ -25,10 +26,10 @@
     const d1 = orient(c, d, a), d2 = orient(c, d, b), d3 = orient(a, b, c), d4 = orient(a, b, d);
     return d1 * d2 < 0 && d3 * d4 < 0;
   }
-  function countCrossings(edges, pos, bend) {
-    const polys = edges.map((e) => {
+  function countCrossings(edges, pos, bend, late) {
+    const polys = edges.map((e, i) => {
       const a = pos[e.a], b = pos[e.b];
-      return bend ? routePts(a, b) : [a, b];
+      return bend ? routePts(a, b, late && late[i]) : [a, b];
     });
     let n = 0;
     for (let i = 0; i < edges.length; i++) {
@@ -212,6 +213,79 @@
       }
       if (!moved) break;
     }
+    if (onProgress) onProgress(0.9);
+    function reduceCrossings() {
+      const deadline = Date.now() + 600;
+      const nEdges = edges.length;
+      const share = (i, j) => { const p = edges[i], q = edges[j]; return p.a === q.a || p.a === q.b || p.b === q.a || p.b === q.b; };
+      const poly = (i) => routePts({ x: ix[edges[i].a], y: iy[edges[i].a] }, { x: ix[edges[i].b], y: iy[edges[i].b] }, late[i]);
+      const polys = edges.map((_, i) => poly(i));
+      const boxes = polys.map((pl) => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const q of pl) { x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); } return [x0, y0, x1, y1]; });
+      const setPoly = (i) => { polys[i] = poly(i); const pl = polys[i]; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const q of pl) { x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); } boxes[i] = [x0, y0, x1, y1]; };
+      const hit = (pi, pj) => { for (let p = 0; p < pi.length - 1; p++) for (let q = 0; q < pj.length - 1; q++) if (properCross(pi[p], pi[p + 1], pj[q], pj[q + 1])) return true; return false; };
+      const crossOf = (i) => {
+        let n = 0; const bi = boxes[i];
+        for (let j = 0; j < nEdges; j++) {
+          if (j === i || share(i, j)) continue;
+          const bj = boxes[j];
+          if (bj[0] > bi[2] || bj[2] < bi[0] || bj[1] > bi[3] || bj[3] < bi[1]) continue;
+          if (hit(polys[i], polys[j])) n++;
+        }
+        return n;
+      };
+      const cornerFree = (i) => { const pl = polys[i]; return pl.length < 3 || !occ.has(key(pl[1].x, pl[1].y)); };
+      const dev = (i) => devDeg(ix[edges[i].b] - ix[edges[i].a], iy[edges[i].b] - iy[edges[i].a]);
+      let moves = 0;
+      for (let sweep = 0; sweep < 12 && Date.now() < deadline; sweep++) {
+        let changed = 0;
+        // 1. swap the bend of a segment
+        for (let i = 0; i < nEdges && Date.now() < deadline; i++) {
+          if (polys[i].length < 3) continue;
+          const cur = crossOf(i);
+          if (!cur) continue;
+          late[i] ^= 1; setPoly(i);
+          if (crossOf(i) < cur && cornerFree(i)) { changed++; moves++; } else { late[i] ^= 1; setPoly(i); }
+        }
+        // 2. nudge an end or pass-through station by one grid step
+        for (let n = 0; n < N && Date.now() < deadline; n++) {
+          const inc = incident[n];
+          if (!inc.length || inc.length > 2) continue;
+          const costOf = () => { let c = 0; for (const ei of inc) c += crossOf(ei); return c; };
+          const cur = costOf();
+          if (!cur) continue;
+          let devB = 0, strB = 0; for (const ei of inc) { const d = dev(ei); devB += d; if (d === 0) strB++; }
+          const ox = ix[n], oy = iy[n];
+          let best = cur, bx = ox, by = oy;
+          for (let o = 0; o < 8; o++) {
+            const x = ox + Math.round(dx8[o]), y = oy + Math.round(dy8[o]);
+            if (occ.has(key(x, y))) continue;
+            ix[n] = x; iy[n] = y;
+            occ.delete(key(ox, oy)); occ.set(key(x, y), n);
+            for (const ei of inc) setPoly(ei);
+            let devA = 0, strA = 0; for (const ei of inc) { const d = dev(ei); devA += d; if (d === 0) strA++; }
+            const c = costOf();
+            if (c < best && devA <= devB + 1e-9 && strA >= strB && inc.every(cornerFree) && !(trOf[n].length && badAt(n, ix, iy))) { best = c; bx = x; by = y; }
+            occ.delete(key(x, y)); occ.set(key(ox, oy), n);
+            ix[n] = ox; iy[n] = oy;
+          }
+          for (const ei of inc) setPoly(ei);
+          if (bx !== ox || by !== oy) {
+            occ.delete(key(ox, oy)); occ.set(key(bx, by), n); ix[n] = bx; iy[n] = by;
+            for (const ei of inc) setPoly(ei);
+            changed++; moves++;
+          }
+        }
+        if (!changed) break;
+      }
+      return moves;
+    }
+
+    // crossing reduction: local moves, each accepted only when the crossings it touches go down
+    const late = new Uint8Array(edges.length);
+    const snappedPos = ids.map((_, i) => ({ x: ix[i], y: iy[i] }));
+    const crossingsSnapped = countCrossings(edges, snappedPos, true, late);
+    let reduceMoves = 0;
+    if (input.reduce !== false && crossingsSnapped > 0) reduceMoves = reduceCrossings();
     if (onProgress) onProgress(0.97);
 
     const pos = ids.map((_, i) => ({ x: ix[i], y: iy[i] }));
@@ -226,9 +300,12 @@
       edges: edges.length, straight, oneBend: edges.length - straight,
       straightShare: straight / E, oneBendShare: (edges.length - straight) / E,
       orderChanges: folds,
-      crossings: countCrossings(edges, pos, true),
+      crossings: countCrossings(edges, pos, true, late),
+      crossingsSnapped, reduceMoves,
       crossingsBefore: countCrossings(edges, geo, false)
     };
+    result.bends = [];
+    edges.forEach((e, i) => { if (late[i] && routePts(pos[e.a], pos[e.b], 1).length === 3) result.bends.push([ids[e.a], ids[e.b], 'late']); });
     if (onProgress) onProgress(1);
     return result;
   }

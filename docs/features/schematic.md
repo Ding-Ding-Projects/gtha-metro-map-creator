@@ -14,7 +14,9 @@ button that jumps to it.
 | Spacing (1 to 4, default 2) | Grid cells between consecutive stops on a typical segment. |
 | Keep geographic shape (0 to 100%, default 30%) | How strongly stations are pulled back toward their real relative positions. |
 | Preview | Runs the solver, switches to the schematic layout and draws the proposal as a thin dotted overlay (ghost lines and dots). The map itself is unchanged. Esc or **Clear preview** removes it. |
-| Apply | One undoable step: writes the new integer `x`, `y` to every station, removes `@x,y` bend points and per-segment bend settings from all lines, moves free labels with their nearest station, then shows the schematic layout. A toast offers Undo. |
+| Apply | One undoable step: writes the new integer `x`, `y` to every station, removes `@x,y` bend points and per-segment bend settings from all lines (then sets the bends chosen by crossing reduction), moves free labels with their nearest station, then shows the schematic layout. A toast offers Undo. |
+
+| Reduce crossings (default on) | After snapping, tries small local moves and keeps only those that remove crossings (see below). Turn it off to see the raw snapped layout. |
 
 The stats card shows the share of segments that are exactly horizontal, vertical or at 45
 degrees, the number of order changes, and the number of crossings (the note below it also gives
@@ -46,21 +48,42 @@ the share that needs one bend, the crossings in the geographic positions, and th
   is zero by construction when the solver finishes.
 - **Crossings**: pairs of distinct edges, not sharing a station, whose routed polylines cross
   properly (touching and collinear overlap are not counted). The solver does not minimize
-  crossings; it only reports them, with the geographic count for comparison.
+  crossings in the force and snapping stages; the reduction pass below lowers them afterwards. The
+  numbers shown are the geographic count, the count after snapping and the final count.
 
 On the GTHA template (238 stations, 251 edges) at Spacing 2 and Keep 30%: about 99% straight,
 1% one bend, 0 order changes, 10 crossings (19 in the geographic positions), about 0.1 to 0.2 s.
 
+## Crossing reduction
+
+After snapping to the grid, a bounded pass (at most 12 sweeps and 0.6 s) tries two kinds of local
+move and accepts one only when the crossings it touches go down:
+
+1. Swap the bend of a segment (diagonal first or straight first). The corner must not land on a
+   station.
+2. Move a station that has one or two segments (an end or a pass-through stop) by one grid step in
+   any of eight directions. The cell must be free, no segment on the station may lose being
+   exactly octilinear or get a larger angular error, and no new fold-back (order change) may
+   appear.
+
+Stations therefore never share a cell and order changes stay at zero. Chosen bends come back as
+`result.bends`, a list of `[stationA, stationB, "late"]`; Apply writes them to every line over that
+pair (mirrored for a line that runs the other way), so shared track stays one track. The numbers on
+the GTHA template at Spacing 2 and Keep 30%: 19 crossings in the geographic positions, 10 after
+snapping, 4 after reduction, 6 accepted moves, about 70 ms in total.
+Not done: reordering the lines inside a bundle ("flipping a line's side") does not change the
+station-level crossing count the statistics use, so it is not part of this pass.
+
 ## API
 
-`window.GMMCSchematic.run({ spacing, keepShape })` resolves `{ positions, stats, params,
-runtimeMs }`; `apply(result)` writes it as one undo step; `preview(result)` and `clear()` control
+`window.GMMCSchematic.run({ spacing, keepShape, reduce })` resolves `{ positions, bends, stats,
+params, runtimeMs }` (`reduce` defaults to true; `stats` also has `crossingsSnapped` and `reduceMoves`); `apply(result)` writes it as one undo step; `preview(result)` and `clear()` control
 the overlay. If a Worker cannot be created, the solver runs on the main thread.
 
 ## Limits
 
 - Dense downtown clusters can stay cramped at low Spacing; raise it.
-- Crossings are not optimized and some remain; the result is a starting point to edit by hand.
+- Crossing reduction is local and greedy: some crossings remain; the result is a starting point to edit by hand.
 - Interchange stations that are far apart geographically get a short link only if an edge joins
   them.
 
@@ -68,4 +91,5 @@ the overlay. If a Worker cannot be created, the solver runs on the main thread.
 
 `scripts/verify/schematic.steps.json`, with `scripts/verify/edge-drive.mjs`: runs the solver,
 checks integer positions, preview overlay, Apply, Undo, Redo, panel statistics and the Cantonese
-labels.
+labels,
+plus `scripts/verify/editor17.steps.json` (reduction numbers with the switch on and off, applied bends).
