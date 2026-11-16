@@ -107,7 +107,7 @@
 - [ ] Vector PDF with Chinese labels (needs an embedded font)
 - [ ] Crossing reduction in auto-schematic
 - [ ] Employment data for coverage, when an open small-area source exists
-- [ ] Appliance images attached to a tagged release: x86_64 boot test passed on main; ticked once the v1.6.0 release carries them
+- [x] Appliance images attached to the v1.6.0 release after their CI boot tests (x86_64 answered in 15 s under KVM; the Raspberry Pi root file system answered in 206 s under QEMU emulation)
 - [ ] Chinese names for bus stops
 - [ ] ~~Automated browser tests in CI~~ Not doing: CI deliberately runs no tests here; browser checks run locally with `scripts/verify/`
 - [ ] Search across the documentation articles with the same regex builder
