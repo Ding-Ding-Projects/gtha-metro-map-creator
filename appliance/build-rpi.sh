@@ -7,14 +7,16 @@
 # Output: <base>.img.xz (the image to write), plus <base>-virt-root.ext4, vmlinuz-virt and
 # initramfs-virt for appliance/boot-test-rpi.sh.
 set -euo pipefail
-version="$1"; image="$2"; out="$(mkdir -p "$3" && cd "$3" && pwd)"
-here="$(cd "$(dirname "$0")" && pwd)"
+version="$1"; image="$2"
+# "pwd -W" gives a Windows path under Git Bash (so Docker Desktop can mount it); on Linux it fails and plain pwd is used.
+out="$(mkdir -p "$3" && cd "$3" && { pwd -W 2>/dev/null || pwd; })"
+here="$(cd "$(dirname "$0")" && { pwd -W 2>/dev/null || pwd; })"
 base="gtha-metro-map-creator-appliance-$version-arm64-rpi"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 echo "== Saving the arm64 container image"
-docker pull --platform linux/arm64 "$image" >/dev/null
+docker pull --platform linux/arm64 "$image" >/dev/null 2>&1 || echo "Using the local copy of $image"
 arch="$(docker image inspect "$image" --format '{{.Architecture}}')"
 [ "$arch" = "arm64" ] || { echo "The image $image is $arch, not arm64. Publish a multi-architecture image first."; exit 1; }
 docker save "$image" -o "$work/image.tar"

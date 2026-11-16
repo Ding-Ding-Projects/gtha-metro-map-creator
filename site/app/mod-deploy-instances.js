@@ -24,7 +24,7 @@
     dpi_rm_ssh: 'the container on {host}, and the compose file and starting map this app wrote in {dir}', dpi_rm_folder: 'only this entry. The files in {path} stay where they are.', dpi_rm_pages: 'only this entry. The repository {repo} and its website stay on GitHub.', dpi_rm_web: 'only this entry in this browser. A downloaded ZIP file or a published site stays where it is.',
     dpi_dupTitle: 'Duplicate “{name}”', dpi_dupName: 'Name of the copy', dpi_dupHelp: 'The copy gets the same settings and starting map, and the next free port.', dpi_dupBtn: 'Duplicate',
     dpi_updating: 'Updating', dpi_failed: 'That did not work', dpi_dismiss: 'Dismiss', dpi_logHelp: 'Last lines', dpi_noLogs: 'No log.',
-    dpi_why_web: 'Needs the desktop deploy app.', dpi_why_kind: 'Not available for this kind of instance.', dpi_why_fresh: 'Already the newest version.', dpi_ver_unknown: 'latest tag'
+    dpi_thisApp: 'This app', dpi_why_web: 'Needs the desktop deploy app.', dpi_why_kind: 'Not available for this kind of instance.', dpi_why_fresh: 'Already the newest version.', dpi_ver_unknown: 'latest tag'
   }, {
     dpi_tab: '實例', dpi_title: '你嘅實例', dpi_sub: '呢個程式部署過嘅每一份，各有自己嘅名稱、連接埠、地圖同連結。健康狀況會即時檢查。',
     dpi_checkAll: '即刻檢查全部', dpi_new: '新增實例', dpi_search: '搜尋實例', dpi_clearSearch: '清除搜尋',
@@ -42,7 +42,7 @@
     dpi_rm_ssh: '{host} 上面嘅容器，同呢個程式寫喺 {dir} 嘅 compose 檔同起始地圖', dpi_rm_folder: '只係呢個項目。{path} 入面嘅檔案會原封不動。', dpi_rm_pages: '只係呢個項目。儲存庫 {repo} 同佢嘅網站會留喺 GitHub。', dpi_rm_web: '只係呢個瀏覽器入面嘅呢個項目。已下載嘅 ZIP 檔或者已發佈嘅網站會原封不動。',
     dpi_dupTitle: '複製「{name}」', dpi_dupName: '複本名稱', dpi_dupHelp: '複本會用相同設定同起始地圖，而且用下一個空閒連接埠。', dpi_dupBtn: '複製',
     dpi_updating: '更新緊', dpi_failed: '做唔到', dpi_dismiss: '收埋', dpi_logHelp: '最後幾行', dpi_noLogs: '冇記錄。',
-    dpi_why_web: '要用桌面部署程式。', dpi_why_kind: '呢種實例用唔到。', dpi_why_fresh: '已經係最新版本。', dpi_ver_unknown: 'latest 標籤'
+    dpi_thisApp: '呢個程式', dpi_why_web: '要用桌面部署程式。', dpi_why_kind: '呢種實例用唔到。', dpi_why_fresh: '已經係最新版本。', dpi_ver_unknown: 'latest 標籤'
   });
   const t = (k, vars) => { let s = window.I18N.t(k); if (vars) for (const [a, b] of Object.entries(vars)) s = s.split('{' + a + '}').join(String(b)); return s; };
 
@@ -59,6 +59,13 @@
       const s = Math.max(0, Math.round((Date.now() - at) / 1000));
       if (s < 5) return t('dpi_checkedNow');
       return t('dpi_checked', { t: s < 60 ? t('dpi_secs', { n: s }) : s < 3600 ? t('dpi_mins', { n: Math.round(s / 60) }) : t('dpi_hours', { n: Math.round(s / 3600) }) });
+    };
+    // The place text is built here, not stored, so it follows the language.
+    const whereOf = (i) => {
+      if (i.kind === 'docker') return 'Docker · ' + t('dp_port') + ' ' + i.port;
+      if (i.kind === 'builtin') return t('dpi_thisApp') + ' · ' + t('dp_port') + ' ' + i.port;
+      if (i.kind === 'virtualbox' || i.kind === 'vmware') return (i.kind === 'virtualbox' ? 'VirtualBox' : 'VMware') + (i.run && i.run.netMode ? ' · ' + t(i.run.netMode === 'nat' ? 'dp_net_nat' : 'dp_net_bridged') : '');
+      return i.where || kindName(i.kind);
     };
     const stateOf = (i) => (i.busy ? 'working' : i.check && i.check.state ? i.check.state : 'unknown');
     const isRunning = (i) => ['healthy', 'unhealthy'].includes(stateOf(i)) && i.canRun;
@@ -141,7 +148,7 @@
         if (st.filter === 'running' && !isRunning(i)) return false;
         if (st.filter === 'stopped' && !isStopped(i)) return false;
         if (st.filter === 'updates' && !i.updateAvailable) return false;
-        return !q || [i.name, i.where, i.url, i.version, i.map, kindName(i.kind)].some((x) => String(x || '').toLowerCase().includes(q));
+        return !q || [i.name, whereOf(i), i.where, i.url, i.version, i.map, kindName(i.kind)].some((x) => String(x || '').toLowerCase().includes(q));
       });
     };
 
@@ -150,7 +157,7 @@
       const c0 = el('div'); c0.setAttribute('role', 'cell'); const cb = checkbox({ checked: sel, label: '', onChange: (v) => { if (v) st.sel.add(i.id); else st.sel.delete(i.id); render(); } });
       cb.input.setAttribute('aria-label', t('dpi_selectRow', { name: i.name })); cb.root.addEventListener('click', (e) => e.stopPropagation()); c0.append(cb.root);
       const c1 = el('div', 'dp-iname'); c1.setAttribute('role', 'cell'); c1.append(el('span', '', i.name)); if (i.map) c1.append(el('small', '', i.map));
-      const c2 = el('div', 'dp-iwhere'); c2.setAttribute('role', 'cell'); c2.append(targetGlyph(i.kind === 'pages' ? 'pages' : i.kind, 18), el('span', '', i.where || kindName(i.kind)));
+      const c2 = el('div', 'dp-iwhere'); c2.setAttribute('role', 'cell'); c2.append(targetGlyph(i.kind === 'pages' ? 'pages' : i.kind, 18), el('span', '', whereOf(i)));
       const c3 = el('div', 'dp-iver'); c3.setAttribute('role', 'cell'); c3.textContent = i.version || (['docker', 'ssh'].includes(i.kind) && i.tag ? i.tag : '-');
       const ch = chipFor(i); const c4 = el('div', 'dp-ihealth'); c4.setAttribute('role', 'cell'); const chip = el('span', 'dp-chip ' + ch.cls, ch.text); chip.title = ch.text; c4.append(chip); if (ch.sub) c4.append(el('small', 'dp-hint', ch.sub));
       const c5 = el('div', 'dp-ilink' + (isStopped(i) || !i.url ? ' muted' : '')); c5.setAttribute('role', 'cell'); c5.textContent = i.url || '-';
@@ -195,7 +202,7 @@
       const picked = st.list.filter((i) => st.sel.has(i.id)); refs.bar.hidden = !picked.length; refs.bar.textContent = '';
       if (picked.length) {
         refs.bar.append(el('b', '', t('dpi_selected', { n: picked.length })));
-        if (picked.length === 1) refs.bar.append(el('span', 'dp-hint', picked[0].name + ' · ' + (picked[0].where || kindName(picked[0].kind))));
+        if (picked.length === 1) refs.bar.append(el('span', 'dp-hint', picked[0].name + ' · ' + whereOf(picked[0])));
         refs.bar.append(el('span', 'grow'));
         const one = picked.length === 1 ? picked[0] : null; const all2 = (f) => picked.every(f);
         const add = (label, cls, fn, icon, dis, why) => { const b = button(label, cls, fn, icon); b.classList.add('sm'); b.disabled = !!dis; if (why) b.title = why; refs.bar.append(b); };

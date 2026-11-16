@@ -63,6 +63,7 @@ const foreignRunning = () => !foreignId || docker('inspect', '-f', '{{.State.Run
 
 try {
   // ------------------------------------------------------------------ run 1
+  if (process.env.SKIP_RUN1 !== '1') {
   const map = path.join(work, 'plan.gmmc.json');
   fs.writeFileSync(map, JSON.stringify({ version: 1, title: 'Deploy check map', stations: { a: { id: 'a', name: 'Alpha', x: 0, y: 0 }, b: { id: 'b', name: 'Beta', x: 4, y: 0 } }, lines: [], labels: [] }));
   const out = path.join(work, 'site-out');
@@ -162,12 +163,13 @@ try {
   app.close();
   await sleep(1500);
 
+  }
   // ------------------------------------------------------------------ run 2: image write to a FILE standing in for a drive
   const rel = path.join(work, 'release'); fs.mkdirSync(rel, { recursive: true });
   const version = JSON.parse(fs.readFileSync(path.join(repo, 'desktop', 'package.json'), 'utf8')).version;
   const raw = crypto.randomBytes(24 * 1024 * 1024 + 123);
   const rawFile = path.join(rel, 'gtha-metro-map-creator-appliance-' + version + '-x86_64.img'); fs.writeFileSync(rawFile, raw);
-  docker('run', '--rm', '-v', rel.replace(/\\/g, '/') + ':/w', 'alpine:3.22', 'sh', '-c', 'xz -k -6 /w/*.img');
+  docker('run', '--rm', '-v', rel.replace(/\\/g, '/') + ':/w', 'alpine:3.22', 'sh', '-c', 'apk add -q xz >/dev/null && xz -k -6 /w/*.img');
   fs.rmSync(rawFile);
   const xz = rawFile + '.xz'; const xzHash = crypto.createHash('sha256').update(fs.readFileSync(xz)).digest('hex');
   fs.writeFileSync(path.join(rel, 'SHA256SUMS.txt'), xzHash + '  ' + path.basename(xz) + '\n');
@@ -176,6 +178,7 @@ try {
   const target = path.join(work, 'fake-drive.bin');
   const runFlash = async (name, env, expect) => {
     const f = await launch(name, { GMMC_RELEASE_BASE: base, GMMC_TEST_FLASH_FILE: target, ...env });
+    for (const other of ['docker', 'builtin', 'folder']) await f.js(tick(other, false)); // only the drive is deployed in these runs
     await f.js(tick('usb', true));
     const disks = await waitFor(f, `(() => { const r = document.querySelectorAll('[data-target=usb] .dp-drive'); return r.length ? r[0].textContent : ''; })()`, 20000);
     check(name + ': the drive list offers only the test file and selects nothing', /Test image file/.test(disks || '') && (await f.js(`document.querySelectorAll('[data-target=usb] .dp-drive input:checked').length`)) === 0, disks);
