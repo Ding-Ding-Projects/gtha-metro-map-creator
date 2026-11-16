@@ -1,0 +1,13 @@
+[
+ {"wait": 2500},
+ {"name": "bridge", "js": "({fetchFeed: typeof window.gmmcDesktop?.fetchFeed, disabled: document.getElementById('setLiveVeh')?.disabled, fab: !!document.getElementById('liveBtn')})"},
+ {"name": "geo", "js": "(GMMC.isGeo() ? 'geo' : (GMMC.setLayout('geographic'), 'switched ' + GMMC.isGeo()))"},
+ {"name": "fit", "js": "(document.getElementById('fitBtn').click(), 'fit')"},
+ {"name": "enable", "js": "(document.getElementById('liveBtn').click(), 'clicked')"},
+ {"wait": 6000},
+ {"name": "result", "js": "({chip: document.getElementById('liveChip').textContent, chipHidden: document.getElementById('liveChip').hidden, markers: document.querySelectorAll('.live-veh').length, pressed: document.getElementById('liveBtn').getAttribute('aria-pressed'), toggle: document.getElementById('setLiveVeh').checked})"},
+ {"name": "colours", "js": "[...new Set([...document.querySelectorAll('.live-veh circle:first-child')].map(c => c.getAttribute('fill')))].slice(0, 6)"},
+ {"name": "exportClean", "js": "GMMC.standaloneSvg ? !String(GMMC.standaloneSvg()).includes('live-veh') : 'n/a'"},
+ {"name": "disable", "js": "(document.getElementById('liveBtn').click(), 'clicked')"},
+ {"name": "after", "js": "({markers: document.querySelectorAll('.live-veh').length, chipHidden: document.getElementById('liveChip').hidden})"}
+]
