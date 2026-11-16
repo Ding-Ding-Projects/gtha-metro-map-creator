@@ -20,5 +20,8 @@
   "devDependencies": {
     "electron": "45.3.2",
     "electron-builder": "26.18.0"
+  },
+  "dependencies": {
+    "xz-decompress": "0.2.3"
   }
 }

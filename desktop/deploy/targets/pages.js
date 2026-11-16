@@ -1,4 +1,4 @@
-// Target 4: GitHub Pages. The publishing logic lives in site/app/deploy-core.js and is shared with the web editor.
+// Target: GitHub Pages. The publishing logic lives in site/app/deploy-core.js and is shared with the web editor.
 // The token comes from the GitHub CLI (when signed in) or from a token the person pasted, which this app keeps
 // only through Electron safeStorage (Windows DPAPI). It is never logged or written in plain text.
 'use strict';
@@ -23,7 +23,13 @@ async function deploy(ctx) {
   const token = await ctx.getToken();
   if (!token) throw new Error('Not signed in. Choose Sign in with GitHub, then deploy again.');
   const files = siteFiles(ctx.siteDir, ctx.mapText).map((f) => ({ rel: f.rel, bytes: async () => f.read() }));
-  return core.publishPages({ token, repo: ctx.settings.repo, files, emit: ctx.emit, log: ctx.log, signal: ctx.signal });
+  const res = await core.publishPages({ token, repo: ctx.settings.repo, files, emit: ctx.emit, log: ctx.log, signal: ctx.signal });
+  const link = (res.links || []).find((l) => l.kind === 'url');
+  return Object.assign({}, res, { patch: { url: link ? link.url : '', where: ctx.settings.repo, version: ctx.version, run: { repo: ctx.settings.repo } } });
 }
 
-module.exports = { deploy, parseRepo: core.parseRepo, cliToken, cliStatus, whoami: core.whoami };
+const state = async () => ({ exists: true, running: true, reason: '' });
+const remove = async () => ({}); // forgetting only: the repository and its site stay on GitHub
+const logs = async (inst) => 'Published to ' + inst.run.repo + ' (the gh-pages branch).';
+
+module.exports = { deploy, state, remove, logs, parseRepo: core.parseRepo, cliToken, cliStatus, whoami: core.whoami };

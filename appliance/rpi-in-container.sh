@@ -38,6 +38,12 @@ for s in modules sysctl hostname bootmisc syslog networking swclock; do chroot "
 for s in mount-ro killprocs savecache; do chroot "$R" rc-update add "$s" shutdown; done
 for s in docker gmmc-app gmmc-banner; do chroot "$R" rc-update add "$s" default; done
 chroot "$R" passwd -l root >/dev/null 2>&1 || true
+# Docker needs these kernel modules, which the Raspberry Pi kernel builds as modules.
+printf 'overlay
+veth
+bridge
+br_netfilter
+' >> "$R/etc/modules"
 
 # Console login prompts: the screen and the Raspberry Pi serial port.
 grep -q '^ttyAMA0:' "$R/etc/inittab" || echo 'ttyAMA0::respawn:/sbin/getty -L 115200 ttyAMA0 vt100' >> "$R/etc/inittab"
