@@ -1,1 +1,16 @@
-/* mod-print.css */
+/* mod-print.css: print layout dialog */
+#printDialog { max-width: min(660px, calc(100vw - 32px)); }
+.pr-body { max-height: min(92vh, 760px); overflow-y: auto; }
+.pr-top { display: flex; gap: 16px; align-items: flex-start; }
+.pr-prev { flex: none; background: #fff; box-shadow: var(--elev-2); border-radius: 2px; overflow: hidden; line-height: 0; transition: width var(--d-med) var(--ease-emph), height var(--d-med) var(--ease-emph); }
+.pr-prev svg { display: block; }
+.pr-side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.pr-seg { display: flex; margin: 0; }
+.pr-seg button { flex: 1; justify-content: center; }
+.pr-seg button .seg-check { width: 0; overflow: hidden; transition: width var(--d-med) var(--ease-emph); }
+.pr-seg button[aria-pressed="true"] { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+.pr-seg button[aria-pressed="true"] .seg-check { width: 18px; }
+.pr-foot { align-items: center; }
+.pr-foot .grow { flex: 1 1 auto; margin: 0; }
+@media (max-width: 560px) { .pr-top { flex-direction: column; align-items: stretch; } .pr-prev { align-self: center; } }
+@media (prefers-reduced-motion: reduce) { .pr-prev, .pr-seg button .seg-check { transition: none; } #printDialog[open] { animation: none; } }

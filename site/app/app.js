@@ -10,7 +10,7 @@
   const DIRS = { E: [1, 0], W: [-1, 0], N: [0, -1], S: [0, 1], NE: [1, -1], NW: [-1, -1], SE: [1, 1], SW: [-1, 1] };
   const DIR_ORDER = ['E', 'W', 'N', 'S', 'NE', 'NW', 'SE', 'SW'];
   const DEFAULT_SETTINGS = { lang: 'en', theme: 'system', grid: true, snap: true, fontSize: 13, legend: true, sound: true,
-    layout: 'geographic', background: 'osm', bgOpacity: 0.9, showFreq: true, liveStops: true, overpassUrl: '' };
+    layout: 'geographic', background: 'osm', bgOpacity: 0.9, showFreq: true, liveStops: true, overpassUrl: '', mapStyle: 'material' };
   const STYLES = ['solid', 'dashed', 'rail', 'brt', 'bus', 'express', 'superExpress'];
   const STYLE_WIDTH = { solid: 8, dashed: 8, rail: 8, brt: 6, bus: 4, express: 8, superExpress: 9 };
   // Geographic layout: Web Mercator at zoom 13, origin at Union Station.
@@ -20,7 +20,7 @@
 
   // Extension hooks. Feature modules (mod-*.js) load before this file and push functions onto
   // window.GMMCX; see docs/features/extensions.md.
-  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [] }, window.GMMCX || {});
+  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [], stationMarker: [], labelStyle: [], exportTheme: [] }, window.GMMCX || {});
   for (const k of Object.keys(X)) if (!Array.isArray(X[k])) X[k] = [];
   window.GMMCX = X;
   const hook = (name, ...args) => { for (const f of X[name]) { try { const r = f(...args); if (r) return r; } catch (err) { console.error('extension ' + name, err); } } return null; };
@@ -268,9 +268,9 @@
   }
   const polyD = (pts) => pts.map((p, i) => (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join('');
 
-  function labelPlacement(m, s, geo, fs) {
+  function labelPlacement(m, s, geo, fs, wf) {
     const name = displayName(s);
-    const w = Math.max(name.main.length, name.sub.length * 1.6) * fs * 0.58 + 6;
+    const w = Math.max(name.main.length * (wf || 1), name.sub.length * 1.6) * fs * 0.58 + 6;
     const h = fs * (name.sub ? 2.3 : 1.25);
     const cx = s.x * G, cy = s.y * G, r = 12;
     const rectFor = (dir) => {
@@ -298,7 +298,7 @@
   }
 
   function linePaths(l, d) {
-    const w = l.width, cap = 'stroke-linecap="round" stroke-linejoin="round" fill="none"';
+    const w = l.width, cap = `stroke-linecap="${l.cap || 'round'}" stroke-linejoin="${l.join || 'round'}" fill="none"`;
     switch (l.style) {
       case 'rail': return `<path d="${d}" ${cap} stroke="${l.color}" stroke-width="${w}"/><path d="${d}" ${cap} stroke="#FFFFFF" stroke-width="${Math.max(1.5, w * 0.28)}"/>`;
       case 'dashed': return `<path d="${d}" ${cap} stroke="${l.color}" stroke-width="${w}" stroke-dasharray="${w * 1.4} ${w}"/>`;
@@ -316,10 +316,14 @@
   }
   const inkFor = (hex) => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) > 160 ? '#16181D' : '#FFFFFF'; };
 
+  /** Colours the exports use; a style preset may change them (extension hook exportTheme). */
+  function exportTheme() { return Object.assign({ bg: '#FFFFFF', ink: '#16181D', halo: '#FFFFFF', sub: '#545249', tileFilter: '' }, hook('exportTheme') || {}); }
+
   // ---------- SVG building (shared by editor and export) ----------
   function buildMapSvg(m, opts) {
     const geo = computeGeometry(m);
     const fs = settings.fontSize;
+    const th = exportTheme();
     let out = '';
     // walking transfers between nearby stations
     for (const tr of (m.transfers || [])) {
@@ -342,7 +346,10 @@
       const lines = m.lines.filter((l) => l.visible && l.path.includes(s.id));
       const col = lines[0] ? lines[0].color : '#16181D';
       const cx = s.x * G, cy = s.y * G;
-      if (s.kind === 'stop' && !inter) {
+      const custom = hook('stationMarker', m, s, { inter, col, cx, cy, geo, G, opts });
+      if (custom) {
+        out += `<g data-st="${esc(s.id)}">${custom}`;
+      } else if (s.kind === 'stop' && !inter) {
         out += `<g data-st="${esc(s.id)}"><circle cx="${cx}" cy="${cy}" r="3.6" fill="#FFFFFF" stroke="${col}" stroke-width="2.2"/>`;
       } else {
         const r = inter ? 8.5 : 6;
@@ -363,16 +370,17 @@
       const inter = isInterchangeIn(m, s);
       const small = s.kind === 'stop' && !inter;
       const lfs = small ? Math.max(9, fs - 2) : fs;
-      const rc = labelPlacement(m, s, geo, lfs);
+      const lst = hook('labelStyle', m, s, { inter, small }) || {};
+      const rc = labelPlacement(m, s, geo, lfs, lst.upper ? 1.25 : 1);
       if (!rc) continue;
       if (placed.some((q) => rc.x0 < q.x1 + 3 && rc.x1 > q.x0 - 3 && rc.y0 < q.y1 + 2 && rc.y1 > q.y0 - 2)) continue;
       placed.push(rc);
       const nm = displayName(s), [ux] = DIRS[rc.dir];
       const anchor = ux > 0 ? 'start' : ux < 0 ? 'end' : 'middle';
       const tx = ux > 0 ? rc.x0 + 2 : ux < 0 ? rc.x1 - 2 : (rc.x0 + rc.x1) / 2;
-      const weight = inter ? 700 : small ? 400 : 500;
-      const ink = opts.exportColors ? ' fill="#16181D" stroke="#FFFFFF"' : '';
-      out += `<text class="st-label" x="${tx.toFixed(1)}" y="${(rc.y0 + lfs).toFixed(1)}" font-size="${lfs}" font-weight="${weight}" text-anchor="${anchor}" data-st="${esc(s.id)}"${ink}>${esc(nm.main)}</text>`;
+      const weight = lst.weight || (inter ? 700 : small ? 400 : 500);
+      const ink = opts.exportColors ? ` fill="${th.ink}" stroke="${th.halo}"` : '';
+      out += `<text class="st-label" x="${tx.toFixed(1)}" y="${(rc.y0 + lfs).toFixed(1)}" font-size="${lfs}" font-weight="${weight}" text-anchor="${anchor}" data-st="${esc(s.id)}"${ink}>${esc(lst.upper ? nm.main.toUpperCase() : nm.main)}</text>`;
       if (nm.sub) out += `<text class="st-label" x="${tx.toFixed(1)}" y="${(rc.y0 + lfs * 2.1).toFixed(1)}" font-size="${(lfs * 0.9).toFixed(1)}" text-anchor="${anchor}"${ink}>${esc(nm.sub)}</text>`;
       out += hookAll('labelExtra', m, s, rc, { G, opts, anchor, fs: lfs });
     }
@@ -394,7 +402,7 @@
     }
     out += hookAll('svgOver', m, { G, geo, opts });
     for (const lb of m.labels) {
-      out += `<text class="map-label" data-label="${esc(lb.id)}" x="${lb.x * G}" y="${lb.y * G}" font-size="${lb.size}"${opts.exportColors ? ' fill="#545249"' : ''}>${esc(lb.text)}</text>`;
+      out += `<text class="map-label" data-label="${esc(lb.id)}" x="${lb.x * G}" y="${lb.y * G}" font-size="${lb.size}"${opts.exportColors ? ` fill="${th.sub}"` : ''}>${esc(lb.text)}</text>`;
     }
     return { svg: out, geo };
   }
@@ -1015,24 +1023,25 @@
   }
   function standaloneSvg(scene, hrefFor) {
     const sc = scene || exportScene();
+    const th = exportTheme();
     const { b, pad, vis, x0, y0, w, h } = sc;
     let legend = '';
     if (settings.legend) {
       let y = b.y1 + pad;
-      legend += `<text x="${b.x0}" y="${y}" font-size="15" font-weight="700" fill="#16181D">${esc(t('legendTitle'))}</text>`;
+      legend += `<text x="${b.x0}" y="${y}" font-size="15" font-weight="700" fill="${th.ink}">${esc(t('legendTitle'))}</text>`;
       for (const l of vis) {
         y += 24;
         legend += `<g transform="translate(${b.x0} ${y - 5})">${linePaths(l, 'M0 0L40 0')}</g>`;
         const f = freqText(l);
-        legend += `<text x="${b.x0 + 54}" y="${y}" font-size="13" fill="#16181D">${esc(lineName(l))} · ${esc(styleName(l.style))}${f ? ' · ' + esc(t('every')) + ' ' + esc(f) : ''}</text>`;
+        legend += `<text x="${b.x0 + 54}" y="${y}" font-size="13" fill="${th.ink}">${esc(lineName(l))} · ${esc(styleName(l.style))}${f ? ' · ' + esc(t('every')) + ' ' + esc(f) : ''}</text>`;
       }
     }
-    const tiles = sc.tiles.map((ti) => `<image href="${esc(hrefFor ? hrefFor(ti.url) : ti.url)}" x="${ti.x.toFixed(1)}" y="${ti.y.toFixed(1)}" width="${(ti.s + 0.6).toFixed(1)}" height="${(ti.s + 0.6).toFixed(1)}" preserveAspectRatio="none" opacity="${settings.bgOpacity}"/>`).join('');
-    const attrib = sc.tiles.length ? `<text x="${x0 + w - 12}" y="${y0 + h - 12}" font-size="12" text-anchor="end" fill="#3A3A3A">© OpenStreetMap contributors</text>` : '';
+    const tiles = sc.tiles.map((ti) => `<image href="${esc(hrefFor ? hrefFor(ti.url) : ti.url)}" x="${ti.x.toFixed(1)}" y="${ti.y.toFixed(1)}" width="${(ti.s + 0.6).toFixed(1)}" height="${(ti.s + 0.6).toFixed(1)}" preserveAspectRatio="none" opacity="${settings.bgOpacity}"${th.tileFilter ? ` style="filter:${th.tileFilter}"` : ''}/>`).join('');
+    const attrib = sc.tiles.length ? `<text x="${x0 + w - 12}" y="${y0 + h - 12}" font-size="12" text-anchor="end" fill="${th.sub}">© OpenStreetMap contributors</text>` : '';
     const title = esc(map.title) + (settings.lang !== 'en' && map.titleZh ? ' · ' + esc(map.titleZh) : '');
     return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0} ${y0} ${w} ${h}" width="${Math.round(w)}" height="${Math.round(h)}" font-family="Roboto, Segoe UI, Arial, sans-serif">` +
-      `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#FFFFFF"/>${tiles}<style>.st-label{paint-order:stroke;stroke-width:4px;stroke-linejoin:round}</style>` +
-      `<text x="${b.x0}" y="${b.y0 - pad + 10}" font-size="28" font-weight="800" fill="#16181D">${title}</text>${sc.svg}${legend}${attrib}</svg>`;
+      `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${th.bg}"/>${tiles}<style>.st-label{paint-order:stroke;stroke-width:4px;stroke-linejoin:round}</style>` +
+      `<text x="${b.x0}" y="${b.y0 - pad + 10}" font-size="28" font-weight="800" fill="${th.ink}">${title}</text>${sc.svg}${legend}${attrib}</svg>`;
   }
   async function tileDataUrls(scene) {
     const out = new Map();
@@ -1051,7 +1060,7 @@
     img.src = URL.createObjectURL(new Blob([src], { type: 'image/svg+xml' }));
     await img.decode();
     const c = document.createElement('canvas'); c.width = Math.round(w * scale); c.height = Math.round(h * scale);
-    const cx = c.getContext('2d'); cx.fillStyle = '#FFFFFF'; cx.fillRect(0, 0, c.width, c.height); cx.drawImage(img, 0, 0, c.width, c.height);
+    const cx = c.getContext('2d'); cx.fillStyle = exportTheme().bg; cx.fillRect(0, 0, c.width, c.height); cx.drawImage(img, 0, 0, c.width, c.height);
     URL.revokeObjectURL(img.src);
     return c;
   }
@@ -1116,7 +1125,7 @@ addEventListener('resize',fit);fit();})();
 `;
   }
   function projectJson() {
-    const keep = ['layout', 'background', 'bgOpacity', 'showFreq', 'fontSize', 'legend', 'lang', 'liveStops'];
+    const keep = ['layout', 'background', 'bgOpacity', 'showFreq', 'fontSize', 'legend', 'lang', 'liveStops', 'mapStyle'];
     return JSON.stringify({ format: PROJECT_FORMAT, version: 1, savedAt: new Date().toISOString(), map, settings: Object.fromEntries(keep.map((k) => [k, settings[k]])), view: { tx: view.tx, ty: view.ty, k: view.k } }, null, 2);
   }
   function setBusy(on) { $('progress').hidden = !on; }
@@ -1149,6 +1158,7 @@ addEventListener('resize',fit);fit();})();
       for (const k of ['showFreq', 'legend', 'liveStops']) if (typeof s2[k] === 'boolean') settings[k] = s2[k];
       if (Number.isFinite(+s2.fontSize)) settings.fontSize = Math.min(22, Math.max(9, +s2.fontSize));
       if (['en', 'yue', 'both'].includes(s2.lang)) settings.lang = s2.lang;
+      if (['material', 'classic', 'frequent', 'night'].includes(s2.mapStyle)) settings.mapStyle = s2.mapStyle;
       saveSettings(); applyI18n(); replaceMap(m); return true;
     }
     const m = obj && validateMap(obj); if (!m) return false;
@@ -1201,7 +1211,7 @@ addEventListener('resize',fit);fit();})();
     const lay = $('setLayout').value; saveSettings(); applyTheme(); applyI18n(); if (lay !== settings.layout) setLayout(lay);
   });
   $('tidyBtn').addEventListener('click', () => { checkpoint(); for (const s of Object.values(map.stations)) s.label = 'auto'; changed(); });
-  $('resetSettingsBtn').addEventListener('click', () => { settings = Object.assign({}, DEFAULT_SETTINGS); saveSettings(); applyTheme(); applyI18n(); openSettingsRefresh(); });
+  $('resetSettingsBtn').addEventListener('click', () => { settings = Object.assign({}, DEFAULT_SETTINGS); saveSettings(); applyTheme(); applyI18n(); render(); openSettingsRefresh(); });
   function openSettingsRefresh() { $('settingsDialog').close(); openSettings(); }
   $('setupBtn').addEventListener('click', () => { $('settingsDialog').close(); store.set(STORE_SETUP, { step: 0, done: false }); openSetup(); });
 
