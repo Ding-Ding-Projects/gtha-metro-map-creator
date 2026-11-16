@@ -22,7 +22,7 @@ qemu-system-aarch64 -machine "virt,accel=$accel" -cpu "$cpu" -m 2048 -smp 2 -dis
 	-kernel "$kernel" -initrd "$dir/initramfs-virt" \
 	-append "root=/dev/vda rootfstype=ext4 rw console=ttyAMA0" \
 	-drive "file=$dir/$base-virt-root.ext4,format=raw,if=virtio,snapshot=on" \
-	-netdev "user,id=n0,hostfwd=tcp:127.0.0.1:$port-:8080" -device virtio-net-pci,netdev=n0 &
+	-netdev "user,id=n0,hostfwd=tcp:127.0.0.1:$port-:8080" -device virtio-net-pci,netdev=n0,romfile= &
 qemu=$!
 trap 'kill "$qemu" 2>/dev/null || true' EXIT
 
