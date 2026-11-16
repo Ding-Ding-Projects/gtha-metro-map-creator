@@ -1,1 +1,26 @@
-/* mod-gtfs-import.css */
+/* mod-gtfs-import.css: the Import from GTFS dialog. Uses the app's Material Design 3 tokens. */
+#gtfsDialog { max-width: min(648px, calc(100vw - 32px)); }
+.gtfs-body { gap: 12px; }
+.gtfs-body .headline { margin-bottom: 0; }
+.gtfs-sub { margin: 0; font-size: 14px; line-height: 20px; letter-spacing: .25px; }
+.gtfs-prog { height: 4px; border-radius: 2px; overflow: hidden; background: var(--md-primary-container); }
+.gtfs-prog[hidden] { display: none; }
+.gtfs-prog > div { height: 100%; width: 0; background: var(--md-primary); border-radius: 2px; transition: width var(--d-med) var(--ease-std); }
+.gtfs-search { height: 48px; }
+.gtfs-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.gtfs-chip { height: 32px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--md-outline); background: transparent; color: var(--md-on-surface); font: inherit; font-weight: 500; cursor: pointer; transition: background-color var(--d-short) var(--ease-std); }
+.gtfs-chip:hover { background: color-mix(in srgb, transparent, var(--md-on-surface) 8%); }
+.gtfs-chip.on { background: var(--md-secondary-container); color: var(--md-on-secondary-container); border-color: transparent; }
+.gtfs-list { overflow-y: auto; min-height: 160px; max-height: 40vh; display: flex; flex-direction: column; margin: 0 -8px; }
+.gtfs-row { display: flex; align-items: center; gap: 16px; padding: 8px; border-radius: 12px; cursor: pointer; content-visibility: auto; contain-intrinsic-size: auto 56px; transition: background-color var(--d-short) var(--ease-std); }
+.gtfs-row:hover { background: color-mix(in srgb, transparent, var(--md-on-surface) 8%); }
+.gtfs-row:has(input:focus-visible) { outline: 2px solid var(--md-primary); outline-offset: -2px; }
+.gtfs-num { flex: none; width: 48px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.gtfs-txt { display: flex; flex-direction: column; min-width: 0; }
+.gtfs-name { font-size: 16px; line-height: 24px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gtfs-meta { font-size: 12px; line-height: 16px; color: var(--md-on-surface-variant); }
+.gtfs-empty { padding: 16px 8px; }
+.gtfs-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+.gtfs-actions { display: inline-flex; gap: 8px; margin-left: auto; }
+.btn:disabled { opacity: .38; pointer-events: none; }
+@media (max-width: 520px) { .gtfs-num { width: 36px; } .gtfs-actions { width: 100%; justify-content: flex-end; } }
