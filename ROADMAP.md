@@ -27,6 +27,7 @@
 - [x] Portable desktop app with offline content, native open and save, recent maps
 - [x] Portable server setup wizard (Docker check, port, pull, start, health, network address)
 - [x] Design artboards for the desktop app and the wizard
+- [x] Portable deploy app: Docker here, built-in server, SSH, GitHub Pages, folder or ZIP, with verified links (SSH and GitHub Pages not yet run end to end with real credentials)
 - [x] Release workflow publishing both executables and the offline site
 - [x] Local verification script that drives the built executables hidden
 - [x] Unofficial Traditional Chinese names for every template station and line (1.1.1)

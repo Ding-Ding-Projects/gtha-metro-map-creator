@@ -2,7 +2,7 @@
   "name": "gtha-metro-map-creator-desktop",
   "productName": "GTHA Metro Map Creator",
   "version": "1.5.0",
-  "description": "Desktop app and server setup wizard for GTHA Metro Map Creator",
+  "description": "Desktop app, server setup wizard and deploy app for GTHA Metro Map Creator",
   "license": "MIT",
   "author": "Ding Ding Projects",
   "private": true,
@@ -13,7 +13,9 @@
     "start:wizard": "node scripts/prepare.mjs && electron wizard/main.js",
     "dist:app": "node scripts/prepare.mjs && electron-builder --config builder-app.json --win portable --publish never",
     "dist:wizard": "node scripts/prepare.mjs && electron-builder --config builder-wizard.json --win portable --publish never",
-    "dist": "npm run dist:app && npm run dist:wizard"
+    "start:deploy": "node scripts/prepare.mjs && electron deploy/main.js",
+    "dist:deploy": "node scripts/prepare.mjs && electron-builder --config builder-deploy.json --win portable --publish never",
+    "dist": "npm run dist:app && npm run dist:wizard && npm run dist:deploy"
   },
   "devDependencies": {
     "electron": "45.3.2",

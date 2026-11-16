@@ -1317,6 +1317,14 @@ addEventListener('resize',fit);fit();})();
   // A timer, not requestAnimationFrame: frames pause in background tabs and setup must still open.
   if (window.RxBuilder) { window.RxBuilder.init(); window.RxBuilder.render(); }
   setTimeout(() => { fit(); if (!setup.done) openSetup(); }, 0);
+  // Optional starting map. A deployment may add app/default-map.json (a saved map or project file).
+  // It opens only for a visitor who has no saved map yet, so nobody's own work is replaced.
+  if (!hadSaved) {
+    fetch('default-map.json', { cache: 'no-store' }).then((r) => (r.ok ? r.text() : null)).then((txt) => {
+      if (!txt || txt.length > MAX_IMPORT || txt.trimStart()[0] !== '{') return;
+      if (loadText(txt)) { fit(); toast(t('imported')); }
+    }).catch(() => { /* no default map is the normal case */ });
+  }
   // Hooks for the desktop app: load a map from text, start a new map, read the export menu.
   function loadJson(text) { if (!loadText(text)) { toast(t('importFailed')); beep(180); return false; } toast(t('imported')); return true; }
   $('zoomInBtn').addEventListener('click', () => zoomBy(1.6));

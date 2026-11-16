@@ -8,6 +8,7 @@
 | Styles | [styles.md](styles.md) | Map style presets: Material, Classic metro, Frequent network, Night |
 | Print | [print.md](print.md) | Print layout dialog and vector PDF export |
 | Desktop | [desktop.md](desktop.md) | Portable desktop app and server setup wizard |
+| Deploy | [deploy.md](deploy.md) | Deploy app: one click to Docker, a built-in server, SSH, GitHub Pages, folder or ZIP |
 | Schematic | [schematic.md](schematic.md) | Auto-schematic: octilinear layout from real positions |
 | Scenarios | [scenarios.md](scenarios.md) | Named map versions, swipe compare, change list |
 | Share | [share.md](share.md) | Share link in the URL fragment |
