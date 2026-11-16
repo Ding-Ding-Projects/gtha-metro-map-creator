@@ -4,86 +4,148 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GTHA Metro Map Creator</title>
-<meta name="description" content="Draw schematic rapid transit maps of the Greater Toronto and Hamilton Area in your browser.">
-<link rel="stylesheet" href="site.css">
+<meta name="description" content="Design transit maps of the Greater Toronto and Hamilton Area on real geography: plan trips, compare scenarios, check coverage and publish anywhere.">
+<meta name="theme-color" content="#1F5FBF">
+<link rel="stylesheet" href="home.css">
 </head>
 <body>
-<header class="wrap top">
-  <strong>GTHA Metro Map Creator</strong>
-  <nav aria-label="Site"><a href="#tasks">Guides</a><a href="#features">Features</a><a href="docs/">Documentation</a><a href="https://github.com/Ding-Ding-Projects/gtha-metro-map-creator">Source</a></nav>
+<a class="skip" href="#main" data-t="skip">Skip to content</a>
+<header class="bar" id="bar">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="GTHA Metro Map Creator home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#1F5FBF"/><path d="M8 24V12l8 8 8-8v12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="20" r="2.6" fill="#F8C300"/></svg>
+      <span>GTHA Metro Map Creator</span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Site">
+      <a href="#features" data-t="navFeatures">Features</a>
+      <a href="#tasks" data-t="navGuides">Guides</a>
+      <a href="#get" data-t="navGet">Get it</a>
+      <a href="docs/" data-t="navDocs">Documentation</a>
+      <a href="https://github.com/Ding-Ding-Projects/gtha-metro-map-creator" data-t="navSource">Source</a>
+    </nav>
+    <div class="tools">
+      <button class="icon-btn" id="langBtn" type="button" aria-label="Language: switch to Cantonese">粵</button>
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Theme"><span id="themeIcon" aria-hidden="true">◐</span></button>
+      <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav">☰</button>
+    </div>
+  </div>
 </header>
-<main>
-  <section class="wrap hero">
-    <div>
-      <h1>Draw the GTHA's rapid transit, your way.</h1>
-      <p class="lead">A browser editor for schematic metro maps of Toronto, Hamilton and the surrounding region. Start from a built-in template of subway, LRT and regional rail lines, then reshape it with octilinear snapping.</p>
-      <p class="cta"><a class="btn primary" href="app/">Open the editor</a><a class="btn" href="#tasks">Read the guides</a></p>
-      <p class="note">Unofficial. The template is a simplified schematic, not a TTC or Metrolinx product.</p>
-    </div>
-    <svg viewBox="0 0 480 320" role="img" aria-label="Illustrative schematic of four crossing transit lines">
-      <path d="M40 260 L440 260" stroke="#98002E" stroke-width="10" stroke-linecap="round"/>
-      <path d="M40 260 L440 260" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
-      <path d="M240 40 L240 200 L270 230 L270 260 L210 260 L210 230 L230 210" stroke="#F8C300" stroke-width="12" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
-      <path d="M60 160 L420 160" stroke="#00923F" stroke-width="12" stroke-linecap="round"/>
-      <path d="M90 100 L400 100" stroke="#F37021" stroke-width="12" stroke-linecap="round"/>
-      <circle cx="240" cy="260" r="12" fill="#FFFFFF" stroke="#16181D" stroke-width="4"/>
-      <circle cx="236" cy="160" r="12" fill="#FFFFFF" stroke="#16181D" stroke-width="4"/>
-      <circle cx="236" cy="100" r="12" fill="#FFFFFF" stroke="#16181D" stroke-width="4"/>
+
+<main id="main">
+  <section class="hero">
+    <svg class="hero-lines" viewBox="0 0 1440 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <path d="M-40 520 L360 520 L480 400 L1480 400" stroke="#00923F"/>
+      <path d="M720 -40 L720 260 L800 340 L800 760" stroke="#F8C300"/>
+      <path d="M-40 160 L520 160 L640 280 L1480 280" stroke="#009CDB" opacity=".7"/>
+      <path d="M1100 -40 L1100 200 L980 320 L980 760" stroke="#9461A8" opacity=".7"/>
     </svg>
-  </section>
-  <section id="tasks" class="wrap">
-    <h2>Start with a task</h2>
-    <div class="cards" id="taskCards">
-      <article><h3>Load the GTHA template</h3><p>Open the editor. The first-run setup offers the GTHA template, a blank map, or your saved map.</p><a href="docs/#template">How the template is built</a></article>
-      <article><h3>Add a station</h3><p>Choose Station (S) and click the grid. Name it in the Inspector, and add a Cantonese name for bilingual maps.</p><a href="docs/#stations">Station guide</a></article>
-      <article><h3>Draw a new line</h3><p>Choose Draw line (L), then click stations in order. Bends snap to 45 degrees and shared track spreads out side by side.</p><a href="docs/#lines">Line guide</a></article>
-      <article><h3>Draw on the real map</h3><p>Switch to the geographic layout to place routes over OpenStreetMap, then zoom in and click real bus stops to add them.</p><a href="docs/#realstops">Real stops guide</a></article>
-      <article><h3>Show how often it comes</h3><p>Give each route a peak and off-peak frequency and choose its service type, from bus to super express. VIVA routes come with real frequencies.</p><a href="docs/#routes">Routes guide</a></article>
-      <article><h3>Publish it</h3><p>Export a PNG, a PDF, or a single web page you can host anywhere, and save the whole project to keep working later.</p><a href="docs/#export">Export guide</a></article>
-      <article><h3>Use it offline on Windows</h3><p>Download the portable desktop app from the releases. One file, nothing to install, with native open, save and recent maps.</p><a href="docs/#desktop">Desktop app guide</a></article>
-      <article><h3>Host it for your household</h3><p>Run the server setup wizard or host.bat. It starts the editor in Docker and gives you an address the rest of your network can open.</p><a href="docs/#server">Hosting guide</a></article>
-      <article><h3>Share your map</h3><p>Export SVG for print, PNG for posts, or JSON to keep editing later. Drop a JSON file on the editor to open it.</p><a href="docs/#export">Export guide</a></article>
-    </div>
-  </section>
-  <section id="features" class="wrap">
-    <h2>What the editor does</h2>
-    <div class="explain">
-      <div class="pickers" role="tablist" aria-label="Feature explanations">
-        <button type="button" role="tab" aria-selected="true" data-k="route">Octilinear routing</button>
-        <button type="button" role="tab" aria-selected="false" data-k="bundle">Shared track</button>
-        <button type="button" role="tab" aria-selected="false" data-k="labels">Label placement</button>
-        <button type="button" role="tab" aria-selected="false" data-k="check">Map check</button>
+    <div class="wrap hero-grid">
+      <div class="reveal">
+        <a class="eyebrow" href="#features"><b data-t="new">New</b><span data-t="eyebrow">Scenarios, simulation and coverage</span></a>
+        <h1><span data-t="h1a">Design the GTHA's</span> <span class="grad" data-t="h1b">transit future</span></h1>
+        <p class="lead" data-t="lead">Draw subway, LRT, GO and bus routes on real geography. Plan trips, compare scenarios, see who lives near a station, and publish the map anywhere. It runs in your browser and your map never leaves your computer.</p>
+        <div class="cta">
+          <a class="btn filled" href="app/"><span data-icon="map"></span><span data-t="open">Open the editor</span></a>
+          <a class="btn tonal" href="https://github.com/Ding-Ding-Projects/gtha-metro-map-creator/releases/latest"><span data-icon="download"></span><span data-t="download">Download for Windows</span></a>
+        </div>
+        <div class="stats">
+          <div><b>238</b><span data-t="sStations">stations and stops</span></div>
+          <div><b>20</b><span data-t="sRoutes">routes in the template</span></div>
+          <div><b>7.28 M</b><span data-t="sPeople">people in census data</span></div>
+          <div><b>0</b><span data-t="sServers">servers needed</span></div>
+        </div>
       </div>
-      <div class="explain-body" role="tabpanel" id="explainBody" aria-live="polite"></div>
+      <div class="reveal" style="position:relative">
+        <div class="shot">
+          <div class="chrome"><i></i><i></i><i></i><span>ding-ding-projects.github.io/gtha-metro-map-creator/app/</span></div>
+          <img src="assets/trip.webp" width="1280" height="800" alt="The editor planning a trip from Finch to Unionville over OpenStreetMap, with the route highlighted and the itinerary in the side panel">
+        </div>
+        <div class="float f1"><span class="dot" style="background:#009CDB"></span><span data-t="float1">Real stops from OpenStreetMap</span></div>
+        <div class="float f2"><span class="dot" style="background:#9461A8"></span><span data-t="float2">VIVA frequencies from GTFS</span></div>
+      </div>
     </div>
-    <ul class="list">
-      <li>Undo and redo history, and autosave in this browser</li>
-      <li>Station, interchange and terminus styles</li>
-      <li>Solid, dashed (planned) and regional rail line styles</li>
-      <li>Geographic layout over OpenStreetMap, or a tidy schematic</li>
-      <li>Bus, rapid bus, express and super express routes with frequency badges</li>
-      <li>Find stations by plain text or regular expression, with a regex builder that explains each part</li>
-      <li>Portable Windows desktop app and a Docker server with a setup wizard</li>
-      <li>English, Cantonese and bilingual interface and labels</li>
-      <li>Light, dark and system themes</li>
-    </ul>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="kicker" data-t="k1">What it does</span>
+        <h2 data-t="featuresH">A planning studio, not just a drawing tool</h2>
+        <p data-t="featuresP">Every screen below is a real capture of the current editor.</p>
+      </div>
+      <div class="showcase reveal">
+        <div class="tabs" role="tablist" aria-label="Features" id="tabs"></div>
+        <div class="stage">
+          <div class="shot"><div class="chrome"><i></i><i></i><i></i><span id="stageCap">GTHA Metro Map Creator</span></div><img id="stageImg" src="assets/trip.webp" width="1280" height="800" alt=""></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="more">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="kicker" data-t="k2">Everything else</span>
+        <h2 data-t="moreH">Built for the details transit fans care about</h2>
+      </div>
+      <div class="bento">
+        <article class="tile-card wide reveal"><span class="tile t-blue" data-icon="public"></span><h3 data-t="b1h">Real geography or a tidy schematic</h3><p data-t="b1p">Draw over OpenStreetMap, then press one button to straighten it into 45-degree lines that keep every station in order.</p><div class="chips"><span>OpenStreetMap</span><span data-t="chip45">45° auto-schematic</span><span data-t="chipShared">Shared track</span></div></article>
+        <article class="tile-card reveal"><span class="tile t-purple" data-icon="schedule"></span><h3 data-t="b2h">Frequencies by time of day</h3><p data-t="b2p">Peak, midday, evening and weekend headways, express skip-stops and branches.</p></article>
+        <article class="tile-card reveal"><span class="tile t-green" data-icon="upload_file"></span><h3 data-t="b3h">GTFS in and out</h3><p data-t="b3p">Import any agency's feed, read on your computer, or export your plan as a valid feed.</p></article>
+        <article class="tile-card reveal"><span class="tile t-orange" data-icon="picture_as_pdf"></span><h3 data-t="b4h">Print-ready vector PDF</h3><p data-t="b4p">A0 to A4 with title, legend and four map styles. PNG, SVG and a hostable web page too.</p></article>
+        <article class="tile-card reveal"><span class="tile t-teal" data-icon="accessible"></span><h3 data-t="b5h">Station facilities</h3><p data-t="b5p">Accessible, parking, bike, airport, ferry and bus terminal icons, plus scale bar and north arrow.</p></article>
+        <article class="tile-card reveal"><span class="tile t-red" data-icon="train"></span><h3 data-t="b6h">Live vehicles</h3><p data-t="b6p">Real TTC and YRT vehicle positions over your map in the desktop app.</p></article>
+        <article class="tile-card reveal"><span class="tile t-blue" data-icon="search"></span><h3 data-t="b7h">Fast to edit</h3><p data-t="b7p">Command palette, box select, copy and paste, undo history, regex search with a builder.</p></article>
+        <article class="tile-card full reveal"><span class="tile t-purple" data-icon="hub"></span><h3 data-t="b8h">English, Cantonese or both</h3><p data-t="b8p">Bilingual station names and a fully translated interface, in light or dark, with keyboard access and reduced motion respected.</p><div class="chips"><span>English</span><span>廣東話</span><span data-t="chipDark">Dark theme</span></div></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="tasks">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="kicker" data-t="k3">Guides</span>
+        <h2 data-t="tasksH">Start with a task</h2>
+      </div>
+      <div class="bento">
+        <article class="tile-card reveal"><span class="tile t-blue" data-icon="add_location_alt"></span><h3 data-t="g1h">Add stations</h3><p data-t="g1p">Click the map, or zoom in and click real stops to add them.</p><a href="docs/#realstops" data-t="g1a">Real stops guide →</a></article>
+        <article class="tile-card reveal"><span class="tile t-green" data-icon="conversion_path"></span><h3 data-t="g2h">Draw a route</h3><p data-t="g2p">Click stations in order; shared track spreads out side by side.</p><a href="docs/#lines" data-t="g2a">Line guide →</a></article>
+        <article class="tile-card reveal"><span class="tile t-purple" data-icon="route"></span><h3 data-t="g3h">Plan a trip</h3><p data-t="g3p">Fastest route with waits from your frequencies, and a travel-time map.</p><a href="docs/#journey" data-t="g3a">Trips guide →</a></article>
+        <article class="tile-card reveal"><span class="tile t-orange" data-icon="swap_horiz"></span><h3 data-t="g4h">Compare plans</h3><p data-t="g4p">Keep Today and 2031 side by side with a swipe and a change list.</p><a href="docs/#scenarios" data-t="g4a">Scenarios guide →</a></article>
+        <article class="tile-card reveal"><span class="tile t-teal" data-icon="my_location"></span><h3 data-t="g5h">Check coverage</h3><p data-t="g5p">People within 400 m and 800 m of every station, from the 2021 Census.</p><a href="docs/#coverage" data-t="g5a">Coverage guide →</a></article>
+        <article class="tile-card reveal"><span class="tile t-red" data-icon="upload_file"></span><h3 data-t="g6h">Import a GTFS feed</h3><p data-t="g6p">Bring in real routes, stops and headways from any agency.</p><a href="docs/#gtfs" data-t="g6a">GTFS guide →</a></article>
+        <article class="tile-card reveal"><span class="tile t-blue" data-icon="picture_as_pdf"></span><h3 data-t="g7h">Print it</h3><p data-t="g7p">Choose a style and paper size and get a sharp vector PDF.</p><a href="docs/#styles" data-t="g7a">Print guide →</a></article>
+        <article class="tile-card reveal"><span class="tile t-green" data-icon="hub"></span><h3 data-t="g8h">Host it at home</h3><p data-t="g8p">Run the setup wizard and share an address with your household.</p><a href="docs/#server" data-t="g8a">Hosting guide →</a></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="get">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="kicker" data-t="k4">Get it</span>
+        <h2 data-t="getH">Use it the way that suits you</h2>
+      </div>
+      <div class="get">
+        <article class="hi reveal"><span data-icon="public"></span><h3 data-t="w1h">In your browser</h3><p data-t="w1p">Nothing to install. Your maps are saved in this browser and never uploaded.</p><a class="btn filled" href="app/" data-t="open">Open the editor</a></article>
+        <article class="reveal"><span data-icon="download"></span><h3 data-t="w2h">Windows desktop app</h3><p data-t="w2p">One portable file with native open and save, recent maps, and live vehicles.</p><a class="btn tonal" href="https://github.com/Ding-Ding-Projects/gtha-metro-map-creator/releases/latest" data-t="w2a">Latest release</a></article>
+        <article class="reveal"><span data-icon="hub"></span><h3 data-t="w3h">Your own server</h3><p data-t="w3p">Run the published container with Docker, or use the setup wizard for one-click hosting on your network.</p>
+          <div class="code"><code id="dockerCmd">docker run -d -p 8080:8080 ghcr.io/ding-ding-projects/gtha-metro-map-creator:latest</code><button class="copy" type="button" id="copyBtn" data-t="copy">Copy</button></div>
+          <a class="btn outlined" href="docs/#server" data-t="w3a">Hosting guide</a></article>
+      </div>
+    </div>
   </section>
 </main>
-<footer class="wrap foot"><p>MIT licensed. Line colours are approximate and the template is simplified. <a href="docs/">Documentation</a></p></footer>
-<script>
-(function(){
-  var text = {
-    route: 'Every segment between two stops is drawn with at most one bend, at 0, 45 or 90 degrees. Each segment can bend diagonal-first or straight-first; pick a segment with Select and switch it in the Inspector.',
-    bundle: 'When two or more lines run between the same pair of stops, the editor offsets them side by side instead of drawing them on top of each other. Union to Bloor shows Kitchener and UP Express sharing track.',
-    labels: 'Station names try eight positions and take the one that crosses the fewest lines and neighbours. Override any label in the Inspector, or reset all labels to automatic in Settings.',
-    check: 'Map check lists stations that no line serves, lines with fewer than two stops, duplicate names and stations stacked on the same spot. Click an item to jump to it.'
-  };
-  var body = document.getElementById('explainBody');
-  var tabs = document.querySelectorAll('[role=tab]');
-  function show(k){ body.textContent = text[k]; tabs.forEach(function(b){ b.setAttribute('aria-selected', String(b.dataset.k === k)); }); }
-  tabs.forEach(function(b){ b.addEventListener('click', function(){ show(b.dataset.k); }); });
-  show('route');
-})();
-</script>
+
+<footer class="foot">
+  <div class="wrap">
+    <p data-t="footP">MIT licensed. Unofficial: not a TTC, Metrolinx or York Region Transit product. Map data © OpenStreetMap contributors. Census data: Statistics Canada.</p>
+    <nav aria-label="Footer"><a href="docs/" data-t="navDocs">Documentation</a><a href="app/" data-t="open">Open the editor</a><a href="https://github.com/Ding-Ding-Projects/gtha-metro-map-creator" data-t="navSource">Source</a></nav>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app/icons.js"></script>
+<script src="home.js"></script>
 </body>
 </html>
