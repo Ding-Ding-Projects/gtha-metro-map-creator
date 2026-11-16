@@ -12,6 +12,9 @@ hooks run when the saved map loads.
 | `lineStyle` | `(line, drawnMap)` before a line is drawn | a styled copy, or nothing |
 | `svgUnder`, `svgOver` | `(drawnMap, { G, geo, opts })` | SVG markup under the lines or over the labels |
 | `labelExtra` | `(drawnMap, station, labelRect, ctx)` | SVG beside a station label |
+| `stationMarker` | `(map, station, { inter, col, cx, cy, geo, G, opts })` | marker SVG that replaces the default circle |
+| `labelStyle` | `(map, station, { inter, small })` | `{ upper, weight }` for the label text |
+| `exportTheme` | `()` | `{ bg, ink, halo, sub, tileFilter }` colours for exports |
 | `inspector` | `(selection, map)` | HTML appended to the inspector |
 | `input` | `(field, event, selection)` for inspector `data-f` inputs | `true` when handled |
 | `click`, `keydown` | `(event)`, `(event, typing)` | `true` when handled |

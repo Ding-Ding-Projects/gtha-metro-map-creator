@@ -1,0 +1,104 @@
+[
+ {
+  "name": "setup",
+  "js": "(() => { document.getElementById('setupDialog').close(); const s0 = GMMC.getSettings(); s0.lang = 'en'; s0.mapStyle = 'material'; GMMC.saveSettings(); GMMC.applyI18n(); window.__dl = []; GMMC.download = (n, b) => { window.__dl.push({ n, b }); }; window.__toasts = []; const tt = GMMC.toast; GMMC.toast = (m) => { window.__toasts.push(m); }; GMMC.setLayout('schematic'); GMMC.fit(); return { layout: GMMC.getSettings().layout, style: GMMC.getSettings().mapStyle, cards: document.querySelectorAll('#mapStyleSec .ms-card').length, settingsCards: document.querySelectorAll('#msSettings .ms-card').length, menuItem: !!document.getElementById('printMenuBtn') }; })()"
+ },
+ {
+  "wait": 800
+ },
+ {
+  "shot": "style-material.png"
+ },
+ {
+  "name": "pick-classic",
+  "js": "(() => { document.querySelector('#mapStyleSec .ms-card[data-ms=\"classic\"]').click(); const svg = document.getElementById('viewport').innerHTML; return { style: GMMC.getSettings().mapStyle, stageAttr: document.getElementById('stage').dataset.mapstyle, pressed: [...document.querySelectorAll('#mapStyleSec .ms-card')].map(b => b.getAttribute('aria-pressed')).join(','), squareCaps: (svg.match(/stroke-linecap=\"square\"/g) || []).length, ticks: (svg.match(/<line [^>]*stroke-linecap=\"butt\"/g) || []).length, upperLabel: (svg.match(/<text class=\"st-label\"[^>]*>[^<a-z]*<\\/text>/g) || []).length, widths: [...new Set([...svg.matchAll(/stroke-width=\"(\\d+)\"/g)].map(m => m[1]))].join(','), stored: JSON.parse(localStorage.getItem('gmmc.settings.v1')).mapStyle, projectHas: JSON.parse(GMMC.projectJson()).settings.mapStyle }; })()"
+ },
+ {
+  "wait": 500
+ },
+ {
+  "shot": "style-classic.png"
+ },
+ {
+  "name": "pick-frequent",
+  "js": "(() => { document.querySelector('#mapStyleSec .ms-card[data-ms=\"frequent\"]').click(); const svg = document.getElementById('viewport').innerHTML; return { style: GMMC.getSettings().mapStyle, stageAttr: document.getElementById('stage').dataset.mapstyle, pressed: [...document.querySelectorAll('#mapStyleSec .ms-card')].map(b => b.getAttribute('aria-pressed')).join(','), squareCaps: (svg.match(/stroke-linecap=\"square\"/g) || []).length, ticks: (svg.match(/<line [^>]*stroke-linecap=\"butt\"/g) || []).length, upperLabel: (svg.match(/<text class=\"st-label\"[^>]*>[^<a-z]*<\\/text>/g) || []).length, widths: [...new Set([...svg.matchAll(/stroke-width=\"(\\d+)\"/g)].map(m => m[1]))].join(','), stored: JSON.parse(localStorage.getItem('gmmc.settings.v1')).mapStyle, projectHas: JSON.parse(GMMC.projectJson()).settings.mapStyle }; })()"
+ },
+ {
+  "wait": 500
+ },
+ {
+  "shot": "style-frequent.png"
+ },
+ {
+  "name": "pick-night",
+  "js": "(() => { document.querySelector('#mapStyleSec .ms-card[data-ms=\"night\"]').click(); const svg = document.getElementById('viewport').innerHTML; return { style: GMMC.getSettings().mapStyle, stageAttr: document.getElementById('stage').dataset.mapstyle, pressed: [...document.querySelectorAll('#mapStyleSec .ms-card')].map(b => b.getAttribute('aria-pressed')).join(','), squareCaps: (svg.match(/stroke-linecap=\"square\"/g) || []).length, ticks: (svg.match(/<line [^>]*stroke-linecap=\"butt\"/g) || []).length, upperLabel: (svg.match(/<text class=\"st-label\"[^>]*>[^<a-z]*<\\/text>/g) || []).length, widths: [...new Set([...svg.matchAll(/stroke-width=\"(\\d+)\"/g)].map(m => m[1]))].join(','), stored: JSON.parse(localStorage.getItem('gmmc.settings.v1')).mapStyle, projectHas: JSON.parse(GMMC.projectJson()).settings.mapStyle }; })()"
+ },
+ {
+  "wait": 500
+ },
+ {
+  "shot": "style-night.png"
+ },
+ {
+  "name": "settingsCards",
+  "js": "(() => { document.getElementById('settingsBtn').click(); const r = { visible: document.querySelector('#msSettings .ms-card').getBoundingClientRect().width > 0, pressed: document.querySelector('#msSettings .ms-card[aria-pressed=true]').dataset.ms }; return r; })()"
+ },
+ {
+  "wait": 400
+ },
+ {
+  "shot": "style-settings.png"
+ },
+ {
+  "name": "closeSettings",
+  "js": "(() => { document.getElementById('settingsDialog').close(); document.querySelector('#mapStyleSec .ms-card[data-ms=\"material\"]').click(); return GMMC.getSettings().mapStyle; })()"
+ },
+ {
+  "name": "openPrint",
+  "js": "(() => { document.getElementById('exportBtn').click(); document.getElementById('printMenuBtn').click(); const d = document.getElementById('printDialog'); const set = (id, v) => { const e = document.getElementById(id); e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); }; set('prPaper', 'A3'); set('prTitleIn', 'GTHA Rapid Transit'); set('prSub', 'Frequent service, 2031 plan'); document.querySelector('#prOrient [data-o=landscape]').click(); return { open: d.open, paper: document.getElementById('prPaper').value, options: document.getElementById('prPaper').options.length }; })()"
+ },
+ {
+  "wait": 900
+ },
+ {
+  "shot": "print-dialog.png"
+ },
+ {
+  "name": "previewInfo",
+  "js": "(() => { const b = document.getElementById('prPrev'); return { w: b.style.width, h: b.style.height, hasSvg: !!b.querySelector('svg'), texts: b.querySelectorAll('text').length }; })()"
+ },
+ {
+  "name": "exportA3",
+  "js": "(async () => { document.getElementById('prExport').click(); for (let i = 0; i < 80 && !window.__dl.length; i++) await new Promise(r => setTimeout(r, 250)); const d = window.__dl[window.__dl.length - 1]; if (!d) return { error: 'no download', toasts: window.__toasts }; const buf = new Uint8Array(await d.b.arrayBuffer()); const txt = new TextDecoder('latin1').decode(buf); const mb = /MediaBox\\s*\\[([^\\]]*)\\]/.exec(txt); let ops = ''; let p = 0; while ((p = txt.indexOf('stream', p)) >= 0) { if (txt.slice(p - 3, p) === 'end') { p += 6; continue; } let st = p + 6; if (txt[st] === '\\r') st++; if (txt[st] === '\\n') st++; const end = txt.indexOf('endstream', st); const slice = buf.slice(st, end - 1); p = end + 9; try { const ds = new Blob([slice]).stream().pipeThrough(new DecompressionStream('deflate')); ops += await new Response(ds).text(); } catch (e) { } } const names = Object.values(GMMC.getMap().stations).slice(0, 40).map(s => s.name); const found = names.filter(n => ops.includes('(' + n + ')')); window.__ops = ops; return { name: d.n, size: buf.length, head: txt.slice(0, 8), mediaBox: mb && mb[1], BT: (ops.match(/\\bBT\\b/g) || []).length, Tj: (ops.match(/\\bTj\\b/g) || []).length, imageDo: (ops.match(/\\bDo\\b/g) || []).length, namesFound: found.length + '/' + names.length, sample: found.slice(0, 4), type: d.b.type, toasts: window.__toasts }; })()"
+ },
+ {
+  "name": "dialogClosed",
+  "js": "(() => ({ closed: !document.getElementById('printDialog').open }))()"
+ },
+ {
+  "name": "nightPdf",
+  "js": "(async () => { document.querySelector('#mapStyleSec .ms-card[data-ms=\"night\"]').click(); window.__dl.length = 0; const r = await GMMCPrint.makePdf(); return { name: r.name, size: r.blob && r.blob.size, fallback: !!r.fallback }; })()"
+ },
+ {
+  "name": "portraitA4",
+  "js": "(async () => { document.querySelector('#mapStyleSec .ms-card[data-ms=\"classic\"]').click(); GMMCPrint.setOptions({ paper: 'A4', landscape: false, legend: 'tr' }); const r = await GMMCPrint.makePdf(); const t = new TextDecoder('latin1').decode(new Uint8Array(await r.blob.arrayBuffer())); return { box: /MediaBox\\s*\\[([^\\]]*)\\]/.exec(t)[1], size: r.blob.size }; })()"
+ },
+ {
+  "name": "cantonese",
+  "js": "(async () => { GMMCPrint.setOptions({ paper: 'A3', landscape: true, legend: 'br' }); const s = GMMC.getSettings(); s.lang = 'yue'; GMMC.saveSettings(); GMMC.applyI18n(); window.__calls = []; const o = GMMC.exportAct; GMMC.exportAct = (a) => { window.__calls.push(a); }; const r = await GMMCPrint.makePdf(); GMMC.exportAct = o; return { fallback: !!r.fallback, hasBlob: !!r.blob }; })()"
+ },
+ {
+  "name": "cantoneseDialog",
+  "js": "(() => { document.getElementById('exportBtn').click(); document.getElementById('printMenuBtn').click(); return { title: document.getElementById('prTitle').textContent, note: document.getElementById('prNote').textContent, card: document.querySelector('#mapStyleSec .ms-card[data-ms=night] .ms-name').textContent }; })()"
+ },
+ {
+  "wait": 600
+ },
+ {
+  "shot": "print-dialog-yue.png"
+ },
+ {
+  "name": "exportYue",
+  "js": "(async () => { const calls = []; const o = GMMC.exportAct; GMMC.exportAct = (a) => { calls.push(a); }; document.getElementById('prExport').click(); await new Promise(r => setTimeout(r, 2500)); GMMC.exportAct = o; return { calls, toasts: window.__toasts.slice(-2) }; })()"
+ }
+]
