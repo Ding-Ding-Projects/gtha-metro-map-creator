@@ -9,6 +9,8 @@
 | Print | [print.md](print.md) | Print layout dialog and vector PDF export |
 | Desktop | [desktop.md](desktop.md) | Portable desktop app and server setup wizard |
 | Schematic | [schematic.md](schematic.md) | Auto-schematic: octilinear layout from real positions |
+| Scenarios | [scenarios.md](scenarios.md) | Named map versions, swipe compare, change list |
+| Share | [share.md](share.md) | Share link in the URL fragment |
 | Hosting | [hosting.md](hosting.md) | Container image, Compose, host.bat |
 
 There is no HTTP API, so no Postman collection applies.

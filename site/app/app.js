@@ -20,7 +20,7 @@
 
   // Extension hooks. Feature modules (mod-*.js) load before this file and push functions onto
   // window.GMMCX; see docs/features/extensions.md.
-  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [], stationMarker: [], labelStyle: [], exportTheme: [] }, window.GMMCX || {});
+  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [], stationMarker: [], labelStyle: [], exportTheme: [], projectSave: [], projectLoad: [] }, window.GMMCX || {});
   for (const k of Object.keys(X)) if (!Array.isArray(X[k])) X[k] = [];
   window.GMMCX = X;
   const hook = (name, ...args) => { for (const f of X[name]) { try { const r = f(...args); if (r) return r; } catch (err) { console.error('extension ' + name, err); } } return null; };
@@ -1136,7 +1136,8 @@ addEventListener('resize',fit);fit();})();
   }
   function projectJson() {
     const keep = ['layout', 'background', 'bgOpacity', 'showFreq', 'fontSize', 'legend', 'lang', 'liveStops', 'freqWeight', 'mapStyle'];
-    return JSON.stringify({ format: PROJECT_FORMAT, version: 1, savedAt: new Date().toISOString(), map, settings: Object.fromEntries(keep.map((k) => [k, settings[k]])), view: { tx: view.tx, ty: view.ty, k: view.k } }, null, 2);
+    const extra = {}; for (const f of X.projectSave) { try { Object.assign(extra, f()); } catch (err) { console.error('extension projectSave', err); } }
+    return JSON.stringify({ ...extra, format: PROJECT_FORMAT, version: 1, savedAt: new Date().toISOString(), map, settings: Object.fromEntries(keep.map((k) => [k, settings[k]])), view: { tx: view.tx, ty: view.ty, k: view.k } }, null, 2);
   }
   function setBusy(on) { $('progress').hidden = !on; }
   async function exportAct(a) {
@@ -1169,7 +1170,9 @@ addEventListener('resize',fit);fit();})();
       if (Number.isFinite(+s2.fontSize)) settings.fontSize = Math.min(22, Math.max(9, +s2.fontSize));
       if (['en', 'yue', 'both'].includes(s2.lang)) settings.lang = s2.lang;
       if (['material', 'classic', 'frequent', 'night'].includes(s2.mapStyle)) settings.mapStyle = s2.mapStyle;
-      saveSettings(); applyI18n(); replaceMap(m); return true;
+            saveSettings(); applyI18n(); replaceMap(m);
+      for (const f of X.projectLoad) { try { f(obj, m); } catch (err) { console.error('extension projectLoad', err); } }
+      return true;
     }
     const m = obj && validateMap(obj); if (!m) return false;
     replaceMap(m); return true;
