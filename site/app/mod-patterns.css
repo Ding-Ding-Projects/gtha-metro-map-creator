@@ -1,1 +1,17 @@
-/* mod-patterns.css */
+/* mod-patterns.css: service patterns in the inspector. */
+.patterns { margin-top: 8px; }
+.patterns .title-sm .supporting { margin-left: auto; }
+.pat-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+#patStopList { max-height: 280px; overflow-y: auto; overscroll-behavior: contain; }
+.pat-row { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 4px; }
+.pat-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pat-mark { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--c, var(--md-primary)); background: var(--md-surface, #fff); box-sizing: border-box; }
+.pat-mark.pass { border-style: dotted; border-width: 2px; opacity: .7; }
+.pat-chip { flex: none; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--md-outline); background: transparent; color: var(--md-on-surface-variant); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+.pat-chip:not(.pass):not(.on) { background: var(--md-secondary-container, #dde3ea); color: var(--md-on-secondary-container, inherit); border-color: transparent; }
+.pat-chip.on { background: var(--md-primary); color: var(--md-on-primary); border-color: transparent; }
+.pat-chip:disabled { opacity: .5; cursor: default; }
+.pat-chip:focus-visible, .pat-mini:focus-visible { outline: 3px solid var(--md-primary); outline-offset: 2px; }
+.pat-mini { flex: none; width: 28px; height: 28px; border-radius: 14px; border: 0; background: transparent; color: var(--md-on-surface-variant); font-size: 18px; line-height: 1; cursor: pointer; }
+.pat-mini:hover { background: var(--md-surface-container-high, rgba(0, 0, 0, .08)); }
+@media (prefers-reduced-motion: reduce) { .patterns * { transition: none !important; animation: none !important; } }

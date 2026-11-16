@@ -65,7 +65,7 @@
       out.lines.push({ id: String(l.id || uid('line')), name: String(l.name || 'Line').slice(0, 80), nameZh: String(l.nameZh || '').slice(0, 80),
         color: /^#[0-9a-fA-F]{6}$/.test(l.color) ? l.color : '#1F5FBF', width: Math.min(16, Math.max(3, +l.width || 8)),
         style: STYLES.includes(l.style) ? l.style : 'solid', visible: l.visible !== false, path,
-        freq: { peak: freqNum(l.freq && l.freq.peak), offpeak: freqNum(l.freq && l.freq.offpeak) }, showFreq: l.showFreq !== false,
+        freq: freqBands(l.freq), showFreq: l.showFreq !== false,
         note: String(l.note || '').slice(0, 300),
         bends: (l.bends && typeof l.bends === 'object') ? Object.fromEntries(Object.entries(l.bends).filter(([, v]) => v === 'late' || v === 'early')) : {} });
     }
@@ -80,6 +80,8 @@
     for (const f of X.validate) { try { f(m, out); } catch (err) { console.error('extension validate', err); } }
     return out;
   }
+  /** Frequency by time band. An older file's `offpeak` becomes `midday`. */
+  function freqBands(f) { f = f || {}; return { peak: freqNum(f.peak), midday: freqNum(f.midday !== undefined && f.midday !== null ? f.midday : f.offpeak), evening: freqNum(f.evening), weekend: freqNum(f.weekend) }; }
   function freqNum(v) { const n = Math.round(+v); return v !== null && v !== '' && Number.isFinite(n) && n >= 1 && n <= 240 ? n : null; }
   const lineById = (id) => map.lines.find((l) => l.id === id);
 
@@ -157,7 +159,7 @@
   function isInterchange(s) {
     if (s.interchange === 'yes') return true;
     if (s.interchange === 'no') return false;
-    return servingLines(s.id).length > 1;
+    return new Set(servingLines(s.id).filter((l) => !(l.skip && l.skip.includes(s.id))).map((l) => String(l.id).split('~b')[0])).size > 1;
   }
 
   function checkpoint() {
@@ -309,10 +311,10 @@
     }
   }
   function freqText(l) {
-    const f = l.freq || {};
-    if (!f.peak && !f.offpeak) return '';
-    if (f.peak && f.offpeak && f.peak !== f.offpeak) return f.peak + '/' + f.offpeak + ' ' + t('minShort');
-    return (f.peak || f.offpeak) + ' ' + t('minShort');
+    const f = freqBands(l.freq);
+    if (f.peak && f.midday && f.peak !== f.midday) return f.peak + '/' + f.midday + ' ' + t('minShort');
+    const one = f.peak || f.midday || f.evening || f.weekend;
+    return one ? one + ' ' + t('minShort') : '';
   }
   const inkFor = (hex) => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) > 160 ? '#16181D' : '#FFFFFF'; };
 
@@ -332,16 +334,22 @@
       if (!g.poly.length) continue;
       let ls = l; for (const f of X.lineStyle) { try { ls = f(ls, m) || ls; } catch (err) { console.error('extension lineStyle', err); } }
       out += linePaths(ls, d);
-      if (opts.editor) for (const e of g.edges) out += `<path class="hit" d="${polyD(e.pts)}" stroke-width="${Math.max(16, l.width + 8)}" data-line="${esc(l.id)}" data-edge="${e.index}"/>`;
+      if (opts.editor && !l._branchOf) for (const e of g.edges) out += `<path class="hit" d="${polyD(e.pts)}" stroke-width="${Math.max(16, l.width + 8)}" data-line="${esc(l.id)}" data-edge="${e.index}"/>`;
     }
     // stations and stops
     const zoomedOut = m._geo && m._k < 0.55;
     const labelled = [];
     for (const s of Object.values(m.stations)) {
       const inter = isInterchangeIn(m, s);
-      const lines = m.lines.filter((l) => l.visible && l.path.includes(s.id));
-      const col = lines[0] ? lines[0].color : '#16181D';
+      const allLines = m.lines.filter((l) => l.visible && l.path.includes(s.id));
+      const lines = allLines.filter((l) => !(l.skip && l.skip.includes(s.id)));
+      const passOnly = allLines.length > 0 && !lines.length && s.interchange !== 'yes';
+      const col = (lines[0] || allLines[0]) ? (lines[0] || allLines[0]).color : '#16181D';
       const cx = s.x * G, cy = s.y * G;
+      if (passOnly) {
+        out += `<g data-st="${esc(s.id)}">${opts.editor ? `<circle cx="${cx}" cy="${cy}" r="2.5" fill="${col}" opacity=".7"/><circle cx="${cx}" cy="${cy}" r="14" fill="transparent"/>` : ''}</g>`;
+        continue;
+      }
       if (s.kind === 'stop' && !inter) {
         out += `<g data-st="${esc(s.id)}"><circle cx="${cx}" cy="${cy}" r="3.6" fill="#FFFFFF" stroke="${col}" stroke-width="2.2"/>`;
       } else {
@@ -401,7 +409,7 @@
   function isInterchangeIn(m, s) {
     if (s.interchange === 'yes') return true;
     if (s.interchange === 'no') return false;
-    return m.lines.filter((l) => l.path.includes(s.id)).length > 1;
+    return new Set(m.lines.filter((l) => l.path.includes(s.id) && !(l.skip && l.skip.includes(s.id))).map((l) => String(l.id).split('~b')[0])).size > 1;
   }
   function bounds(m) {
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -635,6 +643,7 @@
     return Object.values(map.stations).filter((o) => o.id !== s.id).map((o) => { const h = stGeo(o); return [o, Math.hypot(h.x - g.x, h.y - g.y)]; })
       .filter(([, d]) => d < 1.2).sort((a, b) => a[1] - b[1]).slice(0, 12);
   }
+  const freqField = (key, label, v) => tf(label, `<input type="number" min="1" max="240" inputmode="numeric" data-f="ln.${key}" value="${v || ''}" placeholder="-">`, ' tf-suffix" data-suffix="' + esc(t('minShort')));
   function renderInspector() {
     const el = $('inspector');
     const active = activeLineId && lineById(activeLineId);
@@ -664,15 +673,15 @@
         ${btn('alignH', t('alignH'), 'tonal')}${btn('alignV', t('alignV'), 'tonal')}${btn('delSel', t('delete'), 'danger', 'delete')}</div></div>`;
     } else if (selection.type === 'line' || selection.type === 'edge') {
       const l = lineById(selection.lineId || selection.id);
-      const f = l.freq || {};
+      const f = freqBands(l.freq);
       h = `<div class="insp"><div class="insp-title"><span class="swatch s-${l.style}" style="--c:${l.color}"></span><span class="title-md">${esc(lineName(l))}</span><span class="supporting">${l.path.filter((r) => r[0] !== '@').length} ${esc(t('stops'))}</span></div>
         ${tf(t('name'), `<input type="text" data-f="ln.name" value="${esc(l.name)}" maxlength="80">`)}
         ${tf(t('nameZh'), `<input type="text" data-f="ln.nameZh" value="${esc(l.nameZh)}" maxlength="80" lang="yue-Hant">`)}
         ${tf(t('serviceType'), sel('ln.style', STYLES.map((v) => [v, styleName(v)]), l.style))}
         <div class="two">${tf(t('color'), `<input type="color" data-f="ln.color" value="${l.color}">`, ' tf-color')}${tf(t('width') + ' ' + l.width, `<input type="range" min="3" max="16" data-f="ln.width" value="${l.width}">`, ' tf-range')}</div>
-        <h3 class="title-sm">${ic('schedule', 18)} ${esc(t('frequency'))}</h3>
-        <div class="two">${tf(t('peakEvery'), `<input type="number" min="1" max="240" inputmode="numeric" data-f="ln.freqPeak" value="${f.peak || ''}" placeholder="-">`, ' tf-suffix" data-suffix="' + esc(t('minShort')))}
-        ${tf(t('offpeakEvery'), `<input type="number" min="1" max="240" inputmode="numeric" data-f="ln.freqOff" value="${f.offpeak || ''}" placeholder="-">`, ' tf-suffix" data-suffix="' + esc(t('minShort')))}</div>
+        <h3 class="title-sm">${ic('schedule', 18)} ${esc(t('frequencyByTime'))}</h3>
+        <div class="two">${freqField('freqPeak', t('bandPeak'), f.peak)}${freqField('freqMidday', t('bandMidday'), f.midday)}</div>
+        <div class="two">${freqField('freqEvening', t('bandEvening'), f.evening)}${freqField('freqWeekend', t('bandWeekend'), f.weekend)}</div>
         ${sw('ln.showFreq', l.showFreq, t('showFreqLine'))}
         ${l.note ? `<p class="supporting">${esc(l.note)}</p>` : ''}
         <div class="actions">${btn('moveUp', t('moveUp'), 'text')}${btn('moveDown', t('moveDown'), 'text')}${btn('reverse', t('reverse'), 'text', 'sync_alt')}${btn('delLine', t('delete'), 'danger', 'delete')}</div>`;
@@ -725,7 +734,7 @@
   const PALETTE = ['#1F5FBF', '#C8102E', '#0B6E4F', '#E8A317', '#7B2D8E', '#00838F', '#6D4C41', '#D81B60'];
   function newLine() {
     checkpoint();
-    const l = { id: uid('line'), name: t('newLine') + ' ' + (map.lines.length + 1), nameZh: '', color: PALETTE[map.lines.length % PALETTE.length], width: 8, style: 'solid', visible: true, path: [], bends: {}, freq: { peak: null, offpeak: null }, showFreq: true, note: '' };
+    const l = { id: uid('line'), name: t('newLine') + ' ' + (map.lines.length + 1), nameZh: '', color: PALETTE[map.lines.length % PALETTE.length], width: 8, style: 'solid', visible: true, path: [], bends: {}, freq: { peak: null, midday: null, evening: null, weekend: null }, showFreq: true, note: '' };
     map.lines.push(l); activeLineId = l.id; selection = { type: 'line', id: l.id };
     tool = 'line'; changed(); beep(523);
     return l;
@@ -761,7 +770,9 @@
     else if (right.length < 2) { l.path = left; l.bends = bendsL; }
     else {
       l.path = left; l.bends = bendsL;
-      const copy = Object.assign({}, l, { id: uid('line'), name: l.name + ' (2)', path: right, bends: bendsR });
+      const copy = Object.assign({}, l, { id: uid('line'), name: l.name + ' (2)', path: right, bends: bendsR, freq: Object.assign({}, l.freq) });
+      if (l.skip) { copy.skip = l.skip.filter((x) => right.includes(x)); l.skip = l.skip.filter((x) => left.includes(x)); }
+      delete copy.branches;
       map.lines.splice(map.lines.indexOf(l) + 1, 0, copy);
     }
     selection = { type: 'line', id: l.id };
@@ -967,8 +978,7 @@
       const l = lineById(selection.lineId || selection.id); const k = f.slice(3);
       if (k === 'width') l.width = +v;
       else if (k === 'style') { l.style = v; l.width = STYLE_WIDTH[v] || l.width; }
-      else if (k === 'freqPeak') l.freq.peak = freqNum(v);
-      else if (k === 'freqOff') l.freq.offpeak = freqNum(v);
+      else if (k.startsWith('freq')) { l.freq = freqBands(l.freq); l.freq[k.slice(4).toLowerCase()] = freqNum(v); }
       else if (k === 'showFreq') l.showFreq = e.target.checked;
       else l[k] = v;
     }
@@ -1116,7 +1126,7 @@ addEventListener('resize',fit);fit();})();
 `;
   }
   function projectJson() {
-    const keep = ['layout', 'background', 'bgOpacity', 'showFreq', 'fontSize', 'legend', 'lang', 'liveStops'];
+    const keep = ['layout', 'background', 'bgOpacity', 'showFreq', 'fontSize', 'legend', 'lang', 'liveStops', 'freqWeight'];
     return JSON.stringify({ format: PROJECT_FORMAT, version: 1, savedAt: new Date().toISOString(), map, settings: Object.fromEntries(keep.map((k) => [k, settings[k]])), view: { tx: view.tx, ty: view.ty, k: view.k } }, null, 2);
   }
   function setBusy(on) { $('progress').hidden = !on; }
@@ -1146,7 +1156,7 @@ addEventListener('resize',fit);fit();})();
       if (['schematic', 'geographic'].includes(s2.layout)) settings.layout = s2.layout;
       if (['osm', 'none'].includes(s2.background)) settings.background = s2.background;
       if (Number.isFinite(+s2.bgOpacity)) settings.bgOpacity = Math.min(1, Math.max(0.2, +s2.bgOpacity));
-      for (const k of ['showFreq', 'legend', 'liveStops']) if (typeof s2[k] === 'boolean') settings[k] = s2[k];
+      for (const k of ['showFreq', 'legend', 'liveStops', 'freqWeight']) if (typeof s2[k] === 'boolean') settings[k] = s2[k];
       if (Number.isFinite(+s2.fontSize)) settings.fontSize = Math.min(22, Math.max(9, +s2.fontSize));
       if (['en', 'yue', 'both'].includes(s2.lang)) settings.lang = s2.lang;
       saveSettings(); applyI18n(); replaceMap(m); return true;
