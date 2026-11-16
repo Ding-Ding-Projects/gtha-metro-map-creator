@@ -44,6 +44,8 @@ Earlier captures are listed in [docs/screenshots/ARCHIVE.md](docs/screenshots/AR
 - Box select, copy and paste, Ctrl+K command palette, pinch zoom, colour-vision preview (1.3)
 - Import routes, stops and frequencies from any GTFS feed, read on your computer (1.4)
 - Trip planner and travel-time map on your own network (1.4)
+- One-click auto-schematic from real positions (1.5)
+- Map style presets and a print layout with vector PDF (1.5)
 
 - Built-in GTHA template (238 stations and stops, 20 routes, real coordinates): TTC Lines 1, 2, 4, 5 and 6, the planned Ontario Line, GO Lakeshore
   West and East, Kitchener, Milton, Barrie, Richmond Hill, Stouffville, UP Express, and

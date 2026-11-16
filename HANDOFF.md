@@ -1,5 +1,14 @@
 # Handoff
 
+## 1.5.0 (2026-11-16)
+
+Auto-schematic (`mod-schematic.js`, `schematic-worker.js`), style presets (`mod-styles.js`) and the
+print layout (`mod-print.js`, vendored jsPDF 4.2.1 and svg2pdf.js 2.9.0, MIT, in `site/app/vendor/`).
+Verified on merged main: schematic 98.8% straight segments, 0 order changes, crossings 19 to 10, about
+0.1 s; presets change caps, markers, labels and widths; A3 landscape PDF MediaBox 1190.55 x 841.89 with
+366 text operators and 40/40 sampled names as text; Cantonese falls back to the image PDF. The marker
+code from patterns and styles was merged by hand and the patterns checks re-run.
+
 ## 1.4.0 (2026-11-16)
 
 GTFS import (`mod-gtfs-import.js`, `gtfs-worker.js`) and the journey planner (`mod-journey.js`).

@@ -60,10 +60,17 @@
 - [x] GTFS import in a worker with route picker, stop merging and time-band frequencies
 - [x] Journey planner with transfers and waits, and a travel-time map
 
-## Phase 6: next
+## Phase 6: release 1.5.0
+
+- [x] Auto-schematic with preview and quality stats
+- [x] Style presets: Material, Classic metro, Frequent network, Night
+- [x] Print layout with vector PDF (Latin labels)
+
+## Phase 7: next
 
 - [ ] Shared bend setting across all lines on a bundled segment
-- [ ] Vector PDF export (the PDF is currently a high-resolution image)
+- [ ] Vector PDF with Chinese labels (needs an embedded font)
+- [ ] Crossing reduction in auto-schematic
 - [ ] Chinese names for bus stops
 - [ ] Touch gestures for pinch zoom
 - [ ] ~~Automated browser tests in CI~~ Not doing: CI deliberately runs no tests here; browser checks run locally with `scripts/verify/`
