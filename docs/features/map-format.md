@@ -25,6 +25,7 @@
 - `skip` (optional): station IDs on the line's path that this route passes without stopping. IDs not on the path are dropped.
 - `branches` (optional): extra paths that share the line's name, colour, style and frequency. Each is an array of at least two station IDs (no bend points). See [patterns.md](patterns.md).
 - `transfers`: walking links between two stations.
+- `opens`, `closes`: optional years (integers, 1800 to 2100) on a line or a station, used by the network timeline. Absent means unknown or always open. See [timeline.md](timeline.md).
 - `width`: 3 to 16.
 
 ## Import validation

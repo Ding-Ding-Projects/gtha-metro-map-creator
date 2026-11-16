@@ -1,0 +1,74 @@
+[
+{
+"name": "reset",
+"js": "(localStorage.clear(), location.reload(), 'reloaded')"
+},
+{
+"wait": 2500
+},
+{
+"name": "close",
+"js": "(() => { const d = document.getElementById('setupDialog'); if (d && d.open) d.close(); return 'closed'; })()"
+},
+{
+"name": "template years",
+"js": "(() => { const m = GMMC.getMap(); return ['l1','l2','l4','up','l5'].map(i => i + ':' + (m.lines.find(l => l.id === i) || {}).opens).join(' '); })()"
+},
+{
+"name": "enable via key Y",
+"js": "(() => { document.dispatchEvent(new KeyboardEvent('keydown', {key: 'y', bubbles: true})); return JSON.stringify(GMMCTimeline.state) + ' barVisible=' + !document.getElementById('timelineBar').hidden; })()"
+},
+{
+"name": "year 1960",
+"js": "(() => { const s = document.getElementById('tlSlider'); s.value = 1960; s.dispatchEvent(new Event('input', {bubbles: true})); const D = GMMC.viewMap(GMMC.getMap()); const ids = D.lines.map(l => l.id); return 'l1 ' + ids.includes('l1') + ' l2 ' + ids.includes('l2') + ' l4 ' + ids.includes('l4') + ' up ' + ids.includes('up') + ' | undated l5 ' + ids.includes('l5') + ' | finch ' + !!D.stations.finch + ' bayview(l4 only) ' + !!D.stations.bayview + ' dundas_west(l2 only) ' + !!D.stations.dundas_west + ' | ' + document.getElementById('tlCount').textContent; })()"
+},
+{
+"name": "drawn 1960 (yellow l1 yes, green l2 no)",
+"js": "(() => { const vp = document.getElementById('viewport'); const has = c => [...vp.querySelectorAll('path:not(.hit)')].some(p => p.getAttribute('stroke') === c); return 'yellow ' + has('#F8C300') + ' green ' + has('#00923F'); })()"
+},
+{
+"shot": "timeline-1960.png"
+},
+{
+"name": "year 1970",
+"js": "(() => { const s = document.getElementById('tlSlider'); s.value = 1970; s.dispatchEvent(new Event('input', {bubbles: true})); const D = GMMC.viewMap(GMMC.getMap()); const ids = D.lines.map(l => l.id); return 'l1 ' + ids.includes('l1') + ' l2 ' + ids.includes('l2') + ' l4 ' + ids.includes('l4') + ' | dundas_west ' + !!D.stations.dundas_west + ' bayview ' + !!D.stations.bayview; })()"
+},
+{
+"name": "play",
+"js": "(() => { const y0 = GMMCTimeline.state.year; document.getElementById('tlPlay').click(); return new Promise(r => setTimeout(() => r('start ' + y0 + ' -> ' + JSON.stringify(GMMCTimeline.state)), 1300)); })()"
+},
+{
+"name": "play finish",
+"js": "new Promise(r => setTimeout(r, 24000)).then(() => JSON.stringify(GMMCTimeline.state) + ' ' + document.getElementById('tlCount').textContent)"
+},
+{
+"name": "inspector field",
+"js": "(() => { GMMC.setSelection({type: 'line', id: 'l5'}); GMMC.renderPanels(); const i = document.querySelector('#inspector [data-f=\"tl.opens\"]'); if (!i) return 'no field'; i.focus(); i.value = '2030'; i.dispatchEvent(new Event('input', {bubbles: true})); i.dispatchEvent(new Event('change', {bubbles: true})); return 'l5.opens=' + GMMC.getMap().lines.find(l => l.id === 'l5').opens; })()"
+},
+{
+"name": "year 2020 hides l5",
+"js": "(() => { GMMCTimeline.setYear(2020); const D = GMMC.viewMap(GMMC.getMap()); return 'l5 present ' + D.lines.some(l => l.id === 'l5') + ' | l1 ' + D.lines.some(l => l.id === 'l1'); })()"
+},
+{
+"name": "export filtered",
+"js": "(() => { const cnt = (sv, c) => sv.split('stroke=\"' + c + '\"').length - 1; GMMCTimeline.setYear(1960); const a = String(GMMC.standaloneSvg()); GMMCTimeline.enable(false); const b = String(GMMC.standaloneSvg()); GMMCTimeline.enable(true); GMMCTimeline.setYear(1960); return 'drawn green strokes on ' + cnt(a, '#00923F') + ' vs off ' + cnt(b, '#00923F') + ' | yellow on ' + cnt(a, '#F8C300') + ' | yearText on ' + a.includes('Network in 1960') + ' off ' + b.includes('Network in'); })()"
+},
+{
+"name": "undo restores",
+"js": "(() => { GMMC.undo(); return 'l5.opens=' + GMMC.getMap().lines.find(l => l.id === 'l5').opens; })()"
+},
+{
+"name": "disable",
+"js": "(() => { GMMCTimeline.enable(false); const D = GMMC.viewMap(GMMC.getMap()); return 'lines ' + D.lines.length + ' of ' + GMMC.getMap().lines.length + ' barHidden ' + document.getElementById('timelineBar').hidden; })()"
+},
+{
+"name": "settings switch",
+"js": "(() => { document.getElementById('settingsBtn').click(); const sw = document.getElementById('setTimeline'); const r = !!sw; if (sw) { sw.checked = true; sw.dispatchEvent(new Event('change', {bubbles: true})); } const on = GMMCTimeline.state.enabled; document.getElementById('settingsDialog').close(); return 'switch ' + r + ' enabled ' + on; })()"
+},
+{
+"wait": 500
+},
+{
+"shot": "timeline-on.png"
+}
+]
