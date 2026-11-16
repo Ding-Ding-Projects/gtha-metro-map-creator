@@ -44,7 +44,9 @@ const tailOut = (r) => r.out.trim().split(/\r?\n/).slice(-2).join(' ').slice(0, 
 
 async function imageVersion(image) {
   const r = await run('docker', ['image', 'inspect', image, '--format', '{{index .Config.Labels "org.opencontainers.image.version"}}'], { timeout: 20000 });
-  return r.code === 0 ? r.out.trim() : '';
+  // The "latest" tag overwrites the label with the tag name, so only a real version number counts.
+  const v = r.code === 0 ? r.out.trim() : '';
+  return /^\d+\.\d+\.\d+/.test(v) ? v : '';
 }
 
 // Pulls the image, writes the Compose file and starts the project. Used for a new instance and for an update.
@@ -95,7 +97,7 @@ async function deploy(ctx) {
   if (!mine) { const free = await portFree(inst.port); if (!free.ok) throw new Error('Port ' + inst.port + ' is already in use. Choose another port in Settings.'); }
   const version = await up(inst, ctx);
   const links = await verify(inst, ctx);
-  return { links, patch: { url: links[0].url, version: version || ctx.version, where: 'Docker · port ' + inst.port } };
+  return { links, patch: { url: links[0].url, version, where: 'Docker · port ' + inst.port } };
 }
 
 async function state(inst) {
@@ -137,7 +139,7 @@ async function update(inst, ctx, latest) {
   await engine();
   const version = await up(draft, Object.assign({}, ctx, { mapText }), 'Recreating the container');
   const links = await verify(draft, ctx);
-  return { links, patch: { tag: draft.tag, version: version || latest, url: links[0].url } };
+  return { links, patch: { tag: draft.tag, version: version || (draft.tag === 'latest' ? '' : latest), url: links[0].url } };
 }
 
 module.exports = { deploy, state, start, stop, restart, logs, remove, update, composeText, containers };

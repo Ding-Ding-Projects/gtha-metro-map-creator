@@ -18,11 +18,16 @@ class Manager {
     Object.assign(this, opts);
     this.registry = new Registry(path.join(opts.userData, 'instances.json'));
     this.busy = new Map(); // instance id -> AbortController
+    this.kindOf = new Map(); // instance id -> deploy card kind, while a deployment from a card runs
     this.latest = { at: 0, version: '' };
   }
 
   instDir(id) { return path.join(this.userData, 'instances', id); }
-  status(id, patch) { this.send('inst-status', Object.assign({ id }, patch)); }
+  status(id, patch) {
+    this.send('inst-status', Object.assign({ id }, patch));
+    const kind = this.kindOf.get(id); // a deploy card also follows the instance it is deploying
+    if (kind) this.send('status', Object.assign({}, patch, { id: kind }));
+  }
   changed() { this.send('instances-changed', this.list()); }
 
   ctx(inst, extra) {
@@ -99,7 +104,7 @@ class Manager {
       run: { project: '', dir: '', vm: '', uuid: '', vmx: '', host: '', user: '', sshPort: 0, key: '', remoteDir: '', path: '', repo: '', mac: '', netMode: '' }, check: { at: 0, state: '' }
     };
     inst.name = name; inst.map = mapInfo && mapInfo.name ? mapInfo.name : '';
-    const ctl = new AbortController(); this.busy.set(inst.id, ctl);
+    const ctl = new AbortController(); this.busy.set(inst.id, ctl); this.kindOf.set(inst.id, kind);
     const log = (line) => this.send('log', { id: inst.id, line: String(line).slice(0, 400) });
     try {
       if (PORT_KINDS.includes(kind) || (kind === 'ssh')) await this.choosePort(inst, s, kind, fresh, log);
@@ -131,7 +136,7 @@ class Manager {
       this.status(inst.id, { state: 'failed', pct: 0, msg: '', error: msg });
       this.changed();
       return { ok: false, error: msg, id: inst.id };
-    } finally { this.busy.delete(inst.id); }
+    } finally { this.busy.delete(inst.id); this.kindOf.delete(inst.id); }
   }
 
   // New instances get the requested port, or the next free one when it is taken by another instance or by something else.
@@ -147,6 +152,7 @@ class Manager {
   }
 
   cancel(id) { const c = this.busy.get(id); if (c) c.abort(); }
+  cancelKind(kind) { for (const [id, k] of this.kindOf) if (k === kind) this.cancel(id); }
 
   // ---- actions on recorded instances ----
   async action(id, action, opts) {
