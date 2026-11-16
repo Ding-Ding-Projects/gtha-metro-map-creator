@@ -1,0 +1,126 @@
+[
+{
+"wait": 3000
+},
+{
+"name": "reset",
+"js": "localStorage.clear(); 'cleared'"
+},
+{
+"wait": 300
+},
+{
+"name": "closeSetup",
+"js": "(() => { const d = document.getElementById('setupDialog'); if (d && d.open) d.close(); return 'ok'; })()"
+},
+{
+"name": "data",
+"js": "(() => { const d = window.GTHAPopulation; return JSON.stringify({year: d.year, licence: d.licence, points: d.points.length, total: d.points.reduce((a,p)=>a+p[2],0)}); })()"
+},
+{
+"name": "compute",
+"js": "(() => { const t0 = performance.now(); const r = GMMCCoverage.compute(); const ms = Math.round(performance.now() - t0); return JSON.stringify({ms, total: r.total, within400: r.within400, within800: r.within800, frequent800: r.frequent800, stations: r.stationCount, skipped: r.skipped, lines: r.perLine.map(l => [l.id, l.p800, l.stations])}); })()"
+},
+{
+"name": "union hand check",
+"js": "(() => { const m = GMMC.getMap(), u = m.stations.union, R = 6371008.8, rad = Math.PI / 180; const hav = (a, b, c, d) => { const dl = (c - a) * rad, dn = (d - b) * rad, h = Math.sin(dl / 2) ** 2 + Math.cos(a * rad) * Math.cos(c * rad) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }; let p400 = 0, p800 = 0, n = 0; for (const p of GTHAPopulation.points) { const d = hav(u.lat, u.lon, p[0], p[1]); if (d <= 800) { p800 += p[2]; n++; } if (d <= 400) p400 += p[2]; } const r = GMMCCoverage.compute().stations.union; return JSON.stringify({independent: {p400, p800, points: n}, module: {p400: r.p400, p800: r.p800}}); })()"
+},
+{
+"name": "network hand check",
+"js": "(() => { const m = GMMC.getMap(), R = 6371008.8, rad = Math.PI / 180; const served = new Set(); for (const l of m.lines) if (l.visible !== false) for (const id of l.path) if (id[0] !== '@' && m.stations[id] && !(l.skip && l.skip.includes(id)) && Number.isFinite(m.stations[id].lat)) served.add(id); const S = [...served].map(id => m.stations[id]); const hav = (a, b, c, d) => { const dl = (c - a) * rad, dn = (d - b) * rad, h = Math.sin(dl / 2) ** 2 + Math.cos(a * rad) * Math.cos(c * rad) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }; let w4 = 0, w8 = 0; for (const p of GTHAPopulation.points) { let best = 1e9; for (const s of S) { if (Math.abs(s.lat - p[0]) > 0.0075) continue; const d = hav(s.lat, s.lon, p[0], p[1]); if (d < best) best = d; } if (best <= 800) w8 += p[2]; if (best <= 400) w4 += p[2]; } const r = GMMCCoverage.compute(); return JSON.stringify({independent: {w4, w8}, module: {w4: r.within400, w8: r.within800}, stations: S.length}); })()"
+},
+{
+"name": "panel",
+"js": "document.getElementById('cov').innerText.slice(0, 400)"
+},
+{
+"name": "walksheds on",
+"js": "(() => { const b = document.getElementById('covWalk'); b.click(); return [b.checked, document.querySelectorAll('.cov-walksheds circle').length]; })()"
+},
+{
+"wait": 500
+},
+{
+"name": "zoom to Union",
+"js": "(() => { const v = GMMC.getView(), r = document.getElementById('map').getBoundingClientRect(), u = GMMC.dm(4).stations.union; v.k = 4; v.tx = r.width / 2 - u.x * GMMC.G; v.ty = r.height / 2 - u.y * GMMC.G; GMMC.render(); return [v.k, document.querySelectorAll('.cov-walksheds circle').length]; })()"
+},
+{
+"wait": 800
+},
+{
+"shot": "coverage-walksheds.png"
+},
+{
+"name": "zoom in and check circle size",
+"js": "(() => { const c = document.querySelector('.cov-walksheds circle'); const k = GMMC.getView().k; return JSON.stringify({k, r: c && c.getAttribute('r'), expectedPxAt800: 800 / (19.1094 * Math.cos(43.6456 * Math.PI / 180)) * k}); })()"
+},
+{
+"name": "baseline",
+"js": "(() => { document.getElementById('covBase').click(); return document.getElementById('cov').innerText.includes('baseline') || document.getElementById('covBase').innerText; })()"
+},
+{
+"name": "fit again",
+"js": "(() => { document.getElementById('fitBtn').click(); return 'fit'; })()"
+},
+{
+"name": "walksheds off",
+"js": "(() => { const b = document.getElementById('covWalk'); b.click(); return [b.checked, document.querySelectorAll('.cov-walksheds circle').length]; })()"
+},
+{
+"name": "demand run",
+"js": "(async () => { const t0 = performance.now(); await GMMCDemand.setLoads(true); const ms = Math.round(performance.now() - t0); const r = GMMCDemand.result(); return JSON.stringify({ms, resMs: r.ms, stations: r.stations, pairs: r.pairs, busiest: r.busiest, lines: Object.entries(r.lines).map(([id, l]) => [id, Math.round(l.index * 100), l.width.toFixed(1)])}); })()"
+},
+{
+"wait": 800
+},
+{
+"name": "legend",
+"js": "(() => { const l = document.getElementById('dmLegend'); return JSON.stringify({hidden: l.hidden, text: l.innerText}); })()"
+},
+{
+"name": "drawn widths",
+"js": "(() => [...document.querySelectorAll('#viewport path[stroke-width]')].map(p => +p.getAttribute('stroke-width')).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a - b).join(','))()"
+},
+{
+"shot": "demand-loads.png"
+},
+{
+"name": "zoom to Union with loads",
+"js": "(() => { const v = GMMC.getView(), r = document.getElementById('map').getBoundingClientRect(), u = GMMC.dm(1.2).stations.union; v.k = 1.2; v.tx = r.width / 2 - u.x * GMMC.G; v.ty = r.height / 2 - u.y * GMMC.G; GMMC.render(); return v.k; })()"
+},
+{
+"wait": 600
+},
+{
+"shot": "demand-loads-zoomed.png"
+},
+{
+"name": "demand panel",
+"js": "document.getElementById('dm').innerText.slice(0, 500)"
+},
+{
+"name": "cantonese",
+"js": "(() => { const s = document.getElementById('setLang'); s.value = 'yue'; s.dispatchEvent(new Event('input', {bubbles:true})); return 'yue'; })()"
+},
+{
+"wait": 600
+},
+{
+"name": "cantonese text",
+"js": "document.getElementById('cov').innerText.slice(0, 200) + ' | ' + document.getElementById('dm').innerText.slice(0, 200)"
+},
+{
+"wait": 500
+},
+{
+"shot": "demand-yue.png"
+},
+{
+"name": "svg export note",
+"js": "(() => { const s = GMMC.standaloneSvg ? GMMC.standaloneSvg() : ''; return [String(s).length, String(s).includes('dm-export-note'), String(s).includes('cov-walksheds')]; })()"
+},
+{
+"name": "loads off",
+"js": "(async () => { await GMMCDemand.setLoads(false); return [document.getElementById('dmLegend').hidden]; })()"
+}
+]
