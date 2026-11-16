@@ -1,0 +1,11 @@
+#!/sbin/openrc-run
+# Keeps the console login banner current with the network address.
+description="GTHA Metro Map Creator console banner"
+command=/usr/local/sbin/gmmc-banner
+command_background=true
+pidfile=/run/gmmc-banner.pid
+
+depend() {
+	need localmount
+	after networking
+}

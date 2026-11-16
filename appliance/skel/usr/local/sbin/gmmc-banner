@@ -1,0 +1,33 @@
+#!/bin/sh
+# Writes /etc/issue with the address of this appliance and repeats it on the consoles
+# whenever the address changes. Runs until stopped.
+. /opt/gmmc/appliance.env
+last=""
+while :; do
+	ip=$(ip -4 -o addr show scope global 2>/dev/null \
+		| awk '$2 !~ /^(docker|br-|veth)/ { split($4, a, "/"); print a[1]; exit }')
+	if [ "$ip" != "$last" ]; then
+		last="$ip"
+		if [ -n "$ip" ]; then
+			url="http://$ip:8080/"
+			addr="Open the editor from any device on your network:  $url"
+		else
+			url=""
+			addr="No network address yet. Check that the virtual network adapter is connected."
+		fi
+		cat > /etc/issue <<ISSUE
+
+GTHA Metro Map Creator appliance $GMMC_VERSION
+$addr
+Documentation: /docs/   Health check: /healthz
+This console only shows the address; there is no login password.
+
+ISSUE
+		msg="GTHA Metro Map Creator $GMMC_VERSION is ready at: $url"
+		[ -n "$url" ] || msg="GTHA Metro Map Creator $GMMC_VERSION: waiting for a network address"
+		for t in /dev/tty1 /dev/ttyS0; do
+			[ -w "$t" ] && echo "$msg" > "$t" 2>/dev/null
+		done
+	fi
+	sleep 5
+done

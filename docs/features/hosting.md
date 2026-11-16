@@ -23,6 +23,19 @@
 Exit codes: 2 Docker missing, 3 Docker not running, 4 Compose v2 missing, 5 pull failed, 6 start
 failed, 7 health check timed out, 1 unknown option.
 
+## Release hosting bundle
+
+Every release attaches `gtha-metro-map-creator-server-<version>.zip`. It holds `compose.yaml` and
+`host.bat` pinned to that release's image tag (`GMMC_TAG` still overrides it) and a short
+`README.txt` with the requirements, the `--detached` and `--logs` modes, how to change the port and
+where the network address is shown. The release notes name the image tag and its digest. The bundle is
+built by `scripts/make-server-bundle.mjs`.
+
+## Appliance virtual machine
+
+For a dedicated server without installing Docker yourself, each release also attaches disk images for
+Hyper-V, VirtualBox, VMware, Proxmox and QEMU. See [appliance.md](appliance.md).
+
 ## Security
 
 There is no sign-in. The server only serves static files and stores nothing; maps stay in each

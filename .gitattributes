@@ -2,3 +2,6 @@
 *.bat text eol=crlf
 *.png binary
 *.exe binary
+
+# Appliance files run inside Linux
+appliance/** text eol=lf

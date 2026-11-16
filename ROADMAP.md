@@ -85,7 +85,7 @@
 - [ ] Vector PDF with Chinese labels (needs an embedded font)
 - [ ] Crossing reduction in auto-schematic
 - [ ] Employment data for coverage, when an open small-area source exists
-- [ ] Appliance OS image for the hosted server
+- [ ] Appliance OS image for the hosted server: workflow, build scripts and docs written; unticked until a tagged CI run passes the QEMU boot test and the images are attached to a release (see docs/features/appliance.md)
 - [ ] Chinese names for bus stops
 - [ ] ~~Automated browser tests in CI~~ Not doing: CI deliberately runs no tests here; browser checks run locally with `scripts/verify/`
 - [ ] Search across the documentation articles with the same regex builder

@@ -1,0 +1,42 @@
+#!/sbin/openrc-run
+# Loads the bundled container image on first boot and keeps the container running.
+description="GTHA Metro Map Creator container"
+
+depend() {
+	need docker
+	after networking
+}
+
+start() {
+	ebegin "Starting GTHA Metro Map Creator"
+	. /opt/gmmc/appliance.env
+	i=0
+	until docker info >/dev/null 2>&1; do
+		i=$((i + 1))
+		if [ "$i" -gt 90 ]; then
+			eend 1 "Docker did not become ready"
+			return 1
+		fi
+		sleep 1
+	done
+	if ! docker image inspect "$GMMC_IMAGE" >/dev/null 2>&1; then
+		einfo "First start: loading the bundled image"
+		if ! docker load -i /opt/gmmc/image.tar; then
+			eend 1 "Could not load /opt/gmmc/image.tar"
+			return 1
+		fi
+	fi
+	if docker container inspect gmmc >/dev/null 2>&1; then
+		docker start gmmc >/dev/null
+	else
+		docker run -d --name gmmc --restart unless-stopped \
+			--read-only --tmpfs /tmp -p 8080:8080 "$GMMC_IMAGE" >/dev/null
+	fi
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping GTHA Metro Map Creator"
+	docker stop gmmc >/dev/null 2>&1
+	eend 0
+}
