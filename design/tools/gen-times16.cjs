@@ -85,7 +85,7 @@ const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>GTHA Metro Map Creator 1.7: travel times and vehicles</title>
+<title>GTHA Metro Map Creator 1.6: travel times and vehicles</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -119,7 +119,7 @@ fs.writeFileSync(path.join(REPO, 'design', 'Times16.dc.html'), html);
 const cp = path.join(REPO, 'design', 'canvas.json');
 const canvas = JSON.parse(fs.readFileSync(cp, 'utf8'));
 if (!canvas.boards['Times16.dc.html']) {
-  canvas.boards['Times16.dc.html'] = { x: 0, y: 6400, w: 1440, h: 900, title: 'Release 1.7: travel times between stops and vehicle types', expand: 'fill' };
+  canvas.boards['Times16.dc.html'] = { x: 0, y: 6400, w: 1440, h: 900, title: 'Release 1.6: travel times between stops and vehicle types', expand: 'fill' };
   canvas.order.push('Times16.dc.html');
   fs.writeFileSync(cp, JSON.stringify(canvas));
 }
