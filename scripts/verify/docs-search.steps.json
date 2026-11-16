@@ -1,0 +1,114 @@
+[
+ {
+  "wait": 1200
+ },
+ {
+  "name": "setup",
+  "js": "(async () => { window.W = (ms) => new Promise((r) => setTimeout(r, ms)); window.$ = (s) => document.querySelector(s); window.type = async (v, ms) => { const f = $('#dsField'); f.value = v; f.dispatchEvent(new Event('input', { bubbles: true })); await W(ms || 900); }; window.errs = []; addEventListener('error', (e) => errs.push(e.message)); return { sections: document.querySelectorAll('#articles section').length, fieldHeight: $('#dsField').getBoundingClientRect().height, sticky: getComputedStyle($('#dsBar')).position, panelHidden: $('#dsPanel').hidden, lang: $('#dsBar').lang }; })()"
+ },
+ {
+  "name": "plain-search",
+  "js": "(async () => { await type('frequen'); return { status: $('#dsStatus').textContent, groups: document.querySelectorAll('.ds-group').length, marks: document.querySelectorAll('#dsResults mark').length, regexPressed: $('#dsRegex').getAttribute('aria-pressed'), builderHidden: $('#dsBuilder').hidden }; })()"
+ },
+ {
+  "name": "top",
+  "js": "(async () => { scrollTo(0, 0); await W(300); return scrollY; })()"
+ },
+ {
+  "shot": "plain.png"
+ },
+ {
+  "name": "click-result-scrolls",
+  "js": "(async () => { scrollTo(0, 0); await W(200); const all = [...document.querySelectorAll('.ds-res')]; const b = all[all.length - 1]; const sec = document.querySelectorAll('#articles section')[b.dataset.sec]; b.click(); await W(1600); const r = sec.getBoundingClientRect(); return { id: sec.id, top: Math.round(r.top), bottom: Math.round(r.bottom), inView: r.top < innerHeight * 0.6 && r.bottom > 0, marks: sec.querySelectorAll('mark.ds-hit').length, cur: sec.querySelectorAll('mark.ds-cur').length, scrollY: Math.round(scrollY) }; })()"
+ },
+ {
+  "shot": "after-click.png"
+ },
+ {
+  "name": "escape-clears",
+  "js": "(async () => { $('#dsField').focus(); $('#dsField').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); await W(300); return { value: $('#dsField').value, marks: document.querySelectorAll('mark.ds-hit').length, panelHidden: $('#dsPanel').hidden }; })()"
+ },
+ {
+  "name": "regex-fre-quen-q",
+  "js": "(async () => { $('#dsRegex').click(); await W(200); await type('fre(quen|q)'); return { status: $('#dsStatus').textContent, articles: document.querySelectorAll('.ds-group').length, builderShown: !$('#dsBuilder').hidden, explain: $('#dsExplain').textContent, flagOut: $('#dsFlagOut').textContent, sample: $('#dsSampStat').textContent, errHidden: $('#dsErr').hidden }; })()"
+ },
+ {
+  "name": "top",
+  "js": "(async () => { scrollTo(0, 0); await W(300); return scrollY; })()"
+ },
+ {
+  "shot": "regex.png"
+ },
+ {
+  "name": "arrow-keys",
+  "js": "(async () => { const f = $('#dsField'); f.focus(); f.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); const first = document.activeElement.className + '|' + document.activeElement.dataset.sec + '|' + document.activeElement.dataset.m; document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); const second = document.activeElement.className + '|' + document.activeElement.dataset.sec + '|' + document.activeElement.dataset.m; document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true })); const back = document.activeElement.dataset.sec + '|' + document.activeElement.dataset.m; document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true })); return { first, second, back, backToField: document.activeElement.id }; })()"
+ },
+ {
+  "name": "tokens-update-field",
+  "js": "(async () => { await type(''); await type('fre', 300); const f = $('#dsField'); f.focus(); f.setSelectionRange(3, 3); document.querySelector('[data-g=\"0\"][data-t=\"0\"]').click(); await W(300); const afterGroup = f.value; await type('', 300); document.querySelector('[data-g=\"1\"][data-t=\"1\"]').click(); document.querySelector('[data-g=\"2\"][data-t=\"1\"]').click(); await W(600); return { afterGroup, field: f.value, explain: $('#dsExplain').textContent, flag: $('#dsFlagOut').textContent }; })()"
+ },
+ {
+  "name": "field-edits-update-builder",
+  "js": "(async () => { await type('a|b', 700); const e1 = $('#dsExplain').textContent; await type('\\\\d{2,4}', 700); return { e1, e2: $('#dsExplain').textContent, flag: $('#dsFlagOut').textContent, sample: $('#dsSampStat').textContent }; })()"
+ },
+ {
+  "name": "flags-sync",
+  "js": "(async () => { await type('Frequency', 700); const a = $('#dsStatus').textContent; $('#dsIc').click(); await W(700); const b = $('#dsStatus').textContent; $('#dsWord').click(); await W(700); const out = { a, b, c: $('#dsStatus').textContent, flag: $('#dsFlagOut').textContent, explain: $('#dsExplain').textContent }; $('#dsIc').click(); $('#dsWord').click(); await W(300); return out; })()"
+ },
+ {
+  "name": "invalid-regex",
+  "js": "(async () => { await type('(unclosed[', 700); return { err: $('#dsErr').textContent, errHidden: $('#dsErr').hidden, ariaInvalid: $('#dsField').getAttribute('aria-invalid'), status: $('#dsStatus').textContent, resultNodes: $('#dsResults').children.length, pageErrors: errs }; })()"
+ },
+ {
+  "name": "top",
+  "js": "(async () => { scrollTo(0, 0); await W(300); return scrollY; })()"
+ },
+ {
+  "shot": "invalid.png"
+ },
+ {
+  "name": "catastrophic-sample",
+  "js": "(async () => { await type('(a+)+$', 300); const f = $('#dsSample'); f.value = 'a'.repeat(60) + 'b'; f.dispatchEvent(new Event('input', { bubbles: true })); const t0 = performance.now(); let ticks = 0; const iv = setInterval(() => ticks++, 20); await W(1500); clearInterval(iv); return { sampleStat: $('#dsSampStat').textContent, ticksIn1500ms: ticks, pageErrors: errs }; })()"
+ },
+ {
+  "name": "catastrophic-articles",
+  "js": "(async () => { const t0 = performance.now(); await type('(?:\\\\w+\\\\s?)+!', 300); const iv0 = performance.now(); await W(1500); return { status: $('#dsStatus').textContent, warn: $('#dsStatus').classList.contains('ds-warn'), pageStillResponsive: true, pageErrors: errs }; })()"
+ },
+ {
+  "name": "top",
+  "js": "(async () => { scrollTo(0, 0); await W(300); return scrollY; })()"
+ },
+ {
+  "shot": "cutoff.png"
+ },
+ {
+  "name": "match-cap",
+  "js": "(async () => { await type('[a-z]', 1500); return { status: $('#dsStatus').textContent, warn: $('#dsStatus').classList.contains('ds-warn') }; })()"
+ },
+ {
+  "name": "cantonese",
+  "js": "(async () => { await type('fre(quen|q)', 800); $('#dsLang').click(); await W(500); return { lang: $('#dsBar').lang, placeholder: $('#dsField').placeholder, status: $('#dsStatus').textContent, explain: $('#dsExplain').textContent, title: $('#dsBTitle').textContent, htmlLang: document.documentElement.lang }; })()"
+ },
+ {
+  "name": "top",
+  "js": "(async () => { scrollTo(0, 0); await W(300); return scrollY; })()"
+ },
+ {
+  "shot": "yue.png"
+ },
+ {
+  "name": "dark",
+  "js": "(async () => { document.documentElement.setAttribute('data-theme', 'dark'); await W(400); return { bg: getComputedStyle(document.body).backgroundColor, field: getComputedStyle($('#dsField')).backgroundColor }; })()"
+ },
+ {
+  "name": "top",
+  "js": "(async () => { scrollTo(0, 0); await W(300); return scrollY; })()"
+ },
+ {
+  "shot": "dark.png"
+ },
+ {
+  "name": "overflow",
+  "js": "(async () => { document.documentElement.removeAttribute('data-theme'); await W(200); return { overflowX: document.documentElement.scrollWidth > innerWidth, sw: document.documentElement.scrollWidth, iw: innerWidth }; })()"
+ }
+]
