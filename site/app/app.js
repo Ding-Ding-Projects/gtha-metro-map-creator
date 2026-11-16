@@ -77,8 +77,25 @@
       }
     }
     out.transfers = (Array.isArray(m.transfers) ? m.transfers : []).filter((t) => t && out.stations[t.a] && out.stations[t.b] && t.a !== t.b).slice(0, 2000).map((t) => ({ a: String(t.a), b: String(t.b) }));
+    fillKnownCoords(out);
     for (const f of X.validate) { try { f(m, out); } catch (err) { console.error('extension validate', err); } }
     return out;
+  }
+  /** Give stations from older saved maps their real positions: match the built-in GTHA station
+   * coordinates by id, then by name. Maps saved before 1.2 stored only schematic positions. */
+  function fillKnownCoords(out) {
+    const data = window.GTHATransitData; if (!data || !data.geo) return;
+    const norm = (n) => String(n || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    let byName = null;
+    for (const st of Object.values(out.stations)) {
+      if (st.lat !== undefined) continue;
+      let ll = data.geo[st.id];
+      if (!ll) {
+        if (!byName) { byName = {}; const t = window.GTHATemplates ? window.GTHATemplates.gtha() : null; if (t) for (const ts of Object.values(t.stations)) if (ts.lat !== undefined) byName[norm(ts.name)] = [ts.lat, ts.lon]; }
+        ll = byName[norm(st.name)];
+      }
+      if (ll) { st.lat = ll[0]; st.lon = ll[1]; }
+    }
   }
   /** Frequency by time band. An older file's `offpeak` becomes `midday`. */
   function freqBands(f) { f = f || {}; return { peak: freqNum(f.peak), midday: freqNum(f.midday !== undefined && f.midday !== null ? f.midday : f.offpeak), evening: freqNum(f.evening), weekend: freqNum(f.weekend) }; }
@@ -113,11 +130,31 @@
     const key = pts.length + ':' + Object.keys(map.stations).length;
     if (fitCache && fitCache.key === key) return fitCache;
     let toGeo = null, toGrid = null;
+    // A stretch fitted to a few close stations extrapolates wildly, so with fewer than 8 placed
+    // stations, or when they cover under about 10 km, also use the template's known positions.
+    const spread = (list) => { if (!list.length) return 0; const g = list.map((s) => geoGrid(s.lat, s.lon)); const xs = g.map((p) => p.x), ys = g.map((p) => p.y); return Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)); };
+    if ((pts.length < 8 || spread(pts) < 40) && window.GTHATemplates) {
+      const ref = Object.values(window.GTHATemplates.gtha().stations).filter((s) => s.lat !== undefined && s.kind === 'station' && !map.stations[s.id]);
+      pts.push(...ref);
+    }
     if (pts.length >= 3) {
       const gg = pts.map((s) => geoGrid(s.lat, s.lon));
       const ax = solve3(pts.map((s, i) => [s.x, s.y, 1, gg[i].x])), ay = solve3(pts.map((s, i) => [s.x, s.y, 1, gg[i].y]));
       const bx = solve3(pts.map((s, i) => [gg[i].x, gg[i].y, 1, s.x])), by = solve3(pts.map((s, i) => [gg[i].x, gg[i].y, 1, s.y]));
-      if (ax && ay) toGeo = (p) => ({ x: ax[0] * p.x + ax[1] * p.y + ax[2], y: ay[0] * p.x + ay[1] * p.y + ay[2] });
+      if (ax && ay) {
+        // Global stretch plus a local correction from the nearest placed stations, so a station
+        // with no coordinates lands near its schematic neighbours rather than where a single
+        // straight-line fit puts it.
+        const lin = (p) => ({ x: ax[0] * p.x + ax[1] * p.y + ax[2], y: ay[0] * p.x + ay[1] * p.y + ay[2] });
+        const res = pts.map((s, i) => { const l = lin(s); return { x: s.x, y: s.y, dx: gg[i].x - l.x, dy: gg[i].y - l.y }; });
+        toGeo = (p) => {
+          const l = lin(p);
+          const near = res.map((r) => ({ r, d: (r.x - p.x) ** 2 + (r.y - p.y) ** 2 })).sort((a, b) => a.d - b.d).slice(0, 6);
+          if (near.length && near[0].d < 1e-9) return { x: l.x + near[0].r.dx, y: l.y + near[0].r.dy };
+          let w = 0, dx = 0, dy = 0; for (const n of near) { const k = 1 / n.d; w += k; dx += k * n.r.dx; dy += k * n.r.dy; }
+          return w ? { x: l.x + dx / w, y: l.y + dy / w } : l;
+        };
+      }
       if (bx && by) toGrid = (g) => ({ x: bx[0] * g.x + bx[1] * g.y + bx[2], y: by[0] * g.x + by[1] * g.y + by[2] });
     }
     fitCache = { key, toGeo: toGeo || ((p) => ({ x: p.x, y: p.y })), toGrid: toGrid || ((g) => ({ x: g.x, y: g.y })) };
