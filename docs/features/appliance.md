@@ -152,7 +152,9 @@ standing in for the boot partition. Each checks that `/healthz` stays open, `/ap
 The Pi virt twin cannot prove that a real Pi mounts its own boot partition at `/boot`; the lookup for that path (and for FAT, ISO, empty, malformed and out-of-range values) is covered by `appliance/test-signin.sh`, which runs
 against real loop devices before the images are built, and `appliance/test-service.sh` runs the openrc service against a fake `docker` (container created, kept, replaced when the hash changes, recreated without sign-in when the file is removed,
 refused when invalid, hash never on a command line). Only the QEMU boots are tested automatically; the Hyper-V, VirtualBox and VMware formats are checked
-for identical contents but not started in those products, and the raw USB image's legacy BIOS boot on
+for identical contents but not started in those products. The raw USB image is also booted the way a stick boots:
+`boot-test.sh --usb` attaches it as the only disk, a USB mass-storage device on an xHCI controller, so the BIOS must
+boot it from USB; a second run adds a `GMMCCONF` FAT stick on the same USB bus and checks sign-in. Its legacy BIOS boot on
 physical hardware has not been tried.
 
 Files: `appliance/build.sh`, `appliance/chroot-setup.sh`, `appliance/boot-test.sh`,

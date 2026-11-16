@@ -233,6 +233,8 @@ All of these are in `scripts/verify/` and run locally; CI deliberately runs no t
 
 Not verified end to end: SSH and GitHub Pages (they need credentials; only validation and error paths are
 exercised), a real write to a USB drive or SD card (never done here: the helper's physical-drive path,
-unbuffered I/O and the clearing and offline steps are untested on hardware), a real appliance booting in
+unbuffered I/O and the clearing and offline steps are untested on hardware; the same helper's write and read-back code
+has written the released 1.8.0 images to a virtual stick and a virtual card, `scripts/verify/virtual-media.cjs`, and the
+virtual stick then booted from QEMU's USB bus), a real appliance booting in
 VirtualBox or VMware (the appliance cannot be built on Windows; CI boots it under QEMU), a Raspberry Pi
 booting from the image, and the VMware Player route. See `HANDOFF.md`.

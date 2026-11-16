@@ -1,21 +1,26 @@
 #!/bin/bash
 # Boots a built qcow2 image under QEMU and proves the web app answers.
-# Usage: appliance/boot-test.sh <image.qcow2> <version> [timeout-seconds] [--config-disk vfat|iso|invalid --image <container-ref>]
+# Usage: appliance/boot-test.sh <image.qcow2> <version> [timeout-seconds] [--config-disk vfat|iso|invalid --image <container-ref>] [--usb]
 #   Without --config-disk the appliance has no password: /healthz and /app/ must answer 200.
 #   --config-disk vfat     attaches a FAT disk labelled GMMCCONF holding a hash made by the container image
 #                          (--image <ref>); the app must ask for the password and accept it
 #   --config-disk iso      the same, as the ISO CD-ROM image the deploy app attaches to virtual machines
 #   --config-disk invalid  a GMMCCONF disk holding a value that is not a hash: the app must NOT start
+#   --usb                  <image> is a raw disk (the .img written to a USB stick, or a whole virtual stick holding
+#                          it). It is attached as a USB mass-storage device on an xHCI controller and is the only
+#                          disk in the machine, so the BIOS has to boot it from USB like a real stick. With
+#                          --config-disk vfat or invalid the configuration disk is a second USB stick
 # The test password is random, used once and never printed or uploaded.
 set -euo pipefail
 img="$1"; version="$2"; shift 2
 timeout=600
 case "${1:-}" in '' | --*) ;; *) timeout="$1"; shift ;; esac
-mode=none; imageref=""
+mode=none; imageref=""; usb=0
 while [ $# -gt 0 ]; do
 	case "$1" in
 	--config-disk) mode="$2"; shift 2 ;;
 	--image) imageref="$2"; shift 2 ;;
+	--usb) usb=1; shift ;;
 	*) echo "unknown option $1" >&2; exit 2 ;;
 	esac
 done
@@ -27,7 +32,7 @@ tmp="$(mktemp -d)"
 log="$tmp/serial.log"
 accel=tcg
 if [ -w /dev/kvm ]; then accel=kvm; fi
-echo "Booting $img with acceleration: $accel, config disk: $mode (timeout ${timeout}s)"
+echo "Booting $img with acceleration: $accel, config disk: $mode, as USB stick: $usb (timeout ${timeout}s)"
 
 extra=()
 password="test-$(head -c 12 /dev/urandom | od -An -tx1 | tr -d ' \n')"
@@ -45,15 +50,27 @@ vfat | iso | invalid)
 		extra=(-drive "file=$tmp/conf.iso,media=cdrom,readonly=on")
 	else
 		gmmc_vfat_disk "$tmp/conf.img" GMMCCONF password-hash "$tmp/password-hash"
-		extra=(-drive "file=$tmp/conf.img,format=raw,if=virtio,readonly=on")
+		if [ "$usb" = 1 ]; then
+			# With --usb the configuration disk is a second USB stick, as documented for a spare PC.
+			extra=(-drive "file=$tmp/conf.img,format=raw,if=none,id=confstick,readonly=on"
+				-device usb-storage,bus=xhci.0,drive=confstick,removable=on)
+		else
+			extra=(-drive "file=$tmp/conf.img,format=raw,if=virtio,readonly=on")
+		fi
 	fi ;;
 *) echo "unknown config disk mode $mode" >&2; exit 2 ;;
 esac
 
 # snapshot=on keeps the image under test untouched.
+if [ "$usb" = 1 ]; then
+	disk=(-device qemu-xhci,id=xhci -drive "file=$img,format=raw,if=none,id=stick,snapshot=on"
+		-device usb-storage,bus=xhci.0,drive=stick,removable=on,bootindex=0)
+else
+	disk=(-drive "file=$img,format=qcow2,if=virtio,snapshot=on")
+fi
 qemu-system-x86_64 -machine "accel=$accel" -m 1024 -smp 2 -display none \
 	-serial "file:$log" -no-reboot \
-	-drive "file=$img,format=qcow2,if=virtio,snapshot=on" "${extra[@]}" \
+	"${disk[@]}" "${extra[@]}" \
 	-netdev "user,id=n0,hostfwd=tcp:127.0.0.1:$port-:8080" -device virtio-net-pci,netdev=n0 &
 qemu=$!
 trap 'kill "$qemu" 2>/dev/null || true' EXIT

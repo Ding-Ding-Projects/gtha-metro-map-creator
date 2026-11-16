@@ -86,6 +86,14 @@ jobs:
         run: appliance/boot-test.sh "appliance-out/gtha-metro-map-creator-appliance-${{ steps.img.outputs.version }}-x86_64.qcow2" "${{ steps.img.outputs.version }}" 600 --config-disk iso --image "$IMAGE:${{ steps.img.outputs.version }}"
       - name: Boot test with an invalid password setting (the app must refuse to start)
         run: appliance/boot-test.sh "appliance-out/gtha-metro-map-creator-appliance-${{ steps.img.outputs.version }}-x86_64.qcow2" "${{ steps.img.outputs.version }}" 600 --config-disk invalid
+      - name: Boot test as a USB stick (the raw .img the deploy app writes, on a blank 4 GiB virtual stick, then with a second GMMCCONF password stick)
+        run: |
+          stick="$RUNNER_TEMP/virtual-usb-stick.img"
+          xz -dc "appliance-out/gtha-metro-map-creator-appliance-${{ steps.img.outputs.version }}-x86_64.img.xz" > "$stick"
+          truncate -s 4G "$stick"
+          appliance/boot-test.sh "$stick" "${{ steps.img.outputs.version }}" 900 --usb
+          appliance/boot-test.sh "$stick" "${{ steps.img.outputs.version }}" 900 --usb --config-disk vfat --image "$IMAGE:${{ steps.img.outputs.version }}"
+          rm -f "$stick"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -1,5 +1,29 @@
 # Handoff
 
+## Virtual USB stick and SD card checks (2026-11-16, after 1.8.0)
+
+The physical-hardware checks (a real USB or SD write and a real Raspberry Pi boot) are deferred by the owner.
+In their place, without touching any real drive:
+
+- `scripts/verify/virtual-media.cjs 1.8.0 <dir>` runs the deploy app's own flash code (`desktop/deploy/lib/flash.js`
+  and the PowerShell helper from `flash-helper.js`, in its file-target mode) on Windows. It downloaded and checked the
+  released 1.8.0 images, wrote the x86_64 image (2 GiB) to a blank 4 GiB virtual stick and the Raspberry Pi image,
+  with a password hash added by `addBootPassword`, to a blank 8 GiB virtual card. The helper read every byte back
+  ("Written and verified") and the script hashed the drives again itself: x86_64 `51ac19e3...7ab2e`, Pi
+  `9229e3dd...7ecf`, all three hashes equal for each.
+- The virtual card was inspected in an Alpine container: FAT32 boot partition `GMMCBOOT` with the Pi firmware and
+  `config.txt`, `gmmc-password-hash` byte-identical to the hash that was added, ext4 root partition `gmmc-root`.
+- `appliance/boot-test.sh <stick> 1.8.0 1800 --usb` booted the written virtual stick under QEMU (TCG, in an Ubuntu
+  container) as the only disk, a USB mass-storage device on xHCI, from legacy BIOS: `/healthz` ok and `/app/` 200 after
+  54 s, banner "GTHA Metro Map Creator 1.8.0 is ready at". With a second `GMMCCONF` FAT stick on the same USB bus
+  (`--config-disk vfat`): `/app/` redirects to sign-in, wrong password refused, right password signs in, banner
+  "Password required". With an invalid value on that stick: the editor was not started and the banner said so.
+- Both workflows now repeat the USB boot and the second-stick sign-in boot for every appliance build.
+
+Still not verified: the helper's physical-drive path (clearing, offline, unbuffered I/O, the Windows permission
+prompt), a physical PC booting the stick, and a real Raspberry Pi 4 or 5 booting the card (QEMU cannot run the Pi
+firmware; the root file system is covered by the virt-twin boot test).
+
 ## 1.8.0 (2026-11-16): appliance password sign-in
 
 Proven in CI (appliance check run 43930391800 at 2664fc9): six boot tests passed, covering no password,
