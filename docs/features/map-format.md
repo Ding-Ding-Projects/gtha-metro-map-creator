@@ -19,6 +19,7 @@
 - `interchange`: `auto`, `yes` or `no`.
 - `style`: `solid` (subway or metro), `dashed` (planned), `rail` (regional rail), `brt` (rapid bus), `bus`, `express` or `superExpress`.
 - `kind`: `station` or `stop` (bus stop). `lat`, `lon`: optional real position. `osm`: optional OpenStreetMap node ID.
+- `facilities` (stations, optional): array of `accessible`, `parking`, `bike`, `airport`, `ferry`, `busTerminal`. Unknown values and duplicates are dropped on load; an empty list is omitted. See [facilities.md](facilities.md).
 - `freq.peak`, `freq.offpeak`: minutes between vehicles, 1 to 240, or `null`. `showFreq`: show the badge.
 - `transfers`: walking links between two stations.
 - `width`: 3 to 16.
