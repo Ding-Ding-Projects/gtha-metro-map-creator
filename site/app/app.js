@@ -1009,7 +1009,7 @@
     const D = viewMap(geo ? dm(ek) : map);
     const { svg } = buildMapSvg(D, { editor: false, exportColors: true });
     const b = bounds(D), pad = 120;
-    const vis = map.lines.filter((l) => l.visible && l.path.length > 1);
+    const vis = D.lines.filter((l) => l.visible && l.path.length > 1 && !String(l.id).includes("~b"));
     const legendH = settings.legend ? 40 + vis.length * 24 : 0;
     const x0 = b.x0 - pad, y0 = b.y0 - pad - 60, w = b.x1 - b.x0 + pad * 2 + 160, h = b.y1 - b.y0 + pad * 2 + 60 + legendH;
     const tiles = [];

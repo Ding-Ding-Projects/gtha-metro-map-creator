@@ -1,5 +1,16 @@
 # Handoff
 
+## 1.3.0 (2026-11-16)
+
+Editing power, service patterns, station facilities and the network timeline, each in its own
+module (`site/app/mod-*.js`) on the extension hooks in `docs/features/extensions.md`. Verified on
+merged main in headless Edge with `scripts/verify/{editing,patterns,facilities,timeline}.steps.json`:
+box select 238 of 238, paste then undo, palette 45 commands, pinch zoom changes view.k; Passes
+removes the York Mills marker, four bands stored, branch drawn, widths follow frequency, old
+`offpeak` files migrate; facility icons beside labels, scale bar 20 km to 5 km on zoom; timeline at
+1960 shows Line 1 and hides Lines 2 and 4, Play stops at 2015, exports filtered including the legend.
+Known limits are listed in each feature's doc.
+
 ## State (2026-11-15), version 1.2.0
 
 Geographic editor: OpenStreetMap background, real coordinates, VIVA with real frequencies,

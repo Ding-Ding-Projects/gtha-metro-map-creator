@@ -47,10 +47,17 @@
 - [x] Material Design 3 interface with motion
 - [x] Label priority and collision culling
 
-## Phase 4: next
+## Phase 4: release 1.3.0
+
+- [x] Box select, copy and paste, command palette, pinch zoom, colour-vision preview and colour checks
+- [x] Express stops (passes), branches, four frequency bands, frequent-network style
+- [x] Station facilities, scale bar and north arrow
+- [x] Network timeline with opening and closing years
+- [x] Extension hooks so features live in their own modules
+
+## Phase 5: next
 
 - [ ] Shared bend setting across all lines on a bundled segment
-- [ ] Box selection and copy and paste
 - [ ] Import any GTFS feed's routes and frequencies
 - [ ] Vector PDF export (the PDF is currently a high-resolution image)
 - [ ] Chinese names for bus stops

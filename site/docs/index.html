@@ -25,6 +25,10 @@
       <li><a href="#export">Export, projects and import</a></li>
       <li><a href="#settings">Settings</a></li>
       <li><a href="#keys">Keyboard shortcuts</a></li>
+      <li><a href="#editing">Faster editing</a></li>
+      <li><a href="#patterns">Express, branches, frequencies</a></li>
+      <li><a href="#facilities">Facilities and scale</a></li>
+      <li><a href="#timeline">Network timeline</a></li>
       <li><a href="#geographic">Geographic layout</a></li>
       <li><a href="#routes">Routes and frequencies</a></li>
       <li><a href="#stops">Stops and transfers</a></li>
@@ -110,6 +114,21 @@
       <h3>With Docker Compose</h3>
       <p>The image is <code>ghcr.io/ding-ding-projects/gtha-metro-map-creator</code>. Run <code>docker compose up -d</code> next to the project's <code>compose.yaml</code>. The container runs nginx as a non-root user on port 8080 with a read-only file system, and answers <code>/healthz</code> for health checks.</p>
       <p>If other devices cannot connect, allow the port through Windows Firewall. The server has no sign-in, so only run it on a network you trust.</p></section>
+    <section id="editing"><h2>Faster editing</h2>
+      <ul>
+        <li><strong>Box select:</strong> with Select, hold Shift and drag across empty map to select every station inside.</li>
+        <li><strong>Copy and paste:</strong> Ctrl+C copies selected stations and the segments between them; Ctrl+V pastes a copy nearby as a new route.</li>
+        <li><strong>Command palette:</strong> Ctrl+K lists every tool, export, setting, route and station. Type to filter, use the arrow keys and Enter.</li>
+        <li><strong>Touch:</strong> pinch with two fingers to zoom and pan.</li>
+        <li><strong>Colour vision:</strong> Settings can preview the map as seen with protanopia, deuteranopia or tritanopia. Map check flags low-contrast and near-identical route colours.</li>
+      </ul></section>
+    <section id="patterns"><h2>Express stops, branches and time-of-day frequencies</h2>
+      <p>Select a route to see its <strong>Stops</strong> list. Switch a stop to <strong>Passes</strong> and the route runs through it without stopping, which is how express services are drawn. Add a <strong>branch</strong> from a station on the route, then click stations with Route to extend it.</p>
+      <p>Frequencies are set for <strong>Peak, Midday, Evening and Weekend</strong>. Turn on <strong>Line weight follows frequency</strong> in Settings for a frequent-network map: the more often a route runs, the thicker it is drawn.</p></section>
+    <section id="facilities"><h2>Station facilities, scale and north</h2>
+      <p>Select a station and toggle facilities: accessible, parking, bike, airport, ferry and bus terminal. Their icons appear beside the station name on the map and in exports. In the geographic layout a scale bar and north arrow show on screen and in exports.</p></section>
+    <section id="timeline"><h2>Network timeline</h2>
+      <p>Give routes and stations an <strong>Opens</strong> year (and optionally <strong>Closes</strong>) in the inspector. Press <kbd>Y</kbd> or turn on the timeline in Settings, then drag the year slider or press Play to watch the network grow. Routes without a year are always shown. Exports show the chosen year. The template includes years only where certain: Line 1 1954, Line 2 1966, Line 4 2002 and UP Express 2015.</p></section>
     <section id="geographic"><h2>Geographic layout and OpenStreetMap</h2>
       <p>The editor has two layouts, switched with the <strong>Schematic / Geographic</strong> buttons in the top bar. Every station keeps a position in each.</p>
       <ul>

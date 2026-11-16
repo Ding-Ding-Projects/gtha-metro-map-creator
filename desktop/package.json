@@ -1,7 +1,7 @@
 {
   "name": "gtha-metro-map-creator-desktop",
   "productName": "GTHA Metro Map Creator",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Desktop app and server setup wizard for GTHA Metro Map Creator",
   "license": "MIT",
   "author": "Ding Ding Projects",

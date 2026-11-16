@@ -37,6 +37,11 @@ Earlier captures are listed in [docs/screenshots/ARCHIVE.md](docs/screenshots/AR
   Transit timetable
 - Export PNG, PDF, SVG and a single-file website to host; save and open whole projects
 - Material Design 3 interface with motion, light and dark themes
+- Express stop patterns, branches, frequencies for peak, midday, evening and weekend, and a
+  frequent-network style (1.3)
+- Station facility icons, scale bar and north arrow (1.3)
+- Network timeline with opening years and a Play animation (1.3)
+- Box select, copy and paste, Ctrl+K command palette, pinch zoom, colour-vision preview (1.3)
 
 - Built-in GTHA template (238 stations and stops, 20 routes, real coordinates): TTC Lines 1, 2, 4, 5 and 6, the planned Ontario Line, GO Lakeshore
   West and East, Kitchener, Milton, Barrie, Richmond Hill, Stouffville, UP Express, and
