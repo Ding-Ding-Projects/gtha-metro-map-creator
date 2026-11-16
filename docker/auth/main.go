@@ -246,7 +246,8 @@ func fatal(msg string) {
 // It is a convenience for Linux and macOS: docker run --rm -i <image> gmmc-auth hash
 func hashCommand() {
 	line, err := bufio.NewReader(io.LimitReader(os.Stdin, 4096)).ReadString(10)
-	pw := strings.TrimRight(line, "\r\n")
+	// Windows PowerShell can prefix piped text with a UTF-8 byte order mark; it is never part of a password.
+	pw := strings.TrimPrefix(strings.TrimRight(line, string([]byte{13, 10})), string(rune(0xFEFF)))
 	if (err != nil && err != io.EOF) || len(pw) < 8 || len(pw) > 200 {
 		fatal("the password must be 8 to 200 characters")
 	}

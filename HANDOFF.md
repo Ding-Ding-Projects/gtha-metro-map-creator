@@ -1,5 +1,11 @@
 # Handoff
 
+## 1.7.1 (2026-11-16)
+
+Fix: `gmmc-auth hash` now ignores a leading UTF-8 byte order mark. Windows PowerShell put one in front of
+piped text, so a hash made with `'password' | docker run -i ... gmmc-auth hash` never matched and sign-in failed.
+Checked: hashes made through PowerShell and through bash both sign in against the rebuilt image.
+
 ## 1.7.0 (2026-11-16)
 
 New: per-line station markers (`mod-markers.js`), one bend for shared track (`map.sharedBends`),

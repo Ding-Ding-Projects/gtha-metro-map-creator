@@ -67,6 +67,10 @@ rounds, random 16-byte salt, base64url). To make one without `host.bat` or the d
 printf 'your password here' | docker run --rm -i ghcr.io/ding-ding-projects/gtha-metro-map-creator:latest gmmc-auth hash
 ```
 
+The same works from Windows PowerShell (`'your password here' | docker run --rm -i ... gmmc-auth hash`). From 1.7.1
+the command ignores the byte order mark that Windows PowerShell can put in front of piped text; with 1.7.0 that mark
+became part of the hash and the password was then refused.
+
 An invalid hash stops the container at start with a plain message (the value is never printed).
 `GMMC_SESSION_HOURS` (1 to 720, default 12) sets how long a session lasts and `GMMC_COOKIE_SECURE=1` forces the
 `Secure` flag (it is also set when a reverse proxy sends `X-Forwarded-Proto: https`).
