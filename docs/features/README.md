@@ -3,6 +3,7 @@
 | Category | File | Covers |
 | --- | --- | --- |
 | Editor | [editor.md](editor.md) | Routing, shared track, tools, labels, search, map check, history |
+| Getting started | [getting-started.md](getting-started.md) | Tool bar on the map, tool hints, panel tabs, checklist, start card, Help, phone tool bar |
 | Data | [map-format.md](map-format.md) | JSON map format, import validation, the GTHA template |
 | Geographic | [geographic.md](geographic.md) | Layouts, OpenStreetMap background, drawing onto real stops |
 | Styles | [styles.md](styles.md) | Map style presets: Material, Classic metro, Frequent network, Night |

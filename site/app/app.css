@@ -191,7 +191,7 @@ ul { list-style: none; margin: 0; padding: 0; }
 /* stage */
 .stage { flex: 1 1 auto; position: relative; min-width: 0; background: var(--map-bg); overflow: hidden; }
 #map { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; }
-#map.tool-select { cursor: default; } #map.tool-station, #map.tool-line, #map.tool-label { cursor: crosshair; } #map.tool-erase { cursor: not-allowed; }
+#map.tool-select { cursor: default; } #map.tool-station, #map.tool-line, #map.tool-bus, #map.tool-label { cursor: crosshair; } #map.tool-erase { cursor: not-allowed; }
 #map.panning { cursor: grabbing; }
 #tiles image { animation: tile-in var(--d-long) var(--ease-std) both; }
 @keyframes tile-in { from { opacity: 0; } to { opacity: 1; } }

@@ -1,0 +1,126 @@
+/* mod-easy.css: labelled tool bar on the map, tool hints, panel tabs, getting-started checklist,
+   start card, Help menu and the regex toggle beside the search box. See mod-easy.js. */
+
+/* ---------- tool bar on the map ---------- */
+.stage { container-type: inline-size; container-name: stage; }
+/* centred with auto margins, not a transform, because the entry animation animates transform */
+.map-tools { position: absolute; top: 12px; left: 12px; right: 12px; margin-inline: auto; width: max-content; z-index: 6; display: flex; align-items: center; gap: 2px; padding: 6px; max-width: calc(100% - 24px); overflow-x: auto; scrollbar-width: none; border-radius: 28px; background: var(--md-surface-container-lowest); box-shadow: var(--elev-2); animation: fade-up var(--d-med) var(--ease-emph-dec) both; }
+.map-tools::-webkit-scrollbar { display: none; }
+.tool-btn { position: relative; flex: none; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px 0 10px; border: 0; border-radius: 20px; background: transparent; color: var(--md-on-surface); font: 600 14px/20px inherit; font-family: inherit; white-space: nowrap; cursor: pointer; overflow: hidden; transition: background var(--d-short), color var(--d-short); }
+.tool-btn::after { content: ""; position: absolute; inset: 0; background: currentColor; opacity: 0; transition: opacity var(--d-short); }
+.tool-btn:hover::after { opacity: .08; }
+.tool-btn:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+.tool-btn .tool-ind { display: flex; color: var(--md-on-surface-variant); transition: transform var(--d-med) var(--ease-emph); }
+.tool-btn[aria-pressed="true"] { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+.tool-btn[aria-pressed="true"] .tool-ind { color: var(--md-on-secondary-container); transform: scale(1.08); }
+.tool-btn[aria-expanded="true"] { background: var(--md-surface-container-high); }
+.tool-sep { flex: none; width: 1px; height: 28px; margin: 0 4px; background: var(--md-outline-variant); }
+.tool-more-menu { position: absolute; right: auto; width: 280px; z-index: 31; }
+.menu-head { margin: 4px 16px 6px; font-size: 12px; font-weight: 600; color: var(--md-on-surface-variant); }
+.menu a[role="menuitem"] { height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 16px 0 12px; color: var(--md-on-surface); text-decoration: none; }
+.menu a[role="menuitem"] .ic { color: var(--md-on-surface-variant); }
+.menu a[role="menuitem"]:hover, .menu a[role="menuitem"]:focus-visible { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); outline: none; }
+
+/* a narrower map keeps every tool, as icons with their names kept for screen readers and tooltips */
+@container stage (max-width: 760px) {
+  .map-tools .tool-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .map-tools .tool-btn { padding: 0 10px; }
+}
+
+/* ---------- hint for the current tool ---------- */
+.tool-hint { position: absolute; top: 72px; left: 16px; right: 16px; margin-inline: auto; width: max-content; z-index: 5; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 32px); padding: 8px 8px 8px 14px; border-radius: 16px; background: var(--md-inverse-surface); color: var(--md-inverse-on-surface); box-shadow: var(--elev-2); font-size: 14px; line-height: 20px; animation: fade-up var(--d-med) var(--ease-emph-dec) both; }
+.tool-hint[hidden] { display: none; }
+.tool-hint > .ic { flex: none; color: var(--md-inverse-primary); }
+.tool-hint .th-text { flex: 1 1 auto; min-width: 0; }
+.th-btn { flex: none; display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 0; border-radius: 16px; background: transparent; color: var(--md-inverse-primary); font: inherit; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.th-btn.filled { background: var(--md-inverse-primary); color: var(--md-on-primary-container); }
+.th-btn:disabled { opacity: .45; cursor: default; }
+.th-btn:focus-visible, .th-close:focus-visible { outline: 2px solid var(--md-inverse-primary); outline-offset: 2px; }
+.th-close { flex: none; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 16px; background: transparent; color: var(--md-inverse-on-surface); opacity: .8; cursor: pointer; }
+.th-close:hover { opacity: 1; }
+
+/* ---------- right panel tabs ---------- */
+.easy-tabs { position: sticky; top: -12px; z-index: 10; isolation: isolate; display: flex; margin: -12px -12px 8px; background: var(--md-surface-container-low); border-bottom: 1px solid var(--md-outline-variant); }
+.easy-tabs [role="tab"] { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px 0; border: 0; background: transparent; color: var(--md-on-surface-variant); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.easy-tabs [role="tab"]::after { content: ""; display: block; width: 56px; height: 3px; margin-top: 8px; border-radius: 3px 3px 0 0; background: transparent; transition: background var(--d-short); }
+.easy-tabs [role="tab"][aria-selected="true"] { color: var(--md-primary); }
+.easy-tabs [role="tab"][aria-selected="true"]::after { background: var(--md-primary); }
+.easy-tabs [role="tab"]:focus-visible { outline: 2px solid var(--md-primary); outline-offset: -2px; }
+.panel.right[data-tab="sel"] > [data-pane]:not([data-pane="sel"]),
+.panel.right[data-tab="analyse"] > [data-pane]:not([data-pane="analyse"]),
+.panel.right[data-tab="style"] > [data-pane]:not([data-pane="style"]) { display: none !important; }
+
+/* ---------- getting-started checklist ---------- */
+.gs { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.gs-head { display: flex; align-items: baseline; gap: 8px; }
+.gs-head h3 { flex: 1; margin: 0; }
+.gs-count { font-size: 12px; font-weight: 600; color: var(--md-primary); }
+.gs-bar { height: 6px; border-radius: 3px; background: var(--md-surface-container-highest); overflow: hidden; }
+.gs-bar span { display: block; height: 100%; border-radius: 3px; background: var(--md-primary); transition: width var(--d-long, 400ms) var(--ease-emph); }
+.gs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.gs-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--md-outline-variant); background: var(--md-surface-container-lowest); animation: fade-up var(--d-med) var(--ease-emph-dec) both; }
+.gs-row.ok { border-color: transparent; background: var(--md-surface-container); }
+.gs-dot { flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 12px; border: 2px solid var(--md-outline); display: flex; align-items: center; justify-content: center; }
+.gs-row.ok .gs-dot { border: 0; background: var(--md-primary); color: var(--md-on-primary); }
+.gs-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.gs-name { font-weight: 600; }
+.gs-row.ok .gs-name { color: var(--md-on-surface-variant); text-decoration: line-through; }
+.gs-sub { font-size: 12px; color: var(--md-on-surface-variant); }
+.gs .btn.text { align-self: flex-start; }
+
+/* ---------- start card on a blank map ---------- */
+.start-card { position: absolute; inset: 0; margin: auto; height: fit-content; z-index: 4; width: min(400px, calc(100% - 32px)); max-height: calc(100% - 140px); overflow-y: auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 28px; background: var(--md-surface-container-lowest); box-shadow: var(--elev-3, var(--elev-2)); animation: fade-up var(--d-long, 400ms) var(--ease-emph-dec) both; }
+.start-card[hidden] { display: none; }
+.start-card h2 { margin: 0; font-size: 24px; line-height: 32px; font-weight: 500; }
+.start-card .supporting { margin: 0 0 4px; }
+.start-opt { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--md-outline-variant); background: transparent; color: var(--md-on-surface); font: inherit; text-align: left; cursor: pointer; transition: background var(--d-short), transform var(--d-short); }
+.start-opt .ic { flex: none; color: var(--md-primary); }
+.start-opt > span { display: flex; flex-direction: column; }
+.start-opt .so-name { font-weight: 600; }
+.start-opt .so-sub { font-size: 12px; color: var(--md-on-surface-variant); }
+.start-opt:hover { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); transform: translateY(-1px); }
+.start-opt:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+.start-opt.primary { border-color: transparent; background: var(--md-primary-container); color: var(--md-on-primary-container); }
+.start-opt.primary .ic, .start-opt.primary .so-sub { color: var(--md-on-primary-container); }
+
+/* ---------- Help menu ---------- */
+.help-btn { gap: 6px; }
+#helpMenu { width: 280px; }
+
+/* ---------- search: regex builder beside the box ---------- */
+.search-wrap { display: flex; align-items: center; gap: 8px; }
+.search-wrap .search-bar { flex: 1 1 auto; min-width: 0; }
+.rx-toggle { flex: none; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--md-outline-variant); border-radius: 24px; background: transparent; color: var(--md-primary); font: 700 15px/1 Consolas, "Cascadia Mono", monospace; cursor: pointer; transition: background var(--d-short); }
+.rx-toggle[aria-pressed="true"] { background: var(--md-secondary-container); border-color: transparent; color: var(--md-on-secondary-container); }
+.rx-toggle:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+.rx-area { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.rx-area[hidden] { display: none; }
+
+/* ---------- phones and narrow windows: tools in a bar along the bottom ---------- */
+@media (max-width: 900px) {
+  body { padding-bottom: 76px; }
+  .map-tools { position: fixed; top: auto; bottom: 0; left: 0; right: 0; margin: 0; width: auto; max-width: none; z-index: 40; justify-content: space-around; gap: 0; padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); border-radius: 0; border-top: 1px solid var(--md-outline-variant); background: var(--md-surface-container); box-shadow: none; animation: none; }
+  .map-tools .tool-label { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+  .tool-btn { flex-direction: column; gap: 2px; height: 64px; min-width: 52px; padding: 4px 6px; border-radius: 16px; font-size: 12px; line-height: 16px; background: transparent; }
+  .tool-btn .tool-ind { width: 48px; height: 30px; align-items: center; justify-content: center; border-radius: 15px; transition: background var(--d-short); }
+  .tool-btn[aria-pressed="true"] { background: transparent; color: var(--md-on-surface); }
+  .tool-btn[aria-pressed="true"] .tool-ind { background: var(--md-secondary-container); transform: none; }
+  .tool-sep { display: none; }
+  .tool-btn[data-tool="label"], .tool-btn[data-tool="erase"] { display: none; }
+  .tool-more-menu { position: fixed; left: 8px !important; right: 8px; top: auto !important; bottom: 84px; width: auto; }
+  .tool-hint { top: 10px; flex-wrap: wrap; row-gap: 4px; font-size: 13px; line-height: 18px; padding: 8px 6px 6px 12px; }
+  .tool-hint .th-text { flex: 1 1 calc(100% - 72px); }
+  .tool-hint .th-btn { height: 30px; }
+  .help-btn span:last-child { display: none; }
+}
+@media (max-width: 900px) and (min-width: 560px) { .tool-btn[data-tool="label"], .tool-btn[data-tool="erase"] { display: flex; } }
+.menu .narrow-only { display: none; }
+@media (max-width: 559px) { .menu .narrow-only { display: flex; } }
+/* the tool bar owns the top of the map, so the status chip sits above the scale bar instead */
+.stage > .status { top: auto; bottom: 112px; }
+@media (max-width: 900px) { .snackbar { bottom: calc(88px + env(safe-area-inset-bottom)); } }
+/* the scenarios sheet replaces the whole panel while it is open */
+.panel.right.sc-open > [data-pane], .panel.right.sc-open > #easyTabs { display: none !important; }
+/* scenario labels sit below the tool bar and its hint */
+.sc-tag { top: 132px; }
+@media (max-width: 900px) { .sc-tag { top: 88px; } }

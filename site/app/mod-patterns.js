@@ -156,7 +156,7 @@
   // With a branch armed, Route-tool station clicks extend that branch instead of the main route.
   X.pointer.push((e, p, tool, target) => {
     const a = branchActive();
-    if (!a || tool !== 'line' || e.button !== 0) return false;
+    if (!a || (tool !== 'line' && tool !== 'bus') || e.button !== 0) return false;
     const id = target && target.dataset.st;
     if (!id) {
       if (target) return false;

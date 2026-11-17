@@ -367,4 +367,6 @@
     document.getElementById('stage').appendChild(hint);
     if (g.applyI18n) g.applyI18n(); // labels of the injected controls follow the current language
   });
+  // Other modules (the getting-started help) open the palette and paste through this.
+  window.GMMCEditing = { palette: () => togglePalette(), paste: () => pasteClip() };
 })();

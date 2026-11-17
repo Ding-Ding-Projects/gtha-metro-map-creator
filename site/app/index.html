@@ -27,6 +27,7 @@
 <link rel="stylesheet" href="mod-share.css">
 <link rel="stylesheet" href="mod-realtime.css">
 <link rel="stylesheet" href="mod-deploy.css">
+<link rel="stylesheet" href="mod-easy.css">
 </head>
 <body>
 <a class="skip" href="#map">Skip to map</a>
@@ -40,6 +41,7 @@
     <button type="button" data-layout="schematic" aria-pressed="false"><span class="seg-check" data-ic="check"></span><span data-t="layout_schematic">Schematic</span></button>
     <button type="button" data-layout="geographic" aria-pressed="true"><span class="seg-check" data-ic="check"></span><span data-t="layout_geographic">Geographic</span></button>
   </div>
+  <div class="menu-wrap" id="helpWrap"></div>
   <button type="button" class="icon-btn" id="undoBtn" aria-label="Undo"><span data-ic="undo"></span></button>
   <button type="button" class="icon-btn" id="redoBtn" aria-label="Redo"><span data-ic="redo"></span></button>
   <div class="menu-wrap">
@@ -63,7 +65,6 @@
   <div class="progress" id="progress" role="progressbar" aria-label="Working" hidden></div>
 </header>
 <div class="workspace">
-  <nav class="rail" aria-label="Tools" id="tools"></nav>
   <aside class="panel left" aria-label="Routes and search">
     <section class="search-sec">
       <div class="search-bar">
@@ -123,6 +124,8 @@
       <g id="tiles"></g>
       <g id="viewport"></g>
     </svg>
+    <nav class="map-tools" aria-label="Tools" id="tools"></nav>
+    <div class="tool-hint" id="toolHint" role="status" aria-live="polite" hidden></div>
     <div class="fab-col" role="group" aria-label="Map controls">
       <button type="button" class="fab" id="fitBtn" aria-label="Fit map"><span data-ic="fit_screen"></span></button>
       <button type="button" class="fab" id="zoomInBtn" aria-label="Zoom in"><span data-ic="add"></span></button>
@@ -218,6 +221,7 @@
 <script src="deploy-ui.js"></script>
 <script src="mod-deploy-instances.js"></script>
 <script src="mod-deploy.js"></script>
+<script src="mod-easy.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

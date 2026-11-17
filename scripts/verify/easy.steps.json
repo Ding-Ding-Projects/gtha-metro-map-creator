@@ -1,0 +1,118 @@
+[
+ {
+  "name": "clear",
+  "js": "(() => { try { localStorage.clear(); } catch (e) {} location.reload(); return true; })()"
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "name": "prep",
+  "js": "(() => { const d = document.querySelector('dialog[open]'); if (d) d.close(); window.__click = (x, y) => { const svg = document.getElementById('map'), r = svg.getBoundingClientRect(); const o = { clientX: r.left + r.width * x, clientY: r.top + r.height * y, bubbles: true, pointerId: 1, button: 0, buttons: 1, isPrimary: true, pointerType: 'mouse' }; svg.dispatchEvent(new PointerEvent('pointerdown', o)); svg.dispatchEvent(new PointerEvent('pointerup', o)); window.dispatchEvent(new PointerEvent('pointerup', o)); }; window.__key = (k) => document.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })); return true; })()"
+ },
+ {
+  "wait": 600
+ },
+ {
+  "name": "toolbarLabelled",
+  "js": "(() => [...document.querySelectorAll('#tools .tool-btn')].map((b) => b.textContent.trim() + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' | '))()"
+ },
+ {
+  "name": "toolsOnMap",
+  "js": "(() => !!document.querySelector('#stage > #tools') && !document.querySelector('.rail'))()"
+ },
+ {
+  "name": "busKey",
+  "js": "(() => { __key('b'); return GMMC.getTool() + ' / ' + document.getElementById('toolHint').textContent.trim(); })()"
+ },
+ {
+  "name": "drawBus",
+  "js": "(() => { __click(.4, .3); __click(.5, .36); const l = GMMC.lineById(GMMC.getActiveLine()); return { style: l.style, stops: l.path.length, hint: document.getElementById('toolHint').textContent.trim() }; })()"
+ },
+ {
+  "wait": 400
+ },
+ {
+  "shot": "easy-bus-drawing.png"
+ },
+ {
+  "name": "undoStop",
+  "js": "(() => { document.querySelector('[data-easy=undoStop]').click(); return GMMC.lineById(GMMC.getActiveLine()).path.length; })()"
+ },
+ {
+  "name": "enterFinishes",
+  "js": "(() => { __click(.5, .36); __key('Enter'); const s = GMMC.getSelection(); return { tool: GMMC.getTool(), selection: s && s.type, active: GMMC.getActiveLine(), tab: document.querySelector('.panel.right').dataset.tab }; })()"
+ },
+ {
+  "name": "tabsKeyboard",
+  "js": "(() => { const sel = document.querySelector('#easyTabs [aria-selected=true]'); sel.focus(); sel.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); const now = document.activeElement.dataset.pane; const shown = [...document.querySelectorAll('.panel.right > [data-pane]')].filter((e) => getComputedStyle(e).display !== 'none').map((e) => e.id || e.tagName); return { focused: now, panelTab: document.querySelector('.panel.right').dataset.tab, shown }; })()"
+ },
+ {
+  "name": "styleTab",
+  "js": "(() => { document.querySelector('#easyTabs [data-pane=style]').click(); return [...document.querySelectorAll('.panel.right > [data-pane]')].filter((e) => getComputedStyle(e).display !== 'none').map((e) => e.id).join(','); })()"
+ },
+ {
+  "name": "selectSwitchesBack",
+  "js": "(() => { const id = Object.keys(GMMC.getMap().stations)[0]; GMMC.setSelection({ type: 'station', ids: [id] }); GMMC.renderPanels(); GMMC.render(); return document.querySelector('.panel.right').dataset.tab; })()"
+ },
+ {
+  "name": "regexToggle",
+  "js": "(() => { const a = document.getElementById('rxArea'), b = document.getElementById('rxToggle'); const before = a.hidden; b.click(); const after = a.hidden; const adjacent = b.parentElement.contains(document.getElementById('searchInput')); return { hiddenBefore: before, hiddenAfter: after, adjacent, expanded: b.getAttribute('aria-expanded'), label: b.getAttribute('aria-label') }; })()"
+ },
+ {
+  "name": "routesFirst",
+  "js": "(() => { const left = document.querySelector('.panel.left'); const kids = [...left.children]; return kids.indexOf(document.getElementById('lineList').closest('section')) < kids.indexOf(left.querySelector('.search-sec')); })()"
+ },
+ {
+  "name": "checklist",
+  "js": "(() => { GMMC.setSelection(null); GMMC.renderPanels(); GMMC.render(); const rows = [...document.querySelectorAll('.gs-row')]; return { rows: rows.length, done: rows.filter((r) => r.classList.contains('ok')).length, count: document.querySelector('.gs-count').textContent }; })()"
+ },
+ {
+  "name": "helpMenu",
+  "js": "(() => { document.getElementById('helpBtn').click(); const items = [...document.querySelectorAll('#helpMenu [role=menuitem]')].map((x) => x.textContent.trim()); document.getElementById('helpBtn').click(); return items.join(' | '); })()"
+ },
+ {
+  "name": "hideHints",
+  "js": "(() => { GMMC.setTool('station'); const shown = !document.getElementById('toolHint').hidden; document.querySelector('[data-easy=hideHints]').click(); const hidden = document.getElementById('toolHint').hidden; localStorage.setItem('gmmc.easy.hints', '1'); GMMC.setTool('select'); return { shown, hidden }; })()"
+ },
+ {
+  "name": "scenariosSheet",
+  "js": "(() => { document.querySelector('#easyTabs [data-pane=sel]').click(); document.getElementById('scenariosBtn').click(); const sheet = document.getElementById('scSheet'); const open = getComputedStyle(sheet).display !== 'none' && sheet.getBoundingClientRect().height > 0; const tabsHidden = getComputedStyle(document.getElementById('easyTabs')).display === 'none'; document.getElementById('scenariosBtn').click(); const back = getComputedStyle(document.getElementById('easyTabs')).display !== 'none'; return { open, tabsHidden, tabsBackAfterClose: back }; })()"
+ },
+ {
+  "name": "settingsToSchematic",
+  "js": "(() => { document.querySelector('#easyTabs [data-pane=sel]').click(); const b = document.getElementById('schOpen'); if (!b) return 'no button'; b.click(); return { tab: document.querySelector('.panel.right').dataset.tab, focusedVisible: getComputedStyle(document.getElementById('schSec')).display !== 'none', focused: document.activeElement.id }; })()"
+ },
+ {
+  "name": "blankStart",
+  "js": "(() => { GMMC.newMap('blank'); GMMC.setSelection(null); GMMC.setTool('select'); const c = document.getElementById('startCard'); return { visible: !!c && !c.hidden, options: c ? c.querySelectorAll('.start-opt').length : 0 }; })()"
+ },
+ {
+  "wait": 500
+ },
+ {
+  "shot": "easy-blank.png"
+ },
+ {
+  "name": "startStation",
+  "js": "(() => { document.querySelector('.start-opt[data-easy=station]').click(); const hiddenAfterPick = document.getElementById('startCard').hidden; __click(.5, .5); return { tool: GMMC.getTool(), stations: Object.keys(GMMC.getMap().stations).length, hiddenAfterPick }; })()"
+ },
+ {
+  "name": "cantonese",
+  "js": "(() => { const s = GMMC.getSettings(); s.lang = 'yue'; GMMC.saveSettings(); GMMC.applyI18n(); GMMC.render(); return { tools: [...document.querySelectorAll('#tools .tool-label')].map((x) => x.textContent).join(' '), tabs: [...document.querySelectorAll('#easyTabs [role=tab]')].map((x) => x.textContent).join(' '), hint: document.getElementById('toolHint').textContent.trim() }; })()"
+ },
+ {
+  "name": "dark",
+  "js": "(() => { document.documentElement.setAttribute('data-theme', 'dark'); return getComputedStyle(document.getElementById('tools')).backgroundColor; })()"
+ },
+ {
+  "wait": 400
+ },
+ {
+  "shot": "easy-yue-dark.png"
+ },
+ {
+  "name": "overflow",
+  "js": "(() => ({ page: document.documentElement.scrollWidth > innerWidth, tools: document.getElementById('tools').scrollWidth > document.getElementById('tools').clientWidth + 1 }))()"
+ }
+]

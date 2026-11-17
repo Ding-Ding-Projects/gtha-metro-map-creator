@@ -1,5 +1,30 @@
 # Handoff
 
+## 1.9.0 (2026-11-17): easier to use
+
+Feedback: the editor was confusing and adding things was hidden. Design board `design/Easy18.dc.html` (generator
+`design/tools/gen-easy18.cjs`, also on the design canvas). Code: `site/app/mod-easy.js` and `mod-easy.css`, with hooks in
+`app.js` (`toolsExtra`, `toolChanged`, `emptyInspector`, `setTool`, `finishRoute`) and `window.GMMCEditing` in
+`mod-editing.js`. Article: `docs/features/getting-started.md`.
+
+What changed: the tools are a labelled bar on the map (the side rail is gone), with a new Bus route tool (B) and a More
+menu; a hint for every tool, with Finish (Enter) and Undo stop while drawing; the right panel has Selected, Analyse and
+Style tabs; a getting-started checklist and a Start card on blank maps; a Help menu; Routes first in the left panel with
+the search options and regex builder behind a button beside the search box; on phones the tools are a bottom bar.
+
+Verified here in headless Edge: `scripts/verify/easy.steps.json` at 1440 x 900 and 390 x 844 (every step as expected, no
+page errors, no horizontal overflow), plus 1180 x 820. All 18 earlier editor step files were run against the 1.8.0 build
+and this one and compared: 10 identical, the rest differ only because the map is 80 px wider (box-select counts, scale
+bar, simulation canvas, swipe position), because analysis panels now sit in the Analyse tab (panel text read while
+hidden), or in timings. `gtfs-import.steps.json` times out the same way on 1.8.0 and 1.9.0 (its fixture is not a ZIP);
+that predates this change. Found and fixed during the pass: overlays shifted right by their entry animation, the
+scenarios sheet hidden behind the Selected tab, the Settings shortcut to auto-schematic focusing a hidden field, scenario
+labels under the tool bar, content showing through the sticky tab bar. Ten README captures replaced; the seven old ones
+are in `docs/screenshots/archive/`.
+
+Not verified: a person using it for the first time (no user test), screen-reader output beyond the roles and names
+checked in the step file, and the released desktop app until the 1.9.0 build is published.
+
 ## Virtual USB stick and SD card checks (2026-11-16, after 1.8.0)
 
 The physical-hardware checks (a real USB or SD write and a real Raspberry Pi boot) are deferred by the owner.

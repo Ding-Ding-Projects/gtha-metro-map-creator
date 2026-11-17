@@ -113,7 +113,21 @@
 - [x] Sign-in through the deploy app's SSH target, run end to end against an OpenSSH container
 - [x] Firefox and WebKit (Safari's engine) checks of the live site, with no page errors
 
-## Phase 9: next
+## Phase 9: release 1.9.0, easier to use
+
+People said the editor was confusing and adding things was hidden. Design board: `design/Easy18.dc.html`.
+
+- [x] Tools in a labelled bar on top of the map, replacing the five-icon side rail, with a More menu (GTFS import, paste, template, blank map, all commands)
+- [x] Bus route tool (B): starts a route already set to bus service
+- [x] A hint for every tool; while a route is drawn it shows the stop count with Finish (Enter) and Undo stop
+- [x] Right panel in tabs: Selected (opens on what you clicked), Analyse, Style
+- [x] Getting-started checklist and a Start card on a blank map, with buttons that take you to each step
+- [x] Help menu: checklist, tool hints on or off, all commands, user guide
+- [x] Routes first in the left panel; search options and the regex builder behind a button beside the search box
+- [x] Phones: the tools are a bar along the bottom that is always visible; Label and Erase move to More on the narrowest screens
+- [x] Checked in headless Edge at 1440 x 900, 1180 x 820 and 390 x 844, in English, Cantonese and dark (`scripts/verify/easy.steps.json`); every earlier editor check rerun against 1.8.0 and the differences explained (wider map, analysis panels in their own tab)
+
+## Phase 10: next
 
 - [ ] Vector PDF with Chinese labels (needs an embedded font)
 - [ ] Employment data for coverage, when an open small-area source exists

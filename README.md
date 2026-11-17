@@ -15,15 +15,21 @@ or a website. It runs in the browser with no dependencies and stores your work l
 
 ## Screenshots
 
-Captured from the 1.6.0 and 1.7.0 builds on 16 November 2026: the editor and GTFS viewer in headless Microsoft Edge at 1440 x 900, the deploy app from its packaged Windows executable at 1120 x 820. Earlier captures are listed in [docs/screenshots/ARCHIVE.md](docs/screenshots/ARCHIVE.md).
+The editor captures are from the 1.9.0 build on 17 November 2026 in headless Microsoft Edge at 1440 x 900 (the phone view at 390 x 844). The GTFS viewer, documentation search and sign-in captures are from the 1.6.0 and 1.7.0 builds, and the deploy app from its packaged Windows executable at 1120 x 820. Earlier captures are listed in [docs/screenshots/ARCHIVE.md](docs/screenshots/ARCHIVE.md).
 
-![Trip planner: Finch to Unionville over OpenStreetMap, with the itinerary in the side panel](docs/screenshots/editor-trip.webp)
+![Drawing a route: the labelled tool bar on the map, and a hint with the stop count, Finish and Undo stop](docs/screenshots/editor-route-drawing.webp)
+
+![A blank map with the Start your map card and the getting-started checklist in the Selected tab](docs/screenshots/editor-start.webp)
+
+<img src="docs/screenshots/editor-phone.webp" width="300" alt="On a phone the tools are a bar along the bottom; the drawing hint sits at the top of the map">
+
+![Trip planner: Finch to Unionville over OpenStreetMap, with the itinerary in the Analyse tab](docs/screenshots/editor-trip.webp)
 
 ![Travel time between stops shown when zoomed in, as estimates marked with a tilde](docs/screenshots/editor-travel-times.webp)
 
 ![Scenario compare: Today and the 2031 plan with a swipe handle and the change list](docs/screenshots/editor-scenarios.webp)
 
-![Coverage: 800 m walksheds around downtown stations with population totals](docs/screenshots/editor-coverage.webp)
+![Coverage: 800 m walksheds around downtown stations with population totals in the Analyse tab](docs/screenshots/editor-coverage.webp)
 
 ![Dark theme with travel times and the route's editable time list](docs/screenshots/editor-dark-travel-times.webp)
 
@@ -49,6 +55,9 @@ Captured from the 1.6.0 and 1.7.0 builds on 16 November 2026: the editor and GTF
 
 ## Features
 
+- Easy to start: labelled tools on the map (Station, Route, Bus route, Label, Erase, More), a hint
+  that says what to click, Finish and Undo stop while drawing, a getting-started checklist, a Start
+  card on a blank map, and a tool bar along the bottom on phones
 - Geographic layout over OpenStreetMap (default) or a schematic with 45-degree bends; stations keep
   a position in both
 - Draw onto real stops: zoom in, and stops and platforms from OpenStreetMap become clickable

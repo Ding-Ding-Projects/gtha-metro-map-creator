@@ -20,7 +20,7 @@
 
   // Extension hooks. Feature modules (mod-*.js) load before this file and push functions onto
   // window.GMMCX; see docs/features/extensions.md.
-  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [], stationMarker: [], labelStyle: [], exportTheme: [], projectSave: [], projectLoad: [], lineRow: [], legendColumn: [], lineInspector: [] }, window.GMMCX || {});
+  const X = Object.assign({ validate: [], transform: [], lineStyle: [], svgUnder: [], svgOver: [], labelExtra: [], inspector: [], input: [], click: [], issues: [], keydown: [], pointer: [], pointermove: [], pointerup: [], afterRender: [], ready: [], exports: [], settings: [], stationMarker: [], labelStyle: [], exportTheme: [], projectSave: [], projectLoad: [], lineRow: [], legendColumn: [], lineInspector: [], toolsExtra: [], toolChanged: [], emptyInspector: [] }, window.GMMCX || {});
   for (const k of Object.keys(X)) if (!Array.isArray(X[k])) X[k] = [];
   window.GMMCX = X;
   const hook = (name, ...args) => { for (const f of X[name]) { try { const r = f(...args); if (r) return r; } catch (err) { console.error('extension ' + name, err); } } return null; };
@@ -668,13 +668,14 @@
     list.innerHTML = hits.slice(0, 50).map((s) => `<li><button type="button" data-goto="${esc(s.id)}">${esc(s.name)}${s.nameZh ? ' · ' + esc(s.nameZh) : ''}</button></li>`).join('');
   }
 
-  const TOOLS = [['select', 'V', 'arrow_selector_tool'], ['station', 'S', 'add_location_alt'], ['line', 'L', 'conversion_path'], ['label', 'T', 'title'], ['erase', 'E', 'ink_eraser']];
+  const TOOLS = [['select', 'V', 'arrow_selector_tool'], ['station', 'S', 'add_location_alt'], ['line', 'L', 'conversion_path'], ['bus', 'B', 'directions_bus'], ['label', 'T', 'title'], ['erase', 'E', 'ink_eraser']];
   const ic = (n, s) => window.icon(n, s);
   function renderTools() {
     $('tools').innerHTML = TOOLS.map(([id, key, glyph]) => {
-      const lbl = { select: t('select'), station: t('station'), line: t('drawLine'), label: t('label'), erase: t('erase') }[id];
-      return `<button type="button" class="rail-item" data-tool="${id}" aria-pressed="${tool === id}" aria-keyshortcuts="${key}" title="${esc(lbl)} (${key})"><span class="rail-ind">${ic(glyph)}</span><span class="rail-label">${esc(lbl)}</span></button>`;
-    }).join('');
+      const lbl = { select: t('select'), station: t('station'), line: t('drawLine'), bus: t('busRoute'), label: t('label'), erase: t('erase') }[id];
+      return `<button type="button" class="tool-btn" data-tool="${id}" aria-pressed="${tool === id}" aria-keyshortcuts="${key}" title="${esc(lbl)} (${key})"><span class="tool-ind">${ic(glyph, 20)}</span><span class="tool-label">${esc(lbl)}</span></button>`;
+    }).join('') + hookAll('toolsExtra');
+    hookAll('toolChanged', tool);
   }
   const styleName = (st) => t('style_' + st);
   function renderLines() {
@@ -703,7 +704,7 @@
     const el = $('inspector');
     const active = activeLineId && lineById(activeLineId);
     let head = `<div class="insp-active"><span class="li-sub">${esc(t('activeLine'))}</span><span class="li-head">${active ? esc(lineName(active)) : esc(t('noActiveLine'))}</span></div>`;
-    if (!selection) { el.innerHTML = head + `<p class="empty-state">${ic('info')}<span>${esc(t('nothingSelected'))}</span></p>`; return; }
+    if (!selection) { el.innerHTML = head + `<p class="empty-state">${ic('info')}<span>${esc(t('nothingSelected'))}</span></p>` + hookAll('emptyInspector', map); return; }
     let h = '';
     if (selection.type === 'station' && selection.ids.length === 1) {
       const s = map.stations[selection.ids[0]];
@@ -829,10 +830,25 @@
   const PALETTE = ['#1F5FBF', '#C8102E', '#0B6E4F', '#E8A317', '#7B2D8E', '#00838F', '#6D4C41', '#D81B60'];
   function newLine() {
     checkpoint();
-    const l = { id: uid('line'), name: t('newLine') + ' ' + (map.lines.length + 1), nameZh: '', color: PALETTE[map.lines.length % PALETTE.length], width: 8, style: 'solid', visible: true, path: [], bends: {}, freq: { peak: null, midday: null, evening: null, weekend: null }, showFreq: true, note: '' };
+    const bus = tool === 'bus';
+    const l = { id: uid('line'), name: (bus ? t('busRoute') : t('newLine')) + ' ' + (map.lines.length + 1), nameZh: '', color: PALETTE[map.lines.length % PALETTE.length], width: bus ? 6 : 8, style: bus ? 'bus' : 'solid', visible: true, path: [], bends: {}, freq: { peak: null, midday: null, evening: null, weekend: null }, showFreq: true, note: '' };
     map.lines.push(l); activeLineId = l.id; selection = { type: 'line', id: l.id };
-    tool = 'line'; changed(); beep(523);
+    if (!bus) tool = 'line'; changed(); beep(523);
     return l;
+  }
+  // A new tool starts fresh: the bus tool never extends a rail route, and the route tool never a bus route.
+  function setTool(x) {
+    const a = activeLineId && lineById(activeLineId);
+    if (a && ((x === 'bus' && a.style !== 'bus') || (x === 'line' && tool === 'bus' && a.style === 'bus'))) activeLineId = null;
+    tool = x; renderTools(); renderLines(); render();
+  }
+  // Ends drawing: the route stays selected so its name, colour and frequency are one click away.
+  function finishRoute() {
+    const l = activeLineId && lineById(activeLineId);
+    activeLineId = null; tool = 'select';
+    selection = l ? { type: 'line', id: l.id } : null;
+    if (l) toast(t('routeFinished') + ': ' + lineName(l));
+    renderPanels(); render();
   }
   function appendToActive(ref) {
     let l = activeLineId && lineById(activeLineId);
@@ -902,7 +918,7 @@
       else if (edge) { insertStationOnEdge(edge.lineId, edge.index, snapPt(p)); }
       else { checkpoint(); const id = addStation(snapPt(p)); selection = { type: 'station', ids: [id] }; beep(660); }
       changed();
-    } else if (tool === 'line') {
+    } else if (tool === 'line' || tool === 'bus') {
       if (osmId) { let l = activeLineId && lineById(activeLineId); if (!l) l = newLine(); checkpoint(); const id = addOsmStop(osmId); if (id) { l.path.push(id); selection = { type: 'station', ids: [id] }; toast(t('stopAdded') + ': ' + map.stations[id].name, true); beep(587); } }
       else if (stId) { if (appendToActive(stId)) beep(587); selection = { type: 'station', ids: [stId] }; }
       else if (edge) { activeLineId = edge.lineId; selection = { type: 'edge', lineId: edge.lineId, index: edge.index }; }
@@ -1007,8 +1023,9 @@
     if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
     if (mod) return;
     if (e.key === ' ') { spaceDown = true; e.preventDefault(); return; }
-    const toolKey = { v: 'select', s: 'station', l: 'line', t: 'label', e: 'erase' }[e.key.toLowerCase()];
-    if (toolKey) { tool = toolKey; renderTools(); render(); return; }
+    if (e.key === 'Enter' && (tool === 'line' || tool === 'bus') && activeLineId) { e.preventDefault(); finishRoute(); return; }
+    const toolKey = { v: 'select', s: 'station', l: 'line', b: 'bus', t: 'label', e: 'erase' }[e.key.toLowerCase()];
+    if (toolKey) { setTool(toolKey); return; }
     if (e.key.toLowerCase() === 'f') { fit(); return; }
     if ((e.key === 'Delete' || e.key === 'Backspace') && selection) { e.preventDefault(); act('delSel'); return; }
     if (e.key.startsWith('Arrow') && selection && selection.type === 'station') {
@@ -1025,7 +1042,7 @@
   document.addEventListener('click', (e) => {
     if (hook('click', e)) return;
     const b = e.target.closest('button'); if (!b) { if (!e.target.closest('.menu-wrap')) $('exportMenu').hidden = true; return; }
-    if (b.dataset.tool) { tool = b.dataset.tool; renderTools(); render(); return; }
+    if (b.dataset.tool) { setTool(b.dataset.tool); return; }
     if (b.dataset.pickline) { const id = b.dataset.pickline; activeLineId = activeLineId === id ? null : id; selection = activeLineId ? { type: 'line', id } : null; renderPanels(); render(); return; }
     if (b.dataset.eye) { const l = lineById(b.dataset.eye); checkpoint(); l.visible = !l.visible; changed(); return; }
     if (b.dataset.goto) { const s = map.stations[b.dataset.goto]; if (s) { selection = { type: 'station', ids: [s.id] }; centerOnStation(s); renderPanels(); } return; }
@@ -1388,7 +1405,7 @@ addEventListener('resize',fit);fit();})();
   window.GMMC = { getMap: () => map, computeGeometry, route, validateMap, standaloneSvg, loadJson, newMap, exportAct, undo, redo, setLayout, dm, siteHtml, projectJson, getView: () => view, getSettings: () => settings, liveStops: () => liveStops,
     // extension API
     G, t, esc, checkpoint, changed, render, renderPanels, renderInspector, toast, beep, fit, saveSettings, applyI18n, viewMap,
-    getSelection: () => selection, setSelection: (s) => { selection = s; }, getTool: () => tool, setTool: (x) => { tool = x; renderTools(); render(); },
+    getSelection: () => selection, setSelection: (s) => { selection = s; }, getTool: () => tool, setTool, finishRoute,
     getActiveLine: () => activeLineId, setActiveLine: (id) => { activeLineId = id; }, lineById, servingLines, isInterchangeIn, lineName, freqText, linePaths,
     renderLines, saveMap: () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => store.set(STORE_MAP, map), 400); },
     isGeo, stGeo, geoGrid, gridToLatLon, fits, worldFromEvent, addStation, snapPt, uid, svgEl: () => svgEl, replaceMap, loadText, download, exportScene, setBend, syncSharedBends };
